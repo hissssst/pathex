@@ -1,18 +1,10 @@
 defmodule Pathex.Builder.Selector do
 
+  import Pathex.Builder, only: [list_match: 2, pin: 1]
   @callback build(Pathex.Combination.t()) :: Pathex.Builder.Code.t()
 
   def is_matchable?({type, _}) when type in [:map, :list], do: true
   def is_matchable?(_), do: false
-
-  def list_match(index, inner \\ {:x, [], Elixir})
-  def list_match(0, inner) do
-    quote(do: [unquote(inner) | _])
-  end
-  def list_match(index, inner) do
-    unders = Enum.map(1..index, fn _ -> {:_, [], Elixir} end)
-    quote(do: [unquote_splicing(unders), unquote(inner) | _])
-  end
 
   def match_from_path(path, initial \\ {:x, [], Elixir}) do
     path
@@ -40,6 +32,7 @@ defmodule Pathex.Builder.Selector do
     end
   end
   def create_getter({:map, key}, tail) do
+    key = pin(key)
     quote do
       %{unquote(key) => x} -> x |> unquote(tail)
     end

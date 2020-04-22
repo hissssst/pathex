@@ -3,16 +3,16 @@ defmodule Pathex.Test do
   require Pathex
   import Pathex
 
-  def f do
-    func = ~P[:x/:y/:z/3/2/:x]naive
+  def f(s, x) do
+    path1 = path "hey"
+    path2 = path 1
 
-    str = %{
-      x: %{
-        y: %{
-          z: [1, 2, 3, {4, 5, %{x: 1}}]
-        }
-      }
-    }
-    func.(str)
+    func = path1 ~> path2
+
+    [
+      func.(:get, {s}),
+      func.(:set, {s, 123})
+    ]
   end
+
 end

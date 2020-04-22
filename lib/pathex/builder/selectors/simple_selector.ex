@@ -15,7 +15,7 @@ defmodule Pathex.Builder.SimpleSelector do
     {:case, [], [[do: getters ++ fallback()]]}
   end
 
-  defp initial() do
+  defp initial do
     quote do
       (fn x -> {:ok, x} end).()
     end
