@@ -1,6 +1,5 @@
 defmodule PathexTest do
   use ExUnit.Case
-  doctest Pathex
 
   require Pathex
   import Pathex

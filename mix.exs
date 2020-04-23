@@ -9,7 +9,7 @@ defmodule Pathex.MixProject do
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
-      deps: [ex_doc: "~> 0.21.3"],
+      deps: [{:ex_doc, "~> 0.21.3", only: :dev, runtime: false}],
       name: "Pathex",
       source_url: "https://github.com/hissssst/pathex"
     ]
