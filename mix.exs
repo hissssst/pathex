@@ -7,22 +7,24 @@ defmodule Pathex.MixProject do
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      description: description(),
+      package: package(),
+      deps: [],
+      name: "Pathex",
+      source_url: "https://github.com/hissssst/pathex"
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
-  def application do
-    [
-      extra_applications: [:logger]
-    ]
+  def application, do: []
+
+  def description do
+    "Code generation library for functional lenses"
   end
 
-  # Run "mix help deps" to learn about dependencies.
-  defp deps do
+  defp package() do
     [
-      {:dialyxir, "~> 1.0", only: [:dev], runtime: false},
-      {:credo, "~> 1.4", only: [:dev, :test], runtime: false}
+      licenses: ["BSD-2-Clause"],
+      links: %{"GitHub" => "https://github.com/hissssst/pathex"}
     ]
   end
 end
