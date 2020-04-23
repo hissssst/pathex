@@ -1,6 +1,6 @@
 # Pathex
 
-Brings power of filesystem paths to elixir!
+Fast. Really fast.
 
 ## Installation
 
