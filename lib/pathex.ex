@@ -15,6 +15,24 @@ defmodule Pathex do
     |> Pathex.Builder.build(mod)
   end
 
+  defmacro over(path, struct, function) do
+    quote generated: true do
+      unquote(path).(:update, {unquote(struct), unquote(function)})
+    end
+  end
+
+  defmacro set(path, struct, value) do
+    quote generated: true do
+      unquote(path).(:set, {unquote(struct), unquote(value)})
+    end
+  end
+
+  defmacro view(path, struct) do
+    quote generated: true do
+      unquote(path).(:get, {unquote(struct)})
+    end
+  end
+
   defmacro path(quoted, mod \\ 'naive') do
     mod = detect_mod(mod)
     quoted
@@ -23,7 +41,7 @@ defmodule Pathex do
   end
 
   defmacro a ~> b do
-    quote do
+    quote generated: true do
       fn
         :get, arg ->
           with {:ok, res} <- unquote(a).(:get, arg) do

@@ -21,14 +21,18 @@ defmodule Pathex.Builder.Selector do
     end)
   end
 
-  def create_getter({:tuple, key}, tail) do
+  def create_getter({:tuple, index}, tail) do
     quote do
-      t when is_tuple(t) -> (elem(t, unquote(key)) |> unquote(tail))
+      t when is_tuple(t) and tuple_size(t) > unquote(index) ->
+        elem(t, unquote(index)) |> unquote(tail)
     end
   end
   def create_getter({:keyword, key}, tail) do
     quote do
-      [{_, _} | _] = kwd -> Keyword.fetch!(kwd, unquote(key)) |> unquote(tail)
+      [{_, _} | _] = kwd ->
+        with {:ok, value} <- Keyword.fetch(kwd, unquote(key)) do
+          value |> unquote(tail)
+        end
     end
   end
   def create_getter({:map, key}, tail) do

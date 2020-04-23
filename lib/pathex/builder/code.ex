@@ -15,7 +15,7 @@ defmodule Pathex.Builder.Code do
 
   @spec to_fn(t()) :: Macro.t()
   def to_fn(%__MODULE__{vars: vars, code: code}) do
-    quote do
+    quote generated: true do
       fn unquote_splicing(vars) ->
         unquote(code)
       end
@@ -24,7 +24,7 @@ defmodule Pathex.Builder.Code do
 
   @spec to_def(t(), atom()) :: Macro.t()
   def to_def(%__MODULE__{vars: vars, code: code}, name) do
-    quote do
+    quote generated: true do
       def unquote(name)(unquote_splicing(vars)) do
         unquote(code)
       end
@@ -34,7 +34,7 @@ defmodule Pathex.Builder.Code do
   @spec multiple_to_fn([{atom(), t()}]) :: Macro.t()
   def multiple_to_fn(codes) do
     cases = Enum.flat_map(codes, fn {key, %{vars: vars, code: code}} ->
-      quote do
+      quote generated: true do
         unquote(key), {unquote_splicing(vars)} -> unquote(code)
       end
     end)
