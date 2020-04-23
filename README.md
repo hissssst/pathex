@@ -7,7 +7,7 @@ Fast. Really fast.
 ```elixir
 def deps do
   [
-    {:pathex, github: "hissssst/pathex"}
+    {:pathex, "~> 0.1.0"}
   ]
 end
 ```
