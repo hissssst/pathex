@@ -30,10 +30,13 @@ defmodule Pathex do
             unquote(b).(:get, {res})
           end
 
-        :set, {target, val} ->
-          inner = unquote(a).(:get, {target})
-          inner = unquote(b).(:set, {inner, val})
-          unquote(a).(:set, {target, inner})
+        cmd, {target, arg} ->
+          with(
+            {:ok, inner} <- unquote(a).(:get, {target}),
+            {:ok, inner} <- unquote(b).(cmd, {inner, arg})
+          ) do
+            unquote(a).(:set, {target, inner})
+          end
       end
     end
   end

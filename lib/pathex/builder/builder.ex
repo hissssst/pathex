@@ -6,14 +6,16 @@ defmodule Pathex.Builder do
   def build(combination, mod) when mod in ['map', 'json'] do
     [
       get: __MODULE__.MatchableSelector.build(combination),
-      set: __MODULE__.SimpleSetter.build(combination)
+      set: __MODULE__.SimpleSetter.build(combination),
+      update: __MODULE__.UpdateSetter.build(combination)
     ]
     |> __MODULE__.Code.multiple_to_fn()
   end
   def build(combination, 'naive') do
     [
       get: __MODULE__.SimpleSelector.build(combination),
-      set: __MODULE__.SimpleSetter.build(combination)
+      set: __MODULE__.SimpleSetter.build(combination),
+      update: __MODULE__.UpdateSetter.build(combination)
     ]
     |> __MODULE__.Code.multiple_to_fn()
   end

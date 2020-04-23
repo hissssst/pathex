@@ -1,10 +1,10 @@
-defmodule Pathex.Builder.SimpleSetter do
+defmodule Pathex.Builder.UpdateSetter do
 
   import Pathex.Builder.Setter
   @behaviour Pathex.Builder.Setter
 
   @first_arg {:first_arg, [], Elixir}
-  @initial {:value_to_set, [], Elixir}
+  @initial {:function_to_call, [], Elixir}
 
   def build(combination) do
     combination
@@ -20,7 +20,7 @@ defmodule Pathex.Builder.SimpleSetter do
 
   defp initial do
     quote do
-      (fn _ -> unquote(@initial) end).()
+      unquote(@initial).()
     end
   end
 

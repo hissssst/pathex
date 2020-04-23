@@ -4,14 +4,15 @@ defmodule Pathex.Test do
   import Pathex
 
   def f(s, x) do
-    path1 = path "hey"
-    path2 = path 1
+    path1 = path 1
+    path2 = path :x / :y
 
-    func = path1 ~> path2
+    func = path1 ~> path2 ~> path1
 
     [
       func.(:get, {s}),
-      func.(:set, {s, 123})
+      func.(:set, {s, x}),
+      func.(:update, {s, & "xX_#{&1}_Xx"})
     ]
   end
 
