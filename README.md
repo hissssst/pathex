@@ -81,7 +81,10 @@ iex> Pathex.set(mypath, [hey: %{"hey" => 1}], 2)
 3. You can use variables inside paths
 ```elixir
 iex> index = 1
-iex> mypath = path :name / x
+iex> mypath = path :name / index
+iex> Pathex.view path, %{name: ["Linus", "Torvalds"]}
+{:ok, "Torvalds"}
+iex> index = 0
 iex> Pathex.view path, %{name: ["Linus", "Torvalds"]}
 {:ok, "Torvalds"}
 ```
