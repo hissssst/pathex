@@ -82,10 +82,10 @@ iex> Pathex.set(mypath, [hey: %{"hey" => 1}], 2)
 ```elixir
 iex> index = 1
 iex> mypath = path :name / index
-iex> Pathex.view path, %{name: ["Linus", "Torvalds"]}
+iex> Pathex.view path, %{name: %{0 => "Linus", 1 => "Torvalds"}}
 {:ok, "Torvalds"}
 iex> index = 0
-iex> Pathex.view path, %{name: ["Linus", "Torvalds"]}
+iex> Pathex.view path, %{name: %{0 => "Linus", 1 => "Torvalds"}}
 {:ok, "Torvalds"}
 ```
 4. You can create composition of lenses
