@@ -104,3 +104,11 @@ iex> Pathex.view user_path, %{user: "hissssst"}
 iex> Pathex.view user_path, [user: "hissssst"]
 {:ok, "hissssst"}
 ```
+
+## No Magic
+
+Pathex paths are just closures created with `fn`. Any `path` or `~P` is a macro for creating a closure. `Pathex.view/2` `Pathex.set/3` and `Pathex.over/3` are just macros for calling these closures. `Pathex.~>/2` is a simple macro which creates composition of two closures
+
+## Contributions
+
+Welcome!
