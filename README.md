@@ -7,7 +7,7 @@ Fast. Really fast.
 ```elixir
 def deps do
   [
-    {:pathex, github: "hissssst/pathex"}
+    {:pathex, "~> 0.1.0"}
   ]
 end
 ```
@@ -82,10 +82,10 @@ iex> Pathex.set(mypath, [hey: %{"hey" => 1}], 2)
 ```elixir
 iex> index = 1
 iex> mypath = path :name / index
-iex> Pathex.view path, %{name: ["Linus", "Torvalds"]}
+iex> Pathex.view path, %{name: %{0 => "Linus", 1 => "Torvalds"}}
 {:ok, "Torvalds"}
 iex> index = 0
-iex> Pathex.view path, %{name: ["Linus", "Torvalds"]}
+iex> Pathex.view path, %{name: %{0 => "Linus", 1 => "Torvalds"}}
 {:ok, "Torvalds"}
 ```
 4. You can create composition of lenses
@@ -104,3 +104,11 @@ iex> Pathex.view user_path, %{user: "hissssst"}
 iex> Pathex.view user_path, [user: "hissssst"]
 {:ok, "hissssst"}
 ```
+
+## No Magic
+
+Pathex paths are just closures created with `fn`. Any `path` or `~P` is a macro for creating a closure. `Pathex.view/2` `Pathex.set/3` and `Pathex.over/3` are just macros for calling these closures. `Pathex.~>/2` is a simple macro which creates composition of two closures
+
+## Contributions
+
+Welcome!
