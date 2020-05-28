@@ -7,6 +7,7 @@ defmodule Pathex.Builder do
     [
       get: __MODULE__.MatchableSelector.build(combination),
       set: __MODULE__.SimpleSetter.build(combination),
+      force_set: __MODULE__.ForceSetter.build(combination),
       update: __MODULE__.UpdateSetter.build(combination)
     ]
     |> __MODULE__.Code.multiple_to_fn()
@@ -15,6 +16,7 @@ defmodule Pathex.Builder do
     [
       get: __MODULE__.SimpleSelector.build(combination),
       set: __MODULE__.SimpleSetter.build(combination),
+      force_set: __MODULE__.ForceSetter.build(combination),
       update: __MODULE__.UpdateSetter.build(combination)
     ]
     |> __MODULE__.Code.multiple_to_fn()

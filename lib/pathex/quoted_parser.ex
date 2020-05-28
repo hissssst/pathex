@@ -14,7 +14,7 @@ defmodule Pathex.QuotedParser do
   defp parse_quoted(x), do: [x]
 
   defp detect_quoted({name, ctx, nil} = var) when is_atom(name) and is_list(ctx) do
-    [map: var, keyword: var]
+    [map: var, keyword: var, list: var, tuple: var]
   end
   defp detect_quoted(key) when is_atom(key) do
     [map: key, keyword: key]

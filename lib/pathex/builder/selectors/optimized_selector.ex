@@ -73,4 +73,7 @@ defmodule Pathex.Builder.OptimizedSelector do
     |> put_elem(1, items)
   end
 
+  defp is_matchable?({type, _}) when type in [:map, :list], do: true
+  defp is_matchable?(_), do: false
+
 end
