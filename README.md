@@ -4,7 +4,7 @@ Fast. Really fast.
 
 ## What is Pathex?
 
-Pathex is a library for performing fast actions with nested data structures in Elixir. With pathex you can trivially set, get and update values in structures
+Pathex is a library for performing fast actions with nested data structures in Elixir. With pathex you can trivially set, get and update values in structures. You can checkout benchmarks at https://github.com/hissssst/pathex_bench
 
 ## Why another library?
 
