@@ -1,11 +1,12 @@
 defmodule Pathex.QuotedParser do
 
-  @spec parse(Macro.t(), Macro.Env.t()) :: Pathex.Combination.t()
-  def parse(quoted, env) do
+  @spec parse(Macro.t(), Macro.Env.t(), Pathex.mod()) :: Pathex.Combination.t()
+  def parse(quoted, env, mod) do
     quoted
     |> parse_quoted()
     |> Enum.map(&Macro.expand(&1, env))
     |> Enum.map(&detect_quoted/1)
+    |> Enum.map(& filter_mod(&1, mod))
   end
 
   defp parse_quoted({:/, _, args}) do
@@ -24,6 +25,12 @@ defmodule Pathex.QuotedParser do
   end
   defp detect_quoted(other) do
     [map: other]
+  end
+
+  defp filter_mod(p, :naive), do: p
+  defp filter_mod([{:map, m} | _], :map), do: [map: m]
+  defp filter_mod(p, :json) do
+    Keyword.take(p, [:map, :list])
   end
 
 end

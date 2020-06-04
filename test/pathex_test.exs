@@ -162,4 +162,11 @@ defmodule PathexTest do
     assert {:ok, [x: [y: 0]]}   = force_set p, [x: [y: 1]], 0
   end
 
+  test "view: map path" do
+    y = :y
+    p = path :x / y / :z, 'map'
+
+    assert {:ok, 1} = view p, %{x: %{y: %{z: 1}}}
+  end
+
 end

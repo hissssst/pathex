@@ -7,6 +7,9 @@ defmodule Pathex.Builder.Selector do
     path
     |> Enum.reverse()
     |> Enum.reduce_while({:ok, initial}, fn
+      {:map, {_, _, _} = key}, {:ok, acc} ->
+        {:cont, {:ok, quote(do: %{^unquote(key) => unquote(acc)})}}
+
       {:map, key}, {:ok, acc} ->
         {:cont, {:ok, quote(do: %{unquote(key) => unquote(acc)})}}
 

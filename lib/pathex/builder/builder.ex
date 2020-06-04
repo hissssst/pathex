@@ -2,8 +2,8 @@ defmodule Pathex.Builder do
 
   import Pathex.Common
 
-  @spec build(Pathex.Combination.t(), charlist()) :: Macro.t()
-  def build(combination, mod) when mod in ['map', 'json'] do
+  @spec build(Pathex.Combination.t(), Pathex.mod()) :: Macro.t()
+  def build(combination, mod) when mod in [:map, :json] do
     [
       get: __MODULE__.MatchableSelector.build(combination),
       set: __MODULE__.SimpleSetter.build(combination),
@@ -12,7 +12,7 @@ defmodule Pathex.Builder do
     ]
     |> __MODULE__.Code.multiple_to_fn()
   end
-  def build(combination, 'naive') do
+  def build(combination, :naive) do
     [
       get: __MODULE__.SimpleSelector.build(combination),
       set: __MODULE__.SimpleSetter.build(combination),

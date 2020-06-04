@@ -5,18 +5,18 @@ defmodule Pathex.Parser do
   ]
 
   #TODO proper naive parsing
-  @spec parse(binary(), charlist()) :: Pathex.Combination.t()
-  def parse(string, 'naive') do
+  @spec parse(binary(), Pathex.mod()) :: Pathex.Combination.t()
+  def parse(string, :naive) do
     string
     |> String.split("/")
     |> Enum.map(& detect_naive(String.trim(&1)))
   end
-  def parse(string, 'json') do
+  def parse(string, :json) do
     string
     |> String.split("/")
     |> Enum.map(& detect_json(String.trim(&1)))
   end
-  def parse(string, 'map') do
+  def parse(string, :map) do
     string
     |> String.split("/")
     |> Enum.map(& detect_map(String.trim(&1)))
