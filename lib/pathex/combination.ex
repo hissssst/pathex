@@ -1,5 +1,9 @@
 defmodule Pathex.Combination do
 
+  @moduledoc """
+  Module for combination structures
+  """
+
   @type t :: [[{Pathex.struct_type(), atom() | binary() | non_neg_integer()}]]
 
   @spec from_path(Pathex.path()) :: t()

@@ -1,5 +1,9 @@
 defmodule Pathex.Builder.Selector do
 
+  @moduledoc """
+  Module with common functions for selectors
+  """
+
   import Pathex.Builder, only: [list_match: 2, pin: 1]
   @callback build(Pathex.Combination.t()) :: Pathex.Builder.Code.t()
 
@@ -82,7 +86,7 @@ defmodule Pathex.Builder.Selector do
     [] # Can't create getter for tuple with negative index. What can we do?
   end
 
-  def fallback() do
+  def fallback do
     quote do
       _ -> :error
     end

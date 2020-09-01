@@ -1,5 +1,9 @@
 defmodule Pathex.Builder.ForceSetter do
 
+  @moduledoc """
+  Setter which creates given path if item in path does not exist
+  """
+
   import Pathex.Builder.Setter
   @behaviour Pathex.Builder.Setter
 

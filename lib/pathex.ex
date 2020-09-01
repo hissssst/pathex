@@ -21,16 +21,11 @@ defmodule Pathex do
 
   @type result :: {:ok, any()} | {:error, any()} | :error
   @type t :: (
-    :get | :set | :update,
+    :get | :set | :update | :force_set,
     {el_structure()} | {el_structure(), any()} | {el_structure(), (any() -> any())}
   -> result())
 
   @type mod :: :map | :json | :naive
-
-  defp detect_mod(str) when is_binary(str), do: detect_mod('#{str}')
-  defp detect_mod('json'), do: :json
-  defp detect_mod('map'), do: :map
-  defp detect_mod(_), do: :naive
 
   @doc """
   Macro of three arguments which applies given function
@@ -98,7 +93,7 @@ defmodule Pathex do
   defmacro path(quoted, mod \\ 'naive') do
     mod = detect_mod(mod)
     quoted
-    |> Pathex.QuotedParser.parse(__ENV__, mod)
+    |> Pathex.QuotedParser.parse(__CALLER__, mod)
     |> Pathex.Builder.build(mod)
   end
 
@@ -132,5 +127,12 @@ defmodule Pathex do
       end
     end
   end
+
+  # Helper for detecring mod
+  defp detect_mod(mod) when mod in ~w(naive map json)a, do: mod
+  defp detect_mod(str) when is_binary(str), do: detect_mod('#{str}')
+  defp detect_mod('json'), do: :json
+  defp detect_mod('map'), do: :map
+  defp detect_mod(_), do: :naive
 
 end

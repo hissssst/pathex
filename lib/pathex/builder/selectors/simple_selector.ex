@@ -1,5 +1,9 @@
 defmodule Pathex.Builder.SimpleSelector do
 
+  @moduledoc """
+  Simple selector
+  """
+
   @behaviour Pathex.Builder.Selector
   import Pathex.Builder.Selector
 

@@ -1,27 +1,40 @@
 defmodule Pathex.Builder do
 
+  @moduledoc """
+  Module for building combinations into path-closures
+  """
+
   import Pathex.Common
+  alias __MODULE__.{
+    Code, ForceSetter, MatchableSelector,
+    SimpleSelector, SimpleSetter, UpdateSetter
+  }
+
+  # API
 
   @spec build(Pathex.Combination.t(), Pathex.mod()) :: Macro.t()
   def build(combination, mod) when mod in [:map, :json] do
     [
-      get: __MODULE__.MatchableSelector.build(combination),
-      set: __MODULE__.SimpleSetter.build(combination),
-      force_set: __MODULE__.ForceSetter.build(combination),
-      update: __MODULE__.UpdateSetter.build(combination)
+      get:       MatchableSelector.build(combination),
+      set:       SimpleSetter.build(combination),
+      force_set: ForceSetter.build(combination),
+      update:    UpdateSetter.build(combination)
     ]
-    |> __MODULE__.Code.multiple_to_fn()
+    |> Code.multiple_to_fn()
   end
   def build(combination, :naive) do
     [
-      get: __MODULE__.SimpleSelector.build(combination),
-      set: __MODULE__.SimpleSetter.build(combination),
-      force_set: __MODULE__.ForceSetter.build(combination),
-      update: __MODULE__.UpdateSetter.build(combination)
+      get:       SimpleSelector.build(combination),
+      set:       SimpleSetter.build(combination),
+      force_set: ForceSetter.build(combination),
+      update:    UpdateSetter.build(combination)
     ]
-    |> __MODULE__.Code.multiple_to_fn()
+    |> Code.multiple_to_fn()
   end
 
+  # Imported helpers
+
+  @spec list_match(non_neg_integer(), Macro.t()) :: Macro.t()
   def list_match(index, inner \\ {:x, [], Elixir})
   def list_match(0, inner) do
     quote(do: [unquote(inner) | _])
@@ -31,6 +44,7 @@ defmodule Pathex.Builder do
     quote(do: [unquote_splicing(unders), unquote(inner) | _])
   end
 
+  @spec pin(Macro.t()) :: Macro.t()
   def pin(ast) do
     case detect_variables(ast) do
       {_, []} -> ast

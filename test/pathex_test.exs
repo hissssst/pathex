@@ -101,13 +101,14 @@ defmodule PathexTest do
 
   test "view: path: with variable" do
     variable = :x
-    p = path variable / variable
+    p = path :x / variable
     assert {:ok, 1} = view p, %{x: %{x: 1}}
     assert {:ok, 1} = view p, %{variable => %{variable => 1}}
     assert :error   = view p, %{{:variable, [], Elixir} => %{x: 1}}
     assert :error   = view p, %{{:variable, [], nil} => %{x: 1}}
     variable = :y
     assert {:ok, 1} = view p, %{x: %{x: 1}}
+    assert :error   = view p, %{x: %{y: 1}}
     assert :error   = view p, %{y: %{y: 1}}
     assert :error   = view p, %{variable => %{variable => 1}}
   end
@@ -123,21 +124,21 @@ defmodule PathexTest do
 
   test "force_set: path: easy" do
     p = path :x / :y / 1
-    assert {:ok, %{x: %{y: %{1 => 0}}}} = force_set p, %{}, 0
-    assert {:ok, %{x: %{y: %{1 => 0}}}} = force_set p, %{x: %{}}, 0
-    assert {:ok, %{x: %{y: %{1 => 0}}}} = force_set p, %{x: %{y: %{}}}, 0
+    assert {:ok, %{x: %{y: %{1 => 0}}}} == force_set p, %{}, 0
+    assert {:ok, %{x: %{y: %{1 => 0}}}} == force_set p, %{x: %{}}, 0
+    assert {:ok, %{x: %{y: %{1 => 0}}}} == force_set p, %{x: %{y: %{}}}, 0
 
-    assert {:ok, %{x: %{y: {1, 0}}}}    = force_set p, %{x: %{y: {1, 2}}}, 0
-    assert {:ok, %{x: %{y: [1, 0]}}}    = force_set p, %{x: %{y: [1, 2]}}, 0
-    assert {:ok, %{x: %{y: [0]}}}       = force_set p, %{x: %{y: []}}, 0
-    assert {:ok, %{x: %{y: {0}}}}       = force_set p, %{x: %{y: {}}}, 0
+    assert {:ok, %{x: %{y: {1, 0}}}}    == force_set p, %{x: %{y: {1, 2}}}, 0
+    assert {:ok, %{x: %{y: [1, 0]}}}    == force_set p, %{x: %{y: [1, 2]}}, 0
+    assert {:ok, %{x: %{y: [0]}}}       == force_set p, %{x: %{y: []}}, 0
+    assert {:ok, %{x: %{y: {0}}}}       == force_set p, %{x: %{y: {}}}, 0
   end
 
   test "force_set: path: list append" do
     p = path :x / :y / -1
-    assert {:ok, %{x: %{y: [0, 1, 2]}}}  = force_set p, %{x: %{y: [1, 2]}}, 0
-    assert {:ok, %{x: %{y: [0]}}}        = force_set p, %{x: %{y: []}}, 0
-    assert {:ok, %{x: %{y: %{-1 => 0}}}} = force_set p, %{x: %{}}, 0
+    assert {:ok, %{x: %{y: [0, 1, 2]}}}  == force_set p, %{x: %{y: [1, 2]}}, 0
+    assert {:ok, %{x: %{y: [0]}}}        == force_set p, %{x: %{y: []}}, 0
+    assert {:ok, %{x: %{y: %{-1 => 0}}}} == force_set p, %{x: %{}}, 0
   end
 
   test "force_set: path: tricky" do
@@ -157,16 +158,15 @@ defmodule PathexTest do
     assert {:ok, %{x: %{y: 0}}} = force_set p, %{x: %{}}, 0
     assert {:ok, %{x: %{y: 0}}} = force_set p, %{x: %{y: 1}}, 0
 
-    assert {:ok, [x: %{y: 0}]} = force_set p, [], 0
-    assert {:ok, [x: [y: 0]]}  = force_set p, [x: []], 0
+    assert {:ok, [x: %{y: 0}]}  = force_set p, [], 0
+    assert {:ok, [x: [y: 0]]}   = force_set p, [x: []], 0
     assert {:ok, [x: [y: 0]]}   = force_set p, [x: [y: 1]], 0
   end
 
   test "view: map path" do
-    y = :y
-    p = path :x / y / :z, 'map'
+    p1 = path :x / :y, :map
 
-    assert {:ok, 1} = view p, %{x: %{y: %{z: 1}}}
+    assert {:ok, 1} == view p1, %{x: %{y: 1}}
   end
 
 end

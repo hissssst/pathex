@@ -1,5 +1,9 @@
 defmodule Pathex.Builder.MatchableSelector do
 
+  @moduledoc """
+  Selector which matches with one big case in case
+  """
+
   @behaviour Pathex.Builder.Selector
   import Pathex.Builder.Selector
 

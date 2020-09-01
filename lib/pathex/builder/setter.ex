@@ -1,5 +1,9 @@
 defmodule Pathex.Builder.Setter do
 
+  @moduledoc """
+  Module with common functions for setters
+  """
+
   import Pathex.Builder, only: [list_match: 2, pin: 1]
 
   @callback build(Pathex.Combination.t()) :: Pathex.Builder.Code.t()

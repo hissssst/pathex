@@ -1,5 +1,9 @@
 defmodule Pathex.Builder.OptimizedSelector do
 
+  @moduledoc """
+  WIP Selector which tries to use one big case when possible
+  """
+
   @behaviour Pathex.Builder.Selector
   import Pathex.Builder.Selector
 

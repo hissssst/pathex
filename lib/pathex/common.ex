@@ -1,5 +1,9 @@
 defmodule Pathex.Common do
 
+  @moduledoc """
+  Util functions for working with AST
+  """
+
   def update_variables(ast, func, context \\ nil) when is_function(func, 1) do
     Macro.postwalk(ast, fn
       {n, c, ^context} = v when is_atom(n) and is_list(c) ->

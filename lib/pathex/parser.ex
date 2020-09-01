@@ -1,5 +1,9 @@
 defmodule Pathex.Parser do
 
+  @moduledoc """
+  Module for parsing path created wuth sigils
+  """
+
   @type suggested_path :: [
     {Pathex.struct_type() | nil, Pathex.key_type() | nil, binary()}
   ]

@@ -1,5 +1,9 @@
 defmodule Pathex.QuotedParser do
 
+  @moduledoc """
+  Utils module for parsing paths created with `Pathex.path/2`
+  """
+
   @spec parse(Macro.t(), Macro.Env.t(), Pathex.mod()) :: Pathex.Combination.t()
   def parse(quoted, env, mod) do
     quoted

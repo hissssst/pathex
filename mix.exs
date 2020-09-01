@@ -9,7 +9,7 @@ defmodule Pathex.MixProject do
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
-      deps: [{:ex_doc, "~> 0.21.3", only: :dev, runtime: false}],
+      deps: deps(),
       name: "Pathex",
       source_url: "https://github.com/hissssst/pathex"
     ]
@@ -25,6 +25,14 @@ defmodule Pathex.MixProject do
     [
       licenses: ["BSD-2-Clause"],
       links: %{"GitHub" => "https://github.com/hissssst/pathex"}
+    ]
+  end
+
+  defp deps() do
+    [
+      {:ex_doc, "~> 0.21.3", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0.0", only: [:dev], runtime: false},
+      {:credo, "~> 1.1", only: [:dev], runtime: false}
     ]
   end
 end

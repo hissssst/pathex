@@ -1,5 +1,9 @@
 defmodule Pathex.Builder.SimpleSetter do
 
+  @moduledoc """
+  Setter which simply sets new value in given path
+  """
+
   import Pathex.Builder.Setter
   @behaviour Pathex.Builder.Setter
 

@@ -1,5 +1,12 @@
 defmodule Pathex.Builder.Code do
 
+  @moduledoc """
+  Structure for working with closures as ASTs
+  ### Fields
+  * vars - list of variables/arguments
+  * code - body of a closure
+  """
+
   @enforce_keys [:code]
 
   defstruct [
@@ -47,6 +54,17 @@ defmodule Pathex.Builder.Code do
     x = {:x, [], Elixir}
     code = quote(do: unquote(x) |> unquote(code))
     %__MODULE__{vars: [x], code: code}
+  end
+
+  defimpl Inspect do
+    import Inspect.Algebra
+
+    def inspect(%{vars: vars, code: code}, opts) do
+      code = Macro.to_string(code)
+      vars = Enum.map(vars, & elem(&1, 0))
+      concat(["#Pathex.Builder.Code<", to_doc(vars, opts), "\n", code, "\n>"])
+    end
+
   end
 
 end
