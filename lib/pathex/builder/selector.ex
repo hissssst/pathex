@@ -4,7 +4,7 @@ defmodule Pathex.Builder.Selector do
   Module with common functions for selectors
   """
 
-  import Pathex.Builder, only: [list_match: 2, pin: 1]
+  import Pathex.Common, only: [list_match: 2, pin: 1]
   @callback build(Pathex.Combination.t()) :: Pathex.Builder.Code.t()
 
   def match_from_path(path, initial \\ {:x, [], Elixir}) do

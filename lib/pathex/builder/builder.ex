@@ -4,52 +4,52 @@ defmodule Pathex.Builder do
   Module for building combinations into path-closures
   """
 
-  import Pathex.Common
+  alias Pathex.Builder.Code
+  alias Pathex.Operations
+
+  # Formatting here looks really bad but what can I do...
   alias __MODULE__.{
-    Code, ForceSetter, MatchableSelector,
-    SimpleSelector, SimpleSetter, UpdateSetter
+    ForceSetter, MatchableSelector, SimpleSelector, SimpleSetter, UpdateSetter
   }
 
-  # API
+  @type t :: ForceSetter
+  | MatchableSelector
+  | SimpleSelector
+  | SimpleSetter
+  | UpdateSetter
 
-  @spec build(Pathex.Combination.t(), Pathex.mod()) :: Macro.t()
-  def build(combination, mod) when mod in [:map, :json] do
-    [
-      get:       MatchableSelector.build(combination),
-      set:       SimpleSetter.build(combination),
-      force_set: ForceSetter.build(combination),
-      update:    UpdateSetter.build(combination)
-    ]
+  # API functions
+
+  @doc """
+  This function creates quoted fn-closure from passed
+  combination and operations
+
+  Closure has two arguments: operation name and tuple or actual arguments
+
+  It will look like
+      iex> fn
+        :get, {struct} -> ...
+        :set, {struct, value} -> ...
+        ...
+      end
+  """
+  @spec build(Pathex.Combination.t(), Operations.t()) :: Macro.t()
+  def build(combination, operations) do
+    operations
+    |> Enum.map(fn {key, builder} -> {key, builder.build(combination)} end)
     |> Code.multiple_to_fn()
   end
-  def build(combination, :naive) do
-    [
-      get:       SimpleSelector.build(combination),
-      set:       SimpleSetter.build(combination),
-      force_set: ForceSetter.build(combination),
-      update:    UpdateSetter.build(combination)
-    ]
-    |> Code.multiple_to_fn()
-  end
 
-  # Imported helpers
+  @doc """
+  This function creates quoted fn-closure from passed
+  combination and builder
 
-  @spec list_match(non_neg_integer(), Macro.t()) :: Macro.t()
-  def list_match(index, inner \\ {:x, [], Elixir})
-  def list_match(0, inner) do
-    quote(do: [unquote(inner) | _])
-  end
-  def list_match(index, inner) do
-    unders = Enum.map(1..index, fn _ -> {:_, [], Elixir} end)
-    quote(do: [unquote_splicing(unders), unquote(inner) | _])
-  end
-
-  @spec pin(Macro.t()) :: Macro.t()
-  def pin(ast) do
-    case detect_variables(ast) do
-      {_, []} -> ast
-      _ -> quote(do: ^unquote(ast))
-    end
+  Closure has as much arguments as specified builder creates
+  """
+  @spec build_only(Pathex.Combination.t(), t()) :: Macro.t()
+  def build_only(combination, builder) do
+    builder.build(combination)
+    |> Code.to_fn()
   end
 
 end

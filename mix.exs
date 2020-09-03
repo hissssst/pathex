@@ -3,15 +3,15 @@ defmodule Pathex.MixProject do
 
   def project do
     [
-      app: :pathex,
-      version: "0.2.1",
-      elixir: "~> 1.10",
+      app:             :pathex,
+      version:         "0.3.0",
+      elixir:          "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      description: description(),
-      package: package(),
-      deps: deps(),
-      name: "Pathex",
-      source_url: "https://github.com/hissssst/pathex"
+      description:     description(),
+      package:         package(),
+      deps:            deps(),
+      name:            "Pathex",
+      source_url:      "https://github.com/hissssst/pathex"
     ]
   end
 
@@ -30,9 +30,9 @@ defmodule Pathex.MixProject do
 
   defp deps() do
     [
-      {:ex_doc, "~> 0.21.3", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0", only: [:dev], runtime: false},
-      {:credo, "~> 1.1", only: [:dev], runtime: false}
+      {:ex_doc,   "~> 0.21.3", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0.0",  only: :dev, runtime: false},
+      {:credo,    "~> 1.1",    only: :dev, runtime: false}
     ]
   end
 end

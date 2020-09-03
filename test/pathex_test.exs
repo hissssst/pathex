@@ -1,5 +1,8 @@
 defmodule PathexTest do
+
   use ExUnit.Case
+
+  doctest Pathex
 
   require Pathex
   import Pathex
@@ -165,8 +168,14 @@ defmodule PathexTest do
 
   test "view: map path" do
     p1 = path :x / :y, :map
-
     assert {:ok, 1} == view p1, %{x: %{y: 1}}
   end
 
+  test "direct view" do
+    assert {:ok, 1} == view :x / :y, %{x: %{y: 1}}
+  end
+
+  test "direct set" do
+    assert {:ok, %{x: %{y: 2}}} == set :x / :y, %{x: %{y: 1}}, 2
+  end
 end
