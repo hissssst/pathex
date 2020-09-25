@@ -1,12 +1,12 @@
 defmodule Pathex.Builder.Setter do
 
   @moduledoc """
-  Module with common functions for setters
+  Module with common functions for updaters
   """
 
   import Pathex.Common, only: [list_match: 2, pin: 1]
 
-  @callback build(Pathex.Combination.t()) :: Pathex.Builder.Code.t()
+  # Helpers
 
   # Non variable
   def create_setter({:map, key}, tail) do
@@ -81,7 +81,7 @@ defmodule Pathex.Builder.Setter do
         try do
           {:ok, unquote(arg1) |> unquote(code)}
         catch
-          :path_not_found -> {:error, unquote(arg1)}
+          :path_not_found -> :error
         end
       end
 

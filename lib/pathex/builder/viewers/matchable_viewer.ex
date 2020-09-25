@@ -1,20 +1,23 @@
-defmodule Pathex.Builder.MatchableSelector do
+defmodule Pathex.Builder.MatchableViewer do
 
   @moduledoc """
-  Selector which matches with one big case in case
+  Viewer-builder which creates function which matches with one big case
   """
 
-  @behaviour Pathex.Builder.Selector
+  @behaviour Pathex.Builder
   import Pathex.Builder.Selector
+
+  @structure_variable {:x, [], Elixir}
+  @function_variable {:function, [], Elixir}
 
   def build(combination) do
     getters =
       combination
       |> Pathex.Combination.to_paths()
-      |> Enum.flat_map(&path_to_getter/1)
+      |> Enum.flat_map(& path_to_getter(&1))
 
     {:case, [], [[do: getters ++ fallback()]]}
-    |> Pathex.Builder.Code.new_one_arg_pipe()
+    |> Pathex.Builder.Code.new_arg_pipe([@structure_variable, @function_variable])
   end
 
   defp path_to_getter(path) do

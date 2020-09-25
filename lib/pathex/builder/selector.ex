@@ -1,11 +1,12 @@
 defmodule Pathex.Builder.Selector do
 
   @moduledoc """
-  Module with common functions for selectors
+  Module with common functions for viewers
   """
 
   import Pathex.Common, only: [list_match: 2, pin: 1]
-  @callback build(Pathex.Combination.t()) :: Pathex.Builder.Code.t()
+
+  # Helpers
 
   def match_from_path(path, initial \\ {:x, [], Elixir}) do
     path
@@ -28,7 +29,7 @@ defmodule Pathex.Builder.Selector do
   # Non variable cases
   def create_getter({:tuple, index}, tail) when is_integer(index) and index >= 0 do
     quote do
-      t when is_tuple(t) and tuple_size(t) > unquote(index) ->
+      t when is_tuple(t) and (tuple_size(t) > unquote(index)) ->
         elem(t, unquote(index)) |> unquote(tail)
     end
   end

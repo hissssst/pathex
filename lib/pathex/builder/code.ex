@@ -49,11 +49,10 @@ defmodule Pathex.Builder.Code do
     {:fn, [], cases}
   end
 
-  @spec new_one_arg_pipe(Macro.t()) :: t()
-  def new_one_arg_pipe(code) do
-    x = {:x, [], Elixir}
-    code = quote(do: unquote(x) |> unquote(code))
-    %__MODULE__{vars: [x], code: code}
+  @spec new_arg_pipe(Macro.t(), [Macro.t()]) :: t()
+  def new_arg_pipe(code, [arg1 | _] = args) do
+    code = quote(do: unquote(arg1) |> unquote(code))
+    %__MODULE__{code: code, vars: args}
   end
 
   defimpl Inspect do

@@ -1,21 +1,28 @@
-defmodule Pathex.Builder.ForceSetter do
+defmodule Pathex.Builder.ForceUpdater do
 
   @moduledoc """
-  Setter which creates given path if item in path does not exist
+  Forceupdater-builder which builds function for updates in given path
   """
 
   import Pathex.Builder.Setter
-  @behaviour Pathex.Builder.Setter
+  @behaviour Pathex.Builder
 
-  @first_arg {:first_arg, [], Elixir}
-  @initial {:value_to_set, [], Elixir}
+  @structure_variable {:x, [], Elixir}
+  @default_variable {:default, [], Elixir}
+  @function_variable {:function, [], Elixir}
 
+  @doc """
+  Returns three argument code structure
+  """
   def build(combination) do
-    combination
-    |> Enum.reverse()
-    |> Enum.reduce(initial(), &reduce_into/2)
-    |> elem(0)
-    |> wrap_to_code(@first_arg, @initial)
+    %{vars: vars} = code =
+      combination
+      |> Enum.reverse()
+      |> Enum.reduce(initial(), &reduce_into/2)
+      |> elem(0)
+      |> wrap_to_code(@structure_variable, @function_variable)
+
+    %{code | vars: vars ++ [@default_variable]}
   end
 
   defp reduce_into([path_item | _] = path_items, {acc_code, acc_items}) do
@@ -26,8 +33,11 @@ defmodule Pathex.Builder.ForceSetter do
   end
 
   defp initial do
-    setfunc = quote(do: (fn _ -> unquote(@initial) end).())
-    {setfunc, @initial}
+    setfunc =
+      quote do
+        unquote(@function_variable).()
+      end
+    {setfunc, @default_variable}
   end
 
   defp create_setter({:keyword, key}, tail, {_, _, [{_, acc_items}]}) do

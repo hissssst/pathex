@@ -46,19 +46,19 @@ defmodule PathexTest do
     assert :error = view path, [1, 123, 2, 3]
   end
 
-  test "view: naive sigil: composed hard" do
-    path = ~P[1/2/:x/3/4/"y"/:z/:z/:z/1]naive
-    assert {:ok, :yay!} = view path, %{
-      1 => [1, 2, %{
-        x: [1, 2, 3, [1, 2, 3, 4, %{
-          "y" => [
-            z: [z: %{z: [1, :yay!]}],
-            z: [z: %{z: [1, :nope]}]
-          ]
-        }]]
-      }]
-    }
-  end
+# test "view: naive sigil: composed hard" do
+#   path = ~P[1/2/:x/3/4/"y"/:z/:z/:z/1]naive
+#   assert {:ok, :yay!} = view path, %{
+#     1 => [1, 2, %{
+#       x: [1, 2, 3, [1, 2, 3, 4, %{
+#         "y" => [
+#           z: [z: %{z: [1, :yay!]}],
+#           z: [z: %{z: [1, :nope]}]
+#         ]
+#       }]]
+#     }]
+#   }
+# end
 
   test "view: json sigil: binary" do
     path = ~P[hey]json
@@ -86,12 +86,12 @@ defmodule PathexTest do
     assert :error = view path, [{"hey", [1, "yay!"]}]
   end
 
-  test "view: json sigil: composed hard" do
-    path = ~P[hey/1/1/1/x/y/z]json
-    assert {:ok, "yay!"} = view path, %{
-      "hey" => [0, [0, [0, %{"x" => %{"y" => %{"z" => "yay!"}}}]]]
-    }
-  end
+# test "view: json sigil: composed hard" do
+#   path = ~P[hey/1/1/1/x/y/z]json
+#   assert {:ok, "yay!"} = view path, %{
+#     "hey" => [0, [0, [0, %{"x" => %{"y" => %{"z" => "yay!"}}}]]]
+#   }
+# end
 
   test "view: path: easy" do
     p = path 1 / :x / 3
@@ -146,9 +146,9 @@ defmodule PathexTest do
 
   test "force_set: path: tricky" do
     p = path :x / :y / :z
-    assert {:ok, %{x: %{z: 1, y: %{z: 0}}}} =   force_set p, %{x: %{z: 1}}, 0
-    assert {:ok, %{x: %{y: %{z: 0}}}} = force_set p, %{x: %{y: %{z: 1}}}, 0
-    assert {:ok, [x: [z: 1, y: %{z: 0}]]} = force_set p, [x: [z: 1]], 0
+    assert {:ok, %{x: %{z: 1, y: %{z: 0}}}} = force_set p, %{x: %{z: 1}}, 0
+    assert {:ok, %{x: %{y: %{z: 0}}}}       = force_set p, %{x: %{y: %{z: 1}}}, 0
+    assert {:ok, [x: [z: 1, y: %{z: 0}]]}   = force_set p, [x: [z: 1]], 0
     assert {:ok, [x: [y: [z: 0]]]} =
       force_set p, [x: [y: [z: 1, z: 2], y: 2], x: 2], 0
   end
@@ -171,11 +171,37 @@ defmodule PathexTest do
     assert {:ok, 1} == view p1, %{x: %{y: 1}}
   end
 
-  test "direct view" do
+  test "inline view" do
     assert {:ok, 1} == view :x / :y, %{x: %{y: 1}}
   end
 
-  test "direct set" do
+  test "inline set" do
     assert {:ok, %{x: %{y: 2}}} == set :x / :y, %{x: %{y: 1}}, 2
   end
+
+  test "inline force_set" do
+    assert {:ok, %{x: 1}} == force_set :x, %{x: 0}, 1
+    assert {:ok, %{x: 1}} == force_set :x, %{}, 1
+    assert {:ok, %{x: %{y: 1}}} == force_set :x / :y, %{}, 1
+  end
+
+  test "set: path" do
+    p = path :x / :y
+
+    assert {:ok, %{x: %{y: 2}}} == set p, %{x: %{y: 1}}, 2
+    assert :error == set p, %{x: %{z: 1}}, 2
+    assert {:ok, %{x: %{y: 2, z: 3}}} == set p, %{x: %{y: 1, z: 3}}, 2
+  end
+
+  test "set: path: composition" do
+    p1 = path :x / :y
+    p2 = path :z
+
+    p = p1 ~> p2
+
+    assert {:ok, %{x: %{y: %{z: 2}}}} == set p, %{x: %{y: %{z: 1}}}, 2
+    assert :error == set p, %{x: %{y: 1}}, 2
+    assert {:ok, %{x: %{y: %{z: 2}, z: 3}}} == set p, %{x: %{z: 3, y: %{z: 1}}}, 2
+  end
+
 end

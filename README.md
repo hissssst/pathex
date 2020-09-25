@@ -67,12 +67,12 @@ case do
     case x do
       %{"y" => res} -> {:ok, res}
       _ -> :error
-    end  
+    end
   t when is_tuple(t) and tuple_size(t) > 1 ->
     case x do
       %{"y" => res} -> {:ok, res}
       _ -> :error
-    end  
+    end
 end
 ```
 2. Paths for special specifications can be created with sigils
@@ -120,3 +120,35 @@ Pathex paths are just closures created with `fn`. Any `path` or `~P` is a macro 
 ## Contributions
 
 Welcome!
+
+## TODO
+
+[x] Pathex.force_over
+[x] Pathex.at
+[ ] default in get
+[ ] defpath macro
+```elixir
+defpath currency(:state / :currencies / x, :map)
+```
+
+[ ] match macro (Depends on mod)
+```elixir
+def func(path_match currency("USD")) do
+end
+```
+
+[ ] of macro
+```elixir
+def f(x) do
+  Pathex.of(x, %{
+    key1: path(:x / :y),
+    key2: path(:z / 1)
+  })
+end
+
+f(%{x: [y: 1], z: [1, 2]}) == %{key1: 1, key2: 2}
+```
+
+[ ] bang function
+[ ] usage example
+[ ] structure argument first

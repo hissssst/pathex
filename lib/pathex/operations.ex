@@ -7,28 +7,26 @@ defmodule Pathex.Operations do
 
   alias Pathex.Builder
   alias Builder.{
-    ForceSetter, MatchableSelector,
-    SimpleSelector, SimpleSetter, UpdateSetter
+    ForceUpdater, MatchableViewer,
+    SimpleViewer, SimpleUpdater
   }
 
-  @type name :: :get | :set | :force_set | :update
+  @type name :: :view | :force_update | :update
   @type t :: %{name() => Builder.t()}
 
   @spec from_mod(Pathex.mod()) :: t()
   def from_mod(:naive) do
     %{
-      get:       SimpleSelector,
-      set:       SimpleSetter,
-      force_set: ForceSetter,
-      update:    UpdateSetter
+      view:         SimpleViewer,
+      force_update: ForceUpdater,
+      update:       SimpleUpdater
     }
   end
   def from_mod(mod) when mod in ~w[json map]a do
     %{
-      get:       MatchableSelector,
-      set:       SimpleSetter,
-      force_set: ForceSetter,
-      update:    UpdateSetter
+      view:         MatchableViewer,
+      force_update: ForceUpdater,
+      update:       SimpleUpdater
     }
   end
   def from_mod(mod) when is_atom(mod) do

@@ -9,14 +9,17 @@ defmodule Pathex.Builder do
 
   # Formatting here looks really bad but what can I do...
   alias __MODULE__.{
-    ForceSetter, MatchableSelector, SimpleSelector, SimpleSetter, UpdateSetter
+    ForceUpdater, MatchableViewer, SimpleViewer, SimpleUpdater
   }
 
-  @type t :: ForceSetter
-  | MatchableSelector
-  | SimpleSelector
-  | SimpleSetter
-  | UpdateSetter
+  @type t :: ForceUpdater
+  | MatchableViewer
+  | SimpleViewer
+  | SimpleUpdater
+
+  # Behaviour
+
+  @callback build(Pathex.Combination.t()) :: Pathex.Builder.Code.t()
 
   # API functions
 
@@ -36,7 +39,13 @@ defmodule Pathex.Builder do
   @spec build(Pathex.Combination.t(), Operations.t()) :: Macro.t()
   def build(combination, operations) do
     operations
-    |> Enum.map(fn {key, builder} -> {key, builder.build(combination)} end)
+    |> Enum.map(fn
+      {key, builder, args} ->
+        {key, apply(builder, :build, [combination | args])}
+
+      {key, builder} ->
+        {key, apply(builder, :build, [combination])}
+    end)
     |> Code.multiple_to_fn()
   end
 

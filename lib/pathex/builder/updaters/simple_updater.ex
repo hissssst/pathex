@@ -1,20 +1,20 @@
-defmodule Pathex.Builder.SimpleSetter do
+defmodule Pathex.Builder.SimpleUpdater do
 
   @moduledoc """
-  Setter which simply sets new value in given path
+  Updater-builder which generates function for simply updates value in the given path
   """
 
   import Pathex.Builder.Setter
-  @behaviour Pathex.Builder.Setter
+  @behaviour Pathex.Builder
 
-  @first_arg {:first_arg, [], Elixir}
-  @initial {:value_to_set, [], Elixir}
+  @structure_variable {:x, [], Elixir}
+  @function_variable {:function, [], Elixir}
 
   def build(combination) do
     combination
     |> Enum.reverse()
     |> Enum.reduce(initial(), &reduce_into/2)
-    |> wrap_to_code(@first_arg, @initial)
+    |> wrap_to_code(@structure_variable, @function_variable)
   end
 
   defp reduce_into(path_items, acc) do
@@ -24,7 +24,7 @@ defmodule Pathex.Builder.SimpleSetter do
 
   defp initial do
     quote do
-      (fn _ -> unquote(@initial) end).()
+      unquote(@function_variable).()
     end
   end
 

@@ -4,6 +4,13 @@ defmodule Pathex.Common do
   Util functions for working with AST
   """
 
+  defguard is_var(t) when is_tuple(t)
+    and tuple_size(t) == 3
+    and is_atom(:erlang.element(1, t))
+    and is_list(:erlang.element(2, t))
+    and (is_atom(:erlang.element(3, t))
+    or is_nil(:erlang.element(3, t)))
+
   @typep context :: atom() | nil
 
   @spec update_variables(Macro.t(), (Macro.t() -> Macro.t()), context) :: Macro.t()
@@ -16,7 +23,7 @@ defmodule Pathex.Common do
     end)
   end
 
-  @spec detect_variables(Macro.t(), context()) :: {Macro.t(), [{atom(), list(), context()}]}
+  @spec detect_variables(Macro.t(), context()) :: [{atom(), list(), context()}]
   def detect_variables(ast, context \\ nil) do
     Macro.prewalk(ast, [], fn
       {name, ctx, ^context} = var, acc when is_atom(name) and is_list(ctx) ->
@@ -25,6 +32,7 @@ defmodule Pathex.Common do
       other, acc ->
         {other, acc}
     end)
+    |> elem(1)
   end
 
   @spec list_match(non_neg_integer(), Macro.t()) :: Macro.t()
@@ -38,11 +46,9 @@ defmodule Pathex.Common do
   end
 
   @spec pin(Macro.t()) :: Macro.t()
-  def pin(ast) do
-    case detect_variables(ast) do
-      {_, []} -> ast
-      _ -> quote(do: ^unquote(ast))
-    end
+  def pin(ast) when is_var(ast) do
+    quote(do: ^unquote(ast))
   end
+  def pin(ast), do: ast
 
 end

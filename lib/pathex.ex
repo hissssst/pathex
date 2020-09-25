@@ -5,7 +5,7 @@ defmodule Pathex do
 
   Any macro here belongs to one of two categories:
   1) Macro which creates path closure (`sigil_P/2`, `path/2`, `~>/2`)
-  2) Macro which uses path closure as path (`over/3`, `set/3`, `view/2`)
+  2) Macro which uses path closure as path (`over/3`, `set/3`, `view/2`, etc.)
 
   Path closure is a closure which takes two arguments:
   1) `Atom.t()` with operaion name
@@ -17,8 +17,10 @@ defmodule Pathex do
   alias Pathex.Parser
   alias Pathex.QuotedParser
 
+  import Pathex.Common, only: [is_var: 1]
+
   @type struct_type :: :map | :keyword | :list | :tuple
-  @type key_type :: :integer | :atom | :binary
+  @type key_type :: :integer | :viewom | :binary
 
   @type path :: [{struct_type(), any()}]
 
@@ -26,7 +28,7 @@ defmodule Pathex do
 
   @type result :: {:ok, any()} | {:error, any()} | :error
   @type t :: (
-    :get | :set | :update | :force_set,
+    Operations.name(),
     {el_structure()} | {el_structure(), any()} | {el_structure(), (any() -> any())}
   -> result())
 
@@ -44,16 +46,8 @@ defmodule Pathex do
       iex> p = path "hey" / 0
       iex> {:ok, %{"hey" => [2, [2]]}} = over p, %{"hey" => [1, [2]]}, inc
   """
-  defmacro over({:"/", _, _} = path, struct, function) do
-    path_func = build_only(path, :update, __CALLER__)
-    quote generated: true do
-      unquote(path_func).(unquote(struct), unquote(function))
-    end
-  end
-  defmacro over(path, struct, function) do
-    quote generated: true do
-      unquote(path).(:update, {unquote(struct), unquote(function)})
-    end
+  defmacro over(path, struct, func) do
+    gen(path, :update, [struct, func], __CALLER__)
   end
 
   @doc """
@@ -67,16 +61,8 @@ defmodule Pathex do
       iex> p = path "hey" / 0
       iex> {:ok, %{"hey" => [123, [2]]}} = set p, %{"hey" => [1, [2]]}, 123
   """
-  defmacro set({:"/", _, _} = path, struct, value) do
-    path_func = build_only(path, :set, __CALLER__)
-    quote generated: true do
-      unquote(path_func).(unquote(struct), unquote(value))
-    end
-  end
   defmacro set(path, struct, value) do
-    quote generated: true do
-      unquote(path).(:set, {unquote(struct), unquote(value)})
-    end
+    gen(path, :update, [struct, quote(do: fn _ -> unquote(value) end)], __CALLER__)
   end
 
   @doc """
@@ -93,16 +79,44 @@ defmodule Pathex do
       iex> p = path "hey" / 0
       iex> {:ok, %{"hey" => %{0 => 1}}} = force_set p, %{}, 1
   """
-  defmacro force_set({:"/", _, _} = path, struct, value) do
-    path_func = build_only(path, :force_set, __CALLER__)
-    quote generated: true do
-      unquote(path_func).(unquote(struct), unquote(value))
-    end
-  end
   defmacro force_set(path, struct, value) do
-    quote generated: true do
-      unquote(path).(:force_set, {unquote(struct), unquote(value)})
-    end
+    gen(path, :force_update, [struct, quote(do: fn _ -> unquote(value) end), value], __CALLER__)
+  end
+
+  @doc """
+  Macro of four arguments which applies given function
+  in the given path of given structure
+
+  If the path does not exist it creates the path favouring maps
+  when structure is unknown and inserts default value
+
+  Example:
+      iex> require Pathex; import Pathex
+      iex> x = 1
+      iex> {:ok, [0, %{x: {:xxx, 8}}]} = force_over(x / :x, [0, %{x: 8}], & {:xxx, &1}, 123)
+      iex> p = path "hey" / 0
+      iex> {:ok, %{"hey" => %{0 => 1}}} = force_over(p, %{}, fn x -> x + 1 end, 1)
+
+  Note:
+      Default "default" value is nil
+  """
+  defmacro force_over(path, struct, func, value \\ nil) do
+    gen(path, :force_update, [struct, func, value], __CALLER__)
+  end
+
+  @doc """
+  Macro returns function applyed to the value in the path
+  or error
+
+  Example:
+      iex> require Pathex; import Pathex
+      iex> x = 1
+      iex> {:ok, 9} = at x / :x, [0, %{x: 8}], fn x -> x + 1 end
+      iex> p = path "hey" / 0
+      iex> {:ok, {:here, 9}} = at(p, %{"hey" => {9, -9}}, & {:here, &1})
+  """
+  defmacro at(path, struct, func) do
+    gen(path, :view, [struct, func], __CALLER__)
   end
 
   @doc """
@@ -115,29 +129,20 @@ defmodule Pathex do
       iex> p = path "hey" / 0
       iex> {:ok, 9} = view p, %{"hey" => {9, -9}}
   """
-  defmacro view({:"/", _, _} = path, struct) do
-    path_func = build_only(path, :get, __CALLER__)
-    quote generated: true do
-      unquote(path_func).(unquote(struct))
-    end
-  end
   defmacro view(path, struct) do
-    quote generated: true do
-      unquote(path).(:get, {unquote(struct)})
-    end
+    gen(path, :view, [struct, quote(do: fn x -> x end)], __CALLER__)
   end
 
   @doc """
   Sigil for paths. Has only two modes:
   `naive` (default) and `json`.
-  Naive paths should look like `~P["string"/:atom/1]`
+  Naive paths should look like `~P["string"/:viewom/1]`
   Json paths should look like `~P[string/this_one_is_too/1/0]`
   """
   defmacro sigil_P({_, _, [string]}, mod) do
     mod = detect_mod(mod)
     string
     |> Parser.parse(mod)
-    #|> Pathex.Combination.from_suggested_path()
     |> Builder.build(Operations.from_mod(mod))
   end
 
@@ -171,32 +176,46 @@ defmodule Pathex do
   defmacro a ~> b do
     quote generated: true do
       fn
-        :get, arg ->
-          with {:ok, res} <- unquote(a).(:get, arg) do
-            unquote(b).(:get, {res})
+        :view, arg ->
+          with {:ok, res} <- unquote(a).(:view, arg) do
+            unquote(b).(:view, {res, fn x -> x end})
           end
 
-        :force_set, {struct, value} ->
+        :force_update, {struct, function, value} ->
           val =
-            case unquote(a).(:get, {struct}) do
+            case unquote(a).(:view, {struct, fn x -> x end}) do
               :error       -> %{}
               {:ok, other} -> other
             end
-          {:ok, val} = unquote(b).(:force_set, {val, value})
-          unquote(a).(:force_set, {struct, val})
+          {:ok, val} = unquote(b).(:force_update, {val, function, value})
+          unquote(a).(:force_update, {struct, fn _ -> val end, val})
 
-        cmd, {target, arg} ->
-          with(
-            {:ok, inner} <- unquote(a).(:get, {target}),
-            {:ok, inner} <- unquote(b).(cmd, {inner, arg})
-          ) do
-            unquote(a).(:set, {target, inner})
-          end
+        :update, {target, func} ->
+          unquote(a).(:update, {target, fn inner ->
+            unquote(b).(:update, {inner, func})
+            |> case do
+              {:ok, v} -> v
+              :error   -> throw :path_not_found
+            end
+          end})
       end
     end
   end
 
-  # Helper for detecring mod
+  # Helper for generating code for path operation
+  defp gen(path, op, args, _caller) when is_var(path) do
+    quote generated: true do
+      unquote(path).(unquote(op), {unquote_splicing(args)})
+    end
+  end
+  defp gen(path, op, args, caller) do
+    path_func = build_only(path, op, caller)
+    quote generated: true do
+      unquote(path_func).(unquote_splicing(args))
+    end
+  end
+
+  # Helper for detecting mod
   defp detect_mod(mod) when mod in ~w(naive map json)a, do: mod
   defp detect_mod(str) when is_binary(str), do: detect_mod('#{str}')
   defp detect_mod('json'), do: :json
@@ -205,7 +224,17 @@ defmodule Pathex do
 
   defp build_only(path, opname, caller, mod \\ :naive) do
     %{^opname => builder} = Operations.from_mod(mod)
-    path
+    case Macro.prewalk(path, & Macro.expand(&1, caller)) do
+      {{:".", _, [__MODULE__, :path]}, _, args} ->
+        args
+
+      {:path, meta, args} ->
+        __MODULE__ = Keyword.fetch!(meta, :import)
+        args
+
+      args ->
+        args
+    end
     |> QuotedParser.parse(caller, mod)
     |> Builder.build_only(builder)
   end
