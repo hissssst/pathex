@@ -25,7 +25,7 @@ state = %{
 And getter for currency amount will look like:
 
 ```elixir
-def curreny(cur) do
+def currency(cur) do
   path :user_data / :private / :wallet / cur, :map
 end
 ```
