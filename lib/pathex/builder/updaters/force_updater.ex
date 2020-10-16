@@ -4,6 +4,7 @@ defmodule Pathex.Builder.ForceUpdater do
   Forceupdater-builder which builds function for updates in given path
   """
 
+  alias Pathex.Common
   import Pathex.Builder.Setter
   @behaviour Pathex.Builder
 
@@ -15,21 +16,18 @@ defmodule Pathex.Builder.ForceUpdater do
   Returns three argument code structure
   """
   def build(combination) do
-    %{vars: vars} = code =
-      combination
-      |> Enum.reverse()
-      |> Enum.reduce(initial(), &reduce_into/2)
-      |> elem(0)
-      |> wrap_to_code(@structure_variable, @function_variable)
-
-    %{code | vars: vars ++ [@default_variable]}
+    combination
+    |> Enum.reverse()
+    |> Enum.reduce(initial(), &reduce_into/2)
+    |> elem(0)
+    |> wrap_to_code([@structure_variable, @function_variable, @default_variable])
   end
 
   defp reduce_into([path_item | _] = path_items, {acc_code, acc_items}) do
     fallback = fallback_from_acc(path_items, acc_items)
     acc_items = add_to_acc(path_item, acc_items)
     setters = Enum.flat_map(path_items, & create_setter(&1, acc_code, acc_items))
-    {{:case, [], [[do: setters ++ fallback]]}, acc_items}
+    {Common.to_case(setters ++ fallback ++ absolute_fallback()), acc_items}
   end
 
   defp initial do
@@ -47,6 +45,14 @@ defmodule Pathex.Builder.ForceUpdater do
           val |> unquote(tail)
         end)
     end
+  end
+  defp create_setter({:list, {_, _, _} = index}, tail, {_, _, [{_, acc_items}]}) do
+    extra_case =
+      quote generated: true do
+        l when is_list(l) and is_integer(unquote(index)) and (unquote(index) < 0) ->
+          [unquote(acc_items) | l]
+      end
+    extra_case ++ create_setter({:list, index}, tail)
   end
   defp create_setter(path_item, tail, _) do
     create_setter(path_item, tail)
@@ -88,6 +94,12 @@ defmodule Pathex.Builder.ForceUpdater do
     quote generated: true do
       kwd when is_list(kwd) ->
         [{unquote(key), unquote(acc)} | kwd]
+    end
+  end
+
+  defp absolute_fallback do
+    quote generated: true do
+      _ -> throw :path_not_found
     end
   end
 

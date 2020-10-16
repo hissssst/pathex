@@ -5,6 +5,7 @@ defmodule Pathex.Builder do
   """
 
   alias Pathex.Builder.Code
+  alias Pathex.Builder.Composition
   alias Pathex.Operations
 
   # Formatting here looks really bad but what can I do...
@@ -31,20 +32,16 @@ defmodule Pathex.Builder do
 
   It will look like
       iex> fn
-        :get, {struct} -> ...
-        :set, {struct, value} -> ...
+        :view, {struct} -> ...
+        :update, {struct, fun} -> ...
         ...
       end
   """
   @spec build(Pathex.Combination.t(), Operations.t()) :: Macro.t()
   def build(combination, operations) do
     operations
-    |> Enum.map(fn
-      {key, builder, args} ->
-        {key, apply(builder, :build, [combination | args])}
-
-      {key, builder} ->
-        {key, apply(builder, :build, [combination])}
+    |> Enum.map(fn {key, builder} ->
+      {key, apply(builder, :build, [combination])}
     end)
     |> Code.multiple_to_fn()
   end
@@ -57,8 +54,32 @@ defmodule Pathex.Builder do
   """
   @spec build_only(Pathex.Combination.t(), t()) :: Macro.t()
   def build_only(combination, builder) do
-    builder.build(combination)
+    combination
+    |> builder.build()
     |> Code.to_fn()
+  end
+
+  @spec build_composition([Macro.t()], atom()) :: Macro.t()
+  def build_composition(items, :"&&&") do
+    {binds, vars} = bind_items(items)
+    func =
+      vars
+      |> Composition.And.build()
+      |> Code.multiple_to_fn()
+    quote do
+      unquote_splicing(binds)
+      unquote(func)
+    end
+  end
+
+  @spec bind_items([Macro.t()]) :: {[Macro.t()], [Macro.t()]}
+  defp bind_items(items) do
+    {binds, vars, _} =
+      Enum.reduce(items, {[], [], 0}, fn item, {binds, vars, idx} ->
+        var = {:"variable_#{idx}", [], Elixir}
+        {[quote(do: unquote(var) = unquote(item)) | binds], [var | vars], idx + 1}
+      end)
+    {Enum.reverse(binds), Enum.reverse(vars)}
   end
 
 end

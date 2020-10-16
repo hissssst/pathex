@@ -4,6 +4,7 @@ defmodule Pathex.Builder.SimpleUpdater do
   Updater-builder which generates function for simply updates value in the given path
   """
 
+  alias Pathex.Common
   import Pathex.Builder.Setter
   @behaviour Pathex.Builder
 
@@ -14,12 +15,12 @@ defmodule Pathex.Builder.SimpleUpdater do
     combination
     |> Enum.reverse()
     |> Enum.reduce(initial(), &reduce_into/2)
-    |> wrap_to_code(@structure_variable, @function_variable)
+    |> wrap_to_code([@structure_variable, @function_variable])
   end
 
   defp reduce_into(path_items, acc) do
     setters = Enum.flat_map(path_items, & create_setter(&1, acc))
-    {:case, [], [[do: setters ++ fallback()]]}
+    Common.to_case(setters ++ fallback())
   end
 
   defp initial do

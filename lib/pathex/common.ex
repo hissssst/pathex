@@ -42,7 +42,9 @@ defmodule Pathex.Common do
   end
   def list_match(index, inner) do
     unders = Enum.map(1..index, fn _ -> {:_, [], Elixir} end)
-    quote(do: [unquote_splicing(unders), unquote(inner) | _])
+    quote generated: true do
+      [unquote_splicing(unders), unquote(inner) | _]
+    end
   end
 
   @spec pin(Macro.t()) :: Macro.t()
@@ -50,5 +52,12 @@ defmodule Pathex.Common do
     quote(do: ^unquote(ast))
   end
   def pin(ast), do: ast
+
+  @spec to_case([Macro.t()]) :: Macro.t()
+  def to_case(cases) do
+    quote generated: true do
+      case(do: [unquote_splicing(cases)])
+    end
+  end
 
 end

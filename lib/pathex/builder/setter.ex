@@ -46,7 +46,7 @@ defmodule Pathex.Builder.Setter do
   def create_setter({:list, {_, _, _} = index}, tail) do
     quote do
       l when is_list(l) ->
-        List.update_at(l, unquote(index), fn x -> x |> unquote(tail) end)
+      List.update_at(l, unquote(index), fn x -> x |> unquote(tail) end)
     end
   end
   def create_setter({:tuple, {_, _, _} = index}, tail) do
@@ -75,7 +75,7 @@ defmodule Pathex.Builder.Setter do
     end
   end
 
-  def wrap_to_code(code, arg1, arg2) do
+  def wrap_to_code(code, [arg1 | _] = args) do
     code =
       quote do
         try do
@@ -85,7 +85,7 @@ defmodule Pathex.Builder.Setter do
         end
       end
 
-    %Pathex.Builder.Code{code: code, vars: [arg1, arg2]}
+    %Pathex.Builder.Code{code: code, vars: args}
   end
 
 end

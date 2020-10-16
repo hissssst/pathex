@@ -7,8 +7,9 @@ defmodule Pathex.Builder.SimpleViewer do
   to not create another function call
   """
 
-  @behaviour Pathex.Builder
+  alias Pathex.Common
   import Pathex.Builder.Selector
+  @behaviour Pathex.Builder
 
   @structure_variable {:x, [], Elixir}
   @function_variable {:function, [], Elixir}
@@ -30,8 +31,10 @@ defmodule Pathex.Builder.SimpleViewer do
   end
 
   defp reduce_into(path_items, acc) do
-    getters = Enum.flat_map(path_items, & create_getter(&1, acc))
-    {:case, [], [[do: getters ++ fallback()]]}
+    path_items
+    |> Enum.flat_map(& create_getter(&1, acc))
+    |> Kernel.++(fallback())
+    |> Common.to_case()
   end
 
   defp initial do

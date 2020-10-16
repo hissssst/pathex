@@ -9,41 +9,41 @@ defmodule PathexTest do
 
   test "view: naive sigil path: binary" do
     path = ~P["hey"]naive
-    assert {:ok, true} = view path, %{"hey" => true}
-    assert :error = view path, %{}
-    assert :error = view path, %{hey: true}
-    assert :error = view path, [{:hey, true}, {"hey", true}]
-    assert :error = view path, {1, 2, 3, 4, 5}
-    assert :error = view path, [1, 2, 3, 4, 5]
+    assert {:ok, true} = view %{"hey" => true}, path
+    assert :error = view %{}, path
+    assert :error = view %{hey: true}, path
+    assert :error = view [{:hey, true}, {"hey", true}], path
+    assert :error = view {1, 2, 3, 4, 5}, path
+    assert :error = view [1, 2, 3, 4, 5], path
   end
 
   test "view: naive sigil path: atom" do
     path = ~P[:hey]naive
-    assert {:ok, true} = view path, %{hey: true}
-    assert {:ok, true} = view path, [hey: true]
-    assert :error = view path, %{"hey" => true}
-    assert :error = view path, [{"hey", true}]
+    assert {:ok, true} = view %{hey: true}, path
+    assert {:ok, true} = view [hey: true], path
+    assert :error = view %{"hey" => true}, path
+    assert :error = view [{"hey", true}], path
   end
 
   test "view: naive sigil path: integer" do
     path = ~P[1]naive
-    assert {:ok, 2} = view path, [1, 2, 3]
-    assert {:ok, 2} = view path, {1, 2, 3}
-    assert {:ok, :x} = view path, %{1 => :x}
-    assert :error = view path, [{1, :x}]
-    assert :error = view path, [0]
-    assert :error = view path, {0}
+    assert {:ok, 2}  = view [1, 2, 3], path
+    assert {:ok, 2}  = view {1, 2, 3}, path
+    assert {:ok, :x} = view %{1 => :x}, path
+    assert :error = view [{1, :x}], path
+    assert :error = view [0], path
+    assert :error = view {0}, path
   end
 
   test "view: naive sigil: composed easy" do
     path = ~P[1/:x/"y"]naive
-    assert {:ok, 123} = view path, [1, [x: %{"y" => 123}], 2, 3]
-    assert {:ok, 123} = view path, {1, [x: %{"y" => 123}], 2, 3}
-    assert {:ok, 123} = view path, %{1 => [x: %{"y" => 123}], 2 => 3}
-    assert {:ok, 123} = view path, %{1 => %{x: %{"y" => 123}}, 2 => 3}
-    assert :error = view path, [1, [x: %{y: 123}], 2, 3]
-    assert :error = view path, [1, [x: 123], 2, 3]
-    assert :error = view path, [1, 123, 2, 3]
+    assert {:ok, 123} = view [1, [x: %{"y" => 123}], 2, 3], path
+    assert {:ok, 123} = view {1, [x: %{"y" => 123}], 2, 3}, path
+    assert {:ok, 123} = view %{1 => [x: %{"y" => 123}], 2 => 3}, path
+    assert {:ok, 123} = view %{1 => %{x: %{"y" => 123}}, 2 => 3}, path
+    assert :error     = view [1, [x: %{y: 123}], 2, 3], path
+    assert :error     = view [1, [x: 123], 2, 3], path
+    assert :error     = view [1, 123, 2, 3], path
   end
 
 # test "view: naive sigil: composed hard" do
@@ -62,28 +62,28 @@ defmodule PathexTest do
 
   test "view: json sigil: binary" do
     path = ~P[hey]json
-    assert {:ok, "hello sir"} = view path, %{"hey" => "hello sir"}
-    assert :error = view path, [{"hey", "hello sir"}]
-    assert :error = view path, [hey: "this is wrong"]
+    assert {:ok, "hello sir"} = view %{"hey" => "hello sir"}, path
+    assert :error = view [{"hey", "hello sir"}], path
+    assert :error = view [hey: "this is wrong"], path
   end
 
   test "view: json sigil: integer" do
     path = ~P[1]json
-    assert {:ok, "here"} = view path, %{"1" => "here"}
-    assert {:ok, "here"} = view path, ["1", "here"]
+    assert {:ok, "here"} = view %{"1" => "here"}, path
+    assert {:ok, "here"} = view ["1", "here"], path
 
     #JSON specification does not allow integers to be map keys
-    assert :error = view path, %{1 => "here"}
-    assert :error = view path, ["here"]
-    assert :error = view path, %{}
+    assert :error = view %{1 => "here"}, path
+    assert :error = view ["here"], path
+    assert :error = view %{}, path
   end
 
   test "view: json sigil: composed easy" do
     path = ~P[hey/1]json
-    assert {:ok, "yay!"} = view path, %{"hey" => [1, "yay!"]}
-    assert :error = view path, %{"hey" => %{1 => "yay!"}}
-    assert :error = view path, %{"hey" => {1, "yay!"}}
-    assert :error = view path, [{"hey", [1, "yay!"]}]
+    assert {:ok, "yay!"} = view %{"hey" => [1, "yay!"]}, path
+    assert :error = view %{"hey" => %{1 => "yay!"}}, path
+    assert :error = view %{"hey" => {1, "yay!"}}, path
+    assert :error = view [{"hey", [1, "yay!"]}], path
   end
 
 # test "view: json sigil: composed hard" do
@@ -94,103 +94,103 @@ defmodule PathexTest do
 # end
 
   test "view: path: easy" do
-    p = path 1 / :x / 3
-    assert {:ok, 0} = view p, %{1 => [x: [1, 2, 3, 0]]}
-    assert :error   = view p, %{1 => [x: [1, 2, 3]]}
-    assert {:ok, 0} = view p, {1, %{x: %{3 => 0}}}
-    assert :error   = view p, [{1, %{x: [1, 2, 3, 4]}}]
-    assert :error   = view p, %{1 => %{x: [{3, 1}]}}
+    path = path 1 / :x / 3
+    assert {:ok, 0} = view %{1 => [x: [1, 2, 3, 0]]}, path
+    assert :error   = view %{1 => [x: [1, 2, 3]]}, path
+    assert {:ok, 0} = view {1, %{x: %{3 => 0}}}, path
+    assert :error   = view [{1, %{x: [1, 2, 3, 4]}}], path
+    assert :error   = view %{1 => %{x: [{3, 1}]}}, path
   end
 
   test "view: path: with variable" do
     variable = :x
     p = path :x / variable
-    assert {:ok, 1} = view p, %{x: %{x: 1}}
-    assert {:ok, 1} = view p, %{variable => %{variable => 1}}
-    assert :error   = view p, %{{:variable, [], Elixir} => %{x: 1}}
-    assert :error   = view p, %{{:variable, [], nil} => %{x: 1}}
+    assert {:ok, 1} = view %{x: %{x: 1}}, p
+    assert {:ok, 1} = view %{variable => %{variable => 1}}, p
+    assert :error   = view %{{:variable, [], Elixir} => %{x: 1}}, p
+    assert :error   = view %{{:variable, [], nil} => %{x: 1}}, p
     variable = :y
-    assert {:ok, 1} = view p, %{x: %{x: 1}}
-    assert :error   = view p, %{x: %{y: 1}}
-    assert :error   = view p, %{y: %{y: 1}}
-    assert :error   = view p, %{variable => %{variable => 1}}
+    assert {:ok, 1} = view %{x: %{x: 1}}, p
+    assert :error   = view %{x: %{y: 1}}, p
+    assert :error   = view %{y: %{y: 1}}, p
+    assert :error   = view %{variable => %{variable => 1}}, p
   end
 
   test "view: path: variable no index" do
     variable = 1
     p = path variable / :x
-    assert {:ok, 0} = view p, %{1 => [x: 0]}
-    assert :error   = view p, [{1, [x: 0]}]
-    assert {:ok, 0} = view p, [1, [x: 0]]
-    assert {:ok, 0} = view p, {1, [x: 0]}
+    assert {:ok, 0} = view %{1 => [x: 0]}, p
+    assert :error   = view [{1, [x: 0]}], p
+    assert {:ok, 0} = view [1, [x: 0]], p
+    assert {:ok, 0} = view {1, [x: 0]}, p
   end
 
   test "force_set: path: easy" do
     p = path :x / :y / 1
-    assert {:ok, %{x: %{y: %{1 => 0}}}} == force_set p, %{}, 0
-    assert {:ok, %{x: %{y: %{1 => 0}}}} == force_set p, %{x: %{}}, 0
-    assert {:ok, %{x: %{y: %{1 => 0}}}} == force_set p, %{x: %{y: %{}}}, 0
+    assert {:ok, %{x: %{y: %{1 => 0}}}} == force_set %{}, p, 0
+    assert {:ok, %{x: %{y: %{1 => 0}}}} == force_set %{x: %{}}, p, 0
+    assert {:ok, %{x: %{y: %{1 => 0}}}} == force_set %{x: %{y: %{}}}, p, 0
 
-    assert {:ok, %{x: %{y: {1, 0}}}}    == force_set p, %{x: %{y: {1, 2}}}, 0
-    assert {:ok, %{x: %{y: [1, 0]}}}    == force_set p, %{x: %{y: [1, 2]}}, 0
-    assert {:ok, %{x: %{y: [0]}}}       == force_set p, %{x: %{y: []}}, 0
-    assert {:ok, %{x: %{y: {0}}}}       == force_set p, %{x: %{y: {}}}, 0
+    assert {:ok, %{x: %{y: {1, 0}}}}    == force_set %{x: %{y: {1, 2}}}, p, 0
+    assert {:ok, %{x: %{y: [1, 0]}}}    == force_set %{x: %{y: [1, 2]}}, p, 0
+    assert {:ok, %{x: %{y: [0]}}}       == force_set %{x: %{y: []}}, p, 0
+    assert {:ok, %{x: %{y: {0}}}}       == force_set %{x: %{y: {}}}, p, 0
   end
 
   test "force_set: path: list append" do
     p = path :x / :y / -1
-    assert {:ok, %{x: %{y: [0, 1, 2]}}}  == force_set p, %{x: %{y: [1, 2]}}, 0
-    assert {:ok, %{x: %{y: [0]}}}        == force_set p, %{x: %{y: []}}, 0
-    assert {:ok, %{x: %{y: %{-1 => 0}}}} == force_set p, %{x: %{}}, 0
+    assert {:ok, %{x: %{y: [0, 1, 2]}}}  == force_set %{x: %{y: [1, 2]}}, p, 0
+    assert {:ok, %{x: %{y: [0]}}}        == force_set %{x: %{y: []}}, p, 0
+    assert {:ok, %{x: %{y: %{-1 => 0}}}} == force_set %{x: %{}}, p, 0
   end
 
   test "force_set: path: tricky" do
     p = path :x / :y / :z
-    assert {:ok, %{x: %{z: 1, y: %{z: 0}}}} = force_set p, %{x: %{z: 1}}, 0
-    assert {:ok, %{x: %{y: %{z: 0}}}}       = force_set p, %{x: %{y: %{z: 1}}}, 0
-    assert {:ok, [x: [z: 1, y: %{z: 0}]]}   = force_set p, [x: [z: 1]], 0
+    assert {:ok, %{x: %{z: 1, y: %{z: 0}}}} = force_set %{x: %{z: 1}}, p, 0
+    assert {:ok, %{x: %{y: %{z: 0}}}}       = force_set %{x: %{y: %{z: 1}}}, p, 0
+    assert {:ok, [x: [z: 1, y: %{z: 0}]]}   = force_set [x: [z: 1]], p, 0
     assert {:ok, [x: [y: [z: 0]]]} =
-      force_set p, [x: [y: [z: 1, z: 2], y: 2], x: 2], 0
+      force_set [x: [y: [z: 1, z: 2], y: 2], x: 2], p, 0
   end
 
   test "force_set: path: composition" do
     p1 = path :x
     p2 = path :y
     p = p1 ~> p2
-    assert {:ok, %{x: %{y: 0}}} = force_set p, %{}, 0
-    assert {:ok, %{x: %{y: 0}}} = force_set p, %{x: %{}}, 0
-    assert {:ok, %{x: %{y: 0}}} = force_set p, %{x: %{y: 1}}, 0
+    assert {:ok, %{x: %{y: 0}}} = force_set %{}, p, 0
+    assert {:ok, %{x: %{y: 0}}} = force_set %{x: %{}}, p, 0
+    assert {:ok, %{x: %{y: 0}}} = force_set %{x: %{y: 1}}, p, 0
 
-    assert {:ok, [x: %{y: 0}]}  = force_set p, [], 0
-    assert {:ok, [x: [y: 0]]}   = force_set p, [x: []], 0
-    assert {:ok, [x: [y: 0]]}   = force_set p, [x: [y: 1]], 0
+    assert {:ok, [x: %{y: 0}]}  = force_set [], p, 0
+    assert {:ok, [x: [y: 0]]}   = force_set [x: []], p, 0
+    assert {:ok, [x: [y: 0]]}   = force_set [x: [y: 1]], p, 0
   end
 
   test "view: map path" do
     p1 = path :x / :y, :map
-    assert {:ok, 1} == view p1, %{x: %{y: 1}}
+    assert {:ok, 1} == view %{x: %{y: 1}}, p1
   end
 
   test "inline view" do
-    assert {:ok, 1} == view :x / :y, %{x: %{y: 1}}
+    assert {:ok, 1} == view %{x: %{y: 1}}, path(:x / :y)
   end
 
   test "inline set" do
-    assert {:ok, %{x: %{y: 2}}} == set :x / :y, %{x: %{y: 1}}, 2
+    assert {:ok, %{x: %{y: 2}}} == set %{x: %{y: 1}}, path(:x / :y), 2
   end
 
   test "inline force_set" do
-    assert {:ok, %{x: 1}} == force_set :x, %{x: 0}, 1
-    assert {:ok, %{x: 1}} == force_set :x, %{}, 1
-    assert {:ok, %{x: %{y: 1}}} == force_set :x / :y, %{}, 1
+    assert {:ok, %{x: 1}} == force_set %{x: 0}, path(:x), 1
+    assert {:ok, %{x: 1}} == force_set %{}, path(:x), 1
+    assert {:ok, %{x: %{y: 1}}} == force_set %{}, path(:x / :y), 1
   end
 
   test "set: path" do
     p = path :x / :y
 
-    assert {:ok, %{x: %{y: 2}}} == set p, %{x: %{y: 1}}, 2
-    assert :error == set p, %{x: %{z: 1}}, 2
-    assert {:ok, %{x: %{y: 2, z: 3}}} == set p, %{x: %{y: 1, z: 3}}, 2
+    assert {:ok, %{x: %{y: 2}}} == set %{x: %{y: 1}}, p, 2
+    assert :error == set %{x: %{z: 1}}, p, 2
+    assert {:ok, %{x: %{y: 2, z: 3}}} == set %{x: %{y: 1, z: 3}}, p, 2
   end
 
   test "set: path: composition" do
@@ -199,9 +199,15 @@ defmodule PathexTest do
 
     p = p1 ~> p2
 
-    assert {:ok, %{x: %{y: %{z: 2}}}} == set p, %{x: %{y: %{z: 1}}}, 2
-    assert :error == set p, %{x: %{y: 1}}, 2
-    assert {:ok, %{x: %{y: %{z: 2}, z: 3}}} == set p, %{x: %{z: 3, y: %{z: 1}}}, 2
+    assert {:ok, %{x: %{y: %{z: 2}}}} == set %{x: %{y: %{z: 1}}}, p, 2
+    assert :error == set %{x: %{y: 1}}, p, 2
+    assert {:ok, %{x: %{y: %{z: 2}, z: 3}}} == set %{x: %{z: 3, y: %{z: 1}}}, p, 2
+  end
+
+  test "tricky path" do
+    x = :x
+    p = path {:x, [], nil}
+    assert {:ok, 1} = view(%{{:x, [], nil} => 1, :x => 2}, p)
   end
 
 end

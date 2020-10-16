@@ -20,6 +20,9 @@ defmodule Pathex.Builder.Code do
     code: Macro.t(),
   }
 
+  @doc """
+  Converts code structure to quoted fn-closure
+  """
   @spec to_fn(t()) :: Macro.t()
   def to_fn(%__MODULE__{vars: vars, code: code}) do
     quote generated: true do
@@ -29,6 +32,9 @@ defmodule Pathex.Builder.Code do
     end
   end
 
+  @doc """
+  Converts code structure to quoted def-statement
+  """
   @spec to_def(t(), atom()) :: Macro.t()
   def to_def(%__MODULE__{vars: vars, code: code}, name) do
     quote generated: true do
@@ -38,7 +44,10 @@ defmodule Pathex.Builder.Code do
     end
   end
 
-  @spec multiple_to_fn([{atom(), t()}]) :: Macro.t()
+  @doc """
+  Converts code structures to quoted fn-statement with multiple clauses
+  """
+  @spec multiple_to_fn([{atom(), t()}] | %{atom() => t()}) :: Macro.t()
   def multiple_to_fn(codes) do
     cases = Enum.flat_map(codes, fn {key, %{vars: vars, code: code}} ->
       quote generated: true do
@@ -49,10 +58,22 @@ defmodule Pathex.Builder.Code do
     {:fn, [], cases}
   end
 
+  @doc """
+  Converts quoted code with list of quoted vars to
+  piped %Code{} with first arg piping into quoted code
+  """
   @spec new_arg_pipe(Macro.t(), [Macro.t()]) :: t()
   def new_arg_pipe(code, [arg1 | _] = args) do
     code = quote(do: unquote(arg1) |> unquote(code))
     %__MODULE__{code: code, vars: args}
+  end
+
+  @doc """
+  Simply creates new Code structure
+  """
+  @spec new(Macro.t(), [Macro.t()]) :: t()
+  def new(code, vars) do
+    %__MODULE__{code: code, vars: vars}
   end
 
   defimpl Inspect do

@@ -1,14 +1,14 @@
 defmodule Pathex.Operations do
 
   @moduledoc """
-  Module for working with modificators for paths
+  Module for working with modifiers for paths
   Like :naive, :json, :map
   """
 
   alias Pathex.Builder
   alias Builder.{
     ForceUpdater, MatchableViewer,
-    SimpleViewer, SimpleUpdater
+    SimpleUpdater, SimpleViewer
   }
 
   @type name :: :view | :force_update | :update
@@ -30,7 +30,15 @@ defmodule Pathex.Operations do
     }
   end
   def from_mod(mod) when is_atom(mod) do
-    raise ArgumentError, "Modificator #{inspect mod} doesn't exist"
+    raise ArgumentError, "Modificator #{mod} is not supported"
   end
+
+  def filter_combination(combination, mod) do
+    Enum.map(combination, & filter_one(mod, &1))
+  end
+
+  defp filter_one(:naive, c), do: c
+  defp filter_one(:map, c), do: Keyword.take(c, [:map])
+  defp filter_one(:json, c), do: Keyword.take(c, [:map, :list])
 
 end
