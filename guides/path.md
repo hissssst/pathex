@@ -5,7 +5,7 @@ This page describes what a `Pathex.t()` is and how to create and use one
 ## Basic
 
 * Create: As described in [README](README.md) and `Pathex` simple paths can be created with
-`Pathex.path/2` and `Pathex.sigil_P/2` macroses
+`Pathex.path/2` and `Pathex.sigil_P/2` macros
 
 * Use: This paths then can be called using macro-helpers from `Pathex` like `Pathex.view/2` or `Pathex.force_set/3`
 

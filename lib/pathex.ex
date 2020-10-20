@@ -1,7 +1,7 @@
 defmodule Pathex do
 
   @moduledoc """
-  Main module. Use it inside your project to call Pathex macroses
+  Main module. Use it inside your project to call Pathex macros
 
   To use it just insert
   ```elixir
@@ -17,7 +17,7 @@ defmodule Pathex do
   > Note:
   > There is no `__using__/2` macro avaliable here
   > because it would be better to explicitly define that the
-  > `Pathex` is used and what macroses are exported
+  > `Pathex` is used and what macros are exported
 
   Any macro here belongs to one of two categories:
   1. Macro which creates path closure (`sigil_P/2`, `path/2`, `~>/2`)

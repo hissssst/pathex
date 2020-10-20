@@ -39,7 +39,7 @@ import Pathex, only: [path: 1, path: 2, "~>": 2]
 ```
 
 > Note:
-> There is no `__using__/2` macro since it's better to explicitly define what macroses will be exported
+> There is no `__using__/2` macro since it's better to explicitly define what macros will be exported
 
 2. You need to create the path which defines the path to the item in elixir structure you want to get:
 ```elixir
@@ -57,7 +57,7 @@ This creates closure with `fn` which can get, set and update values in this path
         name: "hissssst",
         private: %{
           phone: "123-456-789",
-          adressess: [
+          addresses: [
              [city: "City", street: "6th avenue", mail_index: 123456]
           ]
         }
