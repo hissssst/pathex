@@ -1,4 +1,4 @@
-defmodule Pathex.Builder.Selector do
+defmodule Pathex.Builder.Viewer do
 
   @moduledoc """
   Module with common functions for viewers

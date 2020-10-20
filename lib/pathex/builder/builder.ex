@@ -20,7 +20,12 @@ defmodule Pathex.Builder do
 
   # Behaviour
 
-  @callback build(Pathex.Combination.t()) :: Pathex.Builder.Code.t()
+  @doc """
+  Implementation takes combination for path-closure and
+  returns code structure to be built into some case of
+  path-closure
+  """
+  @callback build(Pathex.Combination.t()) :: Code.t()
 
   # API functions
 
@@ -59,6 +64,10 @@ defmodule Pathex.Builder do
     |> Code.to_fn()
   end
 
+  @doc """
+  This function creates quoted path-closure which is a composition
+  of multiple quoted paths
+  """
   @spec build_composition([Macro.t()], atom()) :: Macro.t()
   def build_composition(items, :"&&&") do
     {binds, vars} = bind_items(items)
@@ -71,8 +80,21 @@ defmodule Pathex.Builder do
       unquote(func)
     end
   end
+  def build_composition(items, :"|||") do
+    {binds, vars} = bind_items(items)
+    func =
+      vars
+      |> Composition.Or.build()
+      |> Code.multiple_to_fn()
+    quote do
+      unquote_splicing(binds)
+      unquote(func)
+    end
+  end
 
-  @spec bind_items([Macro.t()]) :: {[Macro.t()], [Macro.t()]}
+  # Returns bindings for variables which works like
+  # quote's bind_quoted
+  @spec bind_items(vars :: [Macro.t()]) :: {binds :: [Macro.t()], vars :: [Macro.t()]}
   defp bind_items(items) do
     {binds, vars, _} =
       Enum.reduce(items, {[], [], 0}, fn item, {binds, vars, idx} ->

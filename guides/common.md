@@ -42,7 +42,7 @@ With this you can set, get and update value in state and it's better than
     %{user_data: %{private: %{wallet: %{^cur => _}}}} ->
       put_in ..., amount
     %{user_data: %{private: %{wallet: %{}}}} ->
-      put_in ..., %{^cur => amount}
+      put_in ..., %{cur => amount}
     ...
   end
   ```

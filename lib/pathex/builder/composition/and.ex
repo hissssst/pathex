@@ -1,5 +1,10 @@
 defmodule Pathex.Builder.Composition.And do
 
+  @moduledoc """
+  This builder builds composition for `&&&` operator
+  """
+
+  @behaviour Pathex.Builder.Composition
   alias Pathex.Builder.Code
 
   def build(items) do
@@ -11,9 +16,9 @@ defmodule Pathex.Builder.Composition.And do
   end
 
   defp build_view([head | tail]) do
-    ret       = {:x, [], Elixir}
-    structure = {:input_struct, [], Elixir}
-    func      = {:func, [], Elixir}
+    ret        = {:x, [], Elixir}
+    structure  = {:input_struct, [], Elixir}
+    func       = {:func, [], Elixir}
     first_case = to_view(head, ret, structure, func)
 
     [first_case | Enum.map(tail, & to_view(&1, quote(do: ^unquote(ret)), structure, func))]
@@ -22,9 +27,9 @@ defmodule Pathex.Builder.Composition.And do
   end
 
   defp build_update([head | tail]) do
-    ret       = {:x, [], Elixir}
-    structure = {:input_struct, [], Elixir}
-    func      = {:func, [], Elixir}
+    ret        = {:x, [], Elixir}
+    structure  = {:input_struct, [], Elixir}
+    func       = {:func, [], Elixir}
     first_case = to_update(head, ret, structure, func)
 
     [first_case | Enum.map(tail, & to_update(&1, ret, ret, func))]
@@ -33,10 +38,10 @@ defmodule Pathex.Builder.Composition.And do
   end
 
   defp build_force_update([head | tail]) do
-    ret       = {:x, [], Elixir}
-    structure = {:input_struct, [], Elixir}
-    func      = {:func, [], Elixir}
-    default   = {:default, [], Elixir}
+    ret        = {:x, [], Elixir}
+    structure  = {:input_struct, [], Elixir}
+    func       = {:func, [], Elixir}
+    default    = {:default, [], Elixir}
     first_case = to_force_update(head, ret, structure, func, default)
 
     [first_case | Enum.map(tail, & to_force_update(&1, ret, ret, func, default))]
@@ -46,9 +51,7 @@ defmodule Pathex.Builder.Composition.And do
 
   defp to_with(cases, ret) do
     quote do
-      with(
-        unquote_splicing(cases)
-      ) do
+      with unquote_splicing(cases) do
         {:ok, unquote(ret)}
       else
         _ -> :error

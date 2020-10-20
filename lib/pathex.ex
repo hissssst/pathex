@@ -487,32 +487,25 @@ defmodule Pathex do
       iex> require Pathex; import Pathex
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
-      iex> ap = p1 ||| p2
-      iex> {:ok, 1} = view %{x: %{y: 1}, a: [b: 2]}, ap
-      iex> {:ok, 2} = view %{x: 1, a: [b: 2]}, ap
-      iex> {:ok, %{x: %{y: 2}, a: [b: 1]}} = set %{x: %{y: 1}, a: [b: 1]}, ap, 2
-      iex> {:ok, %{x: %{y: 2}}} = force_set %{}, ap, 2
+      iex> op = p1 ||| p2
+      iex> {:ok, 1} = view %{x: %{y: 1}, a: [b: 2]}, op
+      iex> {:ok, 2} = view %{x: 1, a: [b: 2]}, op
+      iex> {:ok, %{x: %{y: 2}, a: [b: 1]}} = set %{x: %{y: 1}, a: [b: 1]}, op, 2
+      iex> {:ok, %{x: %{y: 2}}} = force_set %{}, op, 2
+      iex> {:ok, %{x: %{}, a: [b: 1]}} = force_set %{x: %{y: 1}, a: [b: 1]}, op, 2
   """
   defmacro a ||| b do
-    quote generated: true, bind_quoted: [a: a, b: b] do
-      fn
-        :view, {input_struct, func} ->
-          with :error <- a.(:view, {input_struct, func}) do
-            b.(:view, {input_struct, func})
-          end
+    code =
+      {:"|||", [], [a, b]}
+      |> QuotedParser.parse_composition(:"|||")
+      |> Builder.build_composition(:"|||")
+      |> set_generated()
 
-        :update, {input_struct, func} ->
-          with :error <- a.(:update, {input_struct, func}) do
-            b.(:update, {input_struct, func})
-          end
+    # code
+    # |> Macro.to_string()
+    # |> IO.puts
 
-        :force_update, {input_struct, func, default} ->
-          with :error <- a.(:force_update, {input_struct, func, default}) do
-            b.(:force_update, {input_struct, func, default})
-          end
-      end
-    end
-    |> set_generated()
+    code
   end
 
   # Helper for generating code for path operation
@@ -583,11 +576,11 @@ defmodule Pathex do
       {func, arity} = env.function || {:nofunc, 0}
       stacktrace = [{env.module, func, arity, [file: '#{env.file}', line: env.line]}]
       """
-      This path will generate too many clauses, and therefore will slow down the compilation
-      and increase amount of generated code. Size of current combination is #{size} while suggested
-      size is #{@maximum_combination_size}
+      This path will generate too many clauses, and therefore will slow down
+      the compilation and increase amount of generated code. Size of current
+      combination is #{size} while suggested size is #{@maximum_combination_size}
 
-      We would suggest you to split this closure in different paths with with `Pathex.~>/2`
+      It would be better to split this closure in different paths with `Pathex.~>/2`
       Or change the modifier to one which generates less code: `:map` or `:json`
       """
       |> IO.warn(stacktrace)

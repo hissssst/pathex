@@ -1,7 +1,7 @@
 defmodule Pathex.MixProject do
   use Mix.Project
 
-  @version "1.0.0"
+  @version "1.0.1"
 
   def project do
     [
@@ -85,7 +85,7 @@ defmodule Pathex.MixProject do
         Pathex.Parser
       ],
       "Viewers generation": [
-        Pathex.Builder.Selector,
+        Pathex.Builder.Viewer,
         Pathex.Builder.MatchableViewer,
         Pathex.Builder.SimpleViewer
       ],
@@ -93,6 +93,11 @@ defmodule Pathex.MixProject do
         Pathex.Builder.Setter,
         Pathex.Builder.ForceUpdater,
         Pathex.Builder.SimpleUpdater
+      ],
+      "Compostitions generation": [
+        Pathex.Builder.Composition,
+        Pathex.Builder.Composition.And,
+        Pathex.Builder.Composition.Or,
       ],
       "Utilities": [
         Pathex.Common

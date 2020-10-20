@@ -15,7 +15,7 @@ This page describes what a `Pathex.t()` is and how to create and use one
 
 Every path-closure is a closure of two arguments:
 * Operation name (atom)
-* Operation arguments, tuple which size depends on an operations
+* Operation arguments, tuple which size depends on an operation
 
 Currently every path-closure has 3 operations:
 ```elixir

@@ -16,6 +16,10 @@ For example setting the value in structure with Pathex is `5-10x` faster than `F
 
 > You can checkout benchmarks at https://github.com/hissssst/pathex_bench
 
+## Complete documentation
+
+You can find complete documentation with examples, howto's, guides as https://hexdocs.pm/pathex
+
 ## Installation
 
 ```elixir

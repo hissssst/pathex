@@ -14,6 +14,10 @@ defmodule Pathex.Operations do
   @type name :: :view | :force_update | :update
   @type t :: %{name() => Builder.t()}
 
+  @doc """
+  This functions returns map of builders for each
+  specified modifier
+  """
   @spec from_mod(Pathex.mod()) :: t()
   def from_mod(:naive) do
     %{
@@ -33,6 +37,7 @@ defmodule Pathex.Operations do
     raise ArgumentError, "Modificator #{mod} is not supported"
   end
 
+  @spec filter_combination(Pathex.Combination.t(), Pathex.mod()) :: Pathex.Combination.t()
   def filter_combination(combination, mod) do
     Enum.map(combination, & filter_one(mod, &1))
   end

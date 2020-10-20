@@ -5,7 +5,7 @@ defmodule Pathex.Builder.MatchableViewer do
   """
 
   alias Pathex.Common
-  import Pathex.Builder.Selector
+  import Pathex.Builder.Viewer
   @behaviour Pathex.Builder
 
   @structure_variable {:x, [], Elixir}
