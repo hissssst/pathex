@@ -26,7 +26,7 @@ defmodule Pathex.Builder.MatchableViewer do
     x = {:x, [], Elixir}
     {:ok, match} = match_from_path(path, x)
     quote do
-      unquote(match) -> {:ok, unquote(x)}
+      unquote(match) -> {:ok, unquote(@function_variable).(unquote(x))}
     end
   end
 

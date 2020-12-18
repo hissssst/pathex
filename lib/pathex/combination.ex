@@ -73,4 +73,8 @@ defmodule Pathex.Combination do
     end)
   end
 
+  def size(combination) do
+    Enum.reduce(combination, 1, & length(&1) * &2)
+  end
+
 end

@@ -91,6 +91,17 @@ defmodule Pathex.Builder do
       unquote(func)
     end
   end
+  def build_composition(items, :"~>") do
+    {binds, vars} = bind_items(items)
+    func =
+      vars
+      |> Composition.Concat.build()
+      |> Code.multiple_to_fn()
+    quote do
+      unquote_splicing(binds)
+      unquote(func)
+    end
+  end
 
   # Returns bindings for variables which works like
   # quote's bind_quoted

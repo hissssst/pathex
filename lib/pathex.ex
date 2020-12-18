@@ -28,6 +28,7 @@ defmodule Pathex do
   alias Pathex.Operations
   alias Pathex.Parser
   alias Pathex.QuotedParser
+  alias Pathex.Combination
 
   @typep update_args :: {pathex_compatible_structure(), (any() -> any())}
   @typep force_update_args :: {pathex_compatible_structure(), (any() -> any()), any()}
@@ -376,34 +377,51 @@ defmodule Pathex do
       iex> {:ok, 1} = view %{x: [y: [a: [a: 0, b: 1]]]}, composed_path
   """
   defmacro a ~> b do
-    quote generated: true, bind_quoted: [a: a, b: b] do
-      fn
-        :view, {input_struct, func} ->
-          with {:ok, res} <- a.(:view, {input_struct, func}) do
-            b.(:view, {res, func})
-          end
+    {:"~>", [], [a, b]}
+    |> QuotedParser.parse_composition(:"~>")
+    |> Builder.build_composition(:"~>")
+    |> set_generated()
+  end
 
-        :force_update, {input_struct, function, value} ->
-          with {:ok, other} <- b.(:force_update, {%{}, function, value}) do
-            a.(:force_update, {input_struct, fn v ->
-              b.(:force_update, {v, function, value})
-              |> case do
-                {:ok, v} -> v
-                :error   -> throw :path_not_found
-              end
-            end, other})
-          end
+  @doc """
+  Creates composition of two paths which has some inspiration from logical `and`
 
-        :update, {input_struct, func} ->
-          a.(:update, {input_struct, fn inner ->
-            b.(:update, {inner, func})
-            |> case do
-              {:ok, v} -> v
-              :error   -> throw :path_not_found
-            end
-          end})
-      end
-    end
+  Example:
+      iex> require Pathex; import Pathex
+      iex> p1 = path :x / :y
+      iex> p2 = path :a / :b
+      iex> ap = p1 &&& p2
+      iex> {:ok, 1} = view %{x: %{y: 1}, a: [b: 1]}, ap
+      iex> :error = view %{x: %{y: 1}, a: [b: 2]}, ap
+      iex> {:ok, %{x: %{y: 2}, a: [b: 2]}} = set %{x: %{y: 1}, a: [b: 1]}, ap, 2
+      iex> {:ok, %{x: %{y: 2}, a: %{b: 2}}} = force_set %{}, ap, 2
+  """
+  # This code is generated with experimental composition generator
+  defmacro a &&& b do
+    {:"&&&", [], [a, b]}
+    |> QuotedParser.parse_composition(:"&&&")
+    |> Builder.build_composition(:"&&&")
+    |> set_generated()
+  end
+
+  @doc """
+  Creates composition of two paths which has some inspiration from logical `or`
+
+  Example:
+      iex> require Pathex; import Pathex
+      iex> p1 = path :x / :y
+      iex> p2 = path :a / :b
+      iex> op = p1 ||| p2
+      iex> {:ok, 1} = view %{x: %{y: 1}, a: [b: 2]}, op
+      iex> {:ok, 2} = view %{x: 1, a: [b: 2]}, op
+      iex> {:ok, %{x: %{y: 2}, a: [b: 1]}} = set %{x: %{y: 1}, a: [b: 1]}, op, 2
+      iex> {:ok, %{x: %{y: 2}}} = force_set %{}, op, 2
+      iex> {:ok, %{x: %{}, a: [b: 1]}} = force_set %{x: %{y: 1}, a: [b: 1]}, op, 2
+  """
+  defmacro a ||| b do
+    {:"|||", [], [a, b]}
+    |> QuotedParser.parse_composition(:"|||")
+    |> Builder.build_composition(:"|||")
     |> set_generated()
   end
 
@@ -417,6 +435,7 @@ defmodule Pathex do
       iex> pa = alongside [p1, p2]
       iex> {:ok, [1, 2]} = view(%{x: 1, y: 2}, pa)
       iex> {:ok, %{x: 3, y: 3}} = set(%{x: 1, y: 2}, pa, 3)
+      iex> :error = set(%{x: 1}, pa, 3)
       iex> {:ok, %{x: 1, y: 1}} = force_set(%{}, pa, 1)
   """
   defmacro alongside(list) do
@@ -452,62 +471,6 @@ defmodule Pathex do
     |> set_generated()
   end
 
-  @doc """
-  Creates composition of two paths which has some inspiration from logical `and`
-
-  Example:
-      iex> require Pathex; import Pathex
-      iex> p1 = path :x / :y
-      iex> p2 = path :a / :b
-      iex> ap = p1 &&& p2
-      iex> {:ok, 1} = view %{x: %{y: 1}, a: [b: 1]}, ap
-      iex> :error = view %{x: %{y: 1}, a: [b: 2]}, ap
-      iex> {:ok, %{x: %{y: 2}, a: [b: 2]}} = set %{x: %{y: 1}, a: [b: 1]}, ap, 2
-      iex> {:ok, %{x: %{y: 2}, a: %{b: 2}}} = force_set %{}, ap, 2
-  """
-  # This code is generated with experimental composition generator
-  defmacro a &&& b do
-    code =
-      {:"&&&", [], [a, b]}
-      |> QuotedParser.parse_composition(:"&&&")
-      |> Builder.build_composition(:"&&&")
-      |> set_generated()
-
-    # code
-    # |> Macro.to_string()
-    # |> IO.puts
-
-    code
-  end
-
-  @doc """
-  Creates composition of two paths which has some inspiration from logical `or`
-
-  Example:
-      iex> require Pathex; import Pathex
-      iex> p1 = path :x / :y
-      iex> p2 = path :a / :b
-      iex> op = p1 ||| p2
-      iex> {:ok, 1} = view %{x: %{y: 1}, a: [b: 2]}, op
-      iex> {:ok, 2} = view %{x: 1, a: [b: 2]}, op
-      iex> {:ok, %{x: %{y: 2}, a: [b: 1]}} = set %{x: %{y: 1}, a: [b: 1]}, op, 2
-      iex> {:ok, %{x: %{y: 2}}} = force_set %{}, op, 2
-      iex> {:ok, %{x: %{}, a: [b: 1]}} = force_set %{x: %{y: 1}, a: [b: 1]}, op, 2
-  """
-  defmacro a ||| b do
-    code =
-      {:"|||", [], [a, b]}
-      |> QuotedParser.parse_composition(:"|||")
-      |> Builder.build_composition(:"|||")
-      |> set_generated()
-
-    # code
-    # |> Macro.to_string()
-    # |> IO.puts
-
-    code
-  end
-
   # Helper for generating code for path operation
   # Special case for inline paths
   defp gen({:path, _, [path]}, op, args, caller) do
@@ -526,14 +489,14 @@ defmodule Pathex do
   end
 
   # Helper for generating raising functions
+  @spec bang(Macro.t(), binary()) :: Macro.t()
   defp bang(quoted, err_str \\ "Coundn't find element in given path") do
-    quote do
+    quote generated: true do
       case unquote(quoted) do
         {:ok, value} -> value
         :error -> raise Pathex.Error, unquote(err_str)
       end
     end
-    |> set_generated()
   end
 
   # Helper for detecting mod
@@ -549,9 +512,13 @@ defmodule Pathex do
       {{:".", _, [__MODULE__, :path]}, _, args} ->
         args
 
-      {:path, meta, args} ->
-        __MODULE__ = Keyword.fetch!(meta, :import)
-        args
+      {:path, meta, args} = full ->
+        case Keyword.fetch(meta, :import) do
+          {:ok, __MODULE__} ->
+            args
+          _ ->
+            full
+        end
 
       args ->
         args
@@ -571,7 +538,7 @@ defmodule Pathex do
   # This function raises warning if combination will lead to very big closure
   @maximum_combination_size 128
   defp assert_combination_length(combination, env) do
-    size = Enum.reduce(combination, 1, & length(&1) * &2)
+    size = Combination.size(combination)
     if size > @maximum_combination_size do
       {func, arity} = env.function || {:nofunc, 0}
       stacktrace = [{env.module, func, arity, [file: '#{env.file}', line: env.line]}]

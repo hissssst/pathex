@@ -46,6 +46,7 @@ defmodule PathexTest do
     assert :error     = view [1, 123, 2, 3], path
   end
 
+# Commented, not skipped because compilation takes a lot of time
 # test "view: naive sigil: composed hard" do
 #   path = ~P[1/2/:x/3/4/"y"/:z/:z/:z/1]naive
 #   assert {:ok, :yay!} = view path, %{
@@ -166,6 +167,22 @@ defmodule PathexTest do
     assert {:ok, [x: [y: 0]]}   = force_set [x: [y: 1]], p, 0
   end
 
+  test "force_set: path: composition 3" do
+    p1 = path :x
+    p2 = path :y
+    p3 = path :z
+    p = p1 ~> p2 ~> p3
+    assert {:ok, %{x: %{y: %{z: 0}}}} = force_set %{}, p, 0
+    assert {:ok, %{x: %{y: %{z: 0}}}} = force_set %{x: %{}}, p, 0
+    assert {:ok, %{x: %{y: %{z: 0}}}} = force_set %{x: %{y: %{}}}, p, 0
+    assert {:ok, %{x: %{y: %{z: 0}}}} = force_set %{x: %{y: %{z: 1}}}, p, 0
+
+    assert {:ok, [x: %{y: %{z: 0}}]}  = force_set [], p, 0
+    assert {:ok, [x: [y: %{z: 0}]]}   = force_set [x: []], p, 0
+    assert {:ok, [x: [y: [z: 0]]]}    = force_set [x: [y: []]], p, 0
+    assert {:ok, [x: [y: [z: 0]]]}    = force_set [x: [y: [z: 1]]], p, 0
+  end
+
   test "view: map path" do
     p1 = path :x / :y, :map
     assert {:ok, 1} == view %{x: %{y: 1}}, p1
@@ -202,6 +219,37 @@ defmodule PathexTest do
     assert {:ok, %{x: %{y: %{z: 2}}}} == set %{x: %{y: %{z: 1}}}, p, 2
     assert :error == set %{x: %{y: 1}}, p, 2
     assert {:ok, %{x: %{y: %{z: 2}, z: 3}}} == set %{x: %{z: 3, y: %{z: 1}}}, p, 2
+  end
+
+  test "view: path: double composition" do
+    p1 = path :x
+    p2 = path :y
+
+    p = p1 ~> p2
+
+    assert {:ok, 1} = view %{x: %{y: 1}}, p
+    assert :error = view %{x: %{}}, p
+    assert :error = view %{}, p
+  end
+
+  test "view: path: triple composition" do
+    px = path :x
+    p = px ~> px ~> px
+
+    assert {:ok, 1} = view %{x: %{x: %{x: 1}}}, p
+    assert :error = view %{x: %{x: %{}}}, p
+    assert :error = view %{x: %{}}, p
+    assert :error = view %{}, p
+  end
+
+  test "force set: path map: triple composition" do
+    px = path :x, :map
+    p = px ~> px ~> px
+
+    assert {:ok, 1} = view %{x: %{x: %{x: 1}}}, p
+    assert :error = view %{x: %{x: %{}}}, p
+    assert :error = view %{x: %{}}, p
+    assert :error = view %{}, p
   end
 
   test "tricky path" do
