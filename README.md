@@ -12,7 +12,7 @@ It provides all necessary logic to manipulate data structures in different ways
 
 Existing methods of accesssing data in nested structures are either slow (`Focus` for example)
 or do not provide much functionality (`put_in` or `get_in` for example).
-For example setting the value in structure with Pathex is `5-10x` faster than `Focus` or `2x` faster than `put_in`
+For example setting the value in structure with Pathex is `70-160x` faster than `Focus` or `2x` faster than `put_in` and `get_in`
 
 > You can checkout benchmarks at https://github.com/hissssst/pathex_bench
 
