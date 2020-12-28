@@ -40,7 +40,6 @@ defmodule Pathex.Builder.SimpleViewer do
   defp initial do
     quote do
       unquote(@function_variable).()
-      |> unquote(__MODULE__).wrap_ok()
     end
   end
 

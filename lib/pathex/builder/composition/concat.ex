@@ -18,12 +18,11 @@ defmodule Pathex.Builder.Composition.Concat do
   # Force update
 
   defp build_force_update([head | tail]) do
-    structure  = {:input_struct, [], Elixir}
-    func       = {:func, [], Elixir}
-    default    = {:default, [], Elixir}
+    structure = {:input_struct, [], Elixir}
+    func      = {:func, [], Elixir}
+    default   = {:default, [], Elixir}
 
-    {reversed_defaults, withs} = generate_withs(tail, func, default)
-    [head_default | defaults] = Enum.reverse(reversed_defaults)
+    {[head_default | defaults], withs} = generate_withs(tail, func, default)
 
     inner_arg = {:x, [], Elixir}
     inner = do_build_force_update(tail, defaults, inner_arg, func)
@@ -46,12 +45,12 @@ defmodule Pathex.Builder.Composition.Concat do
 
     withs =
       [items, rets, defaults]
-      |> Enum.zip
+      |> Enum.zip()
       |> Enum.map(fn {item, ret, default} ->
         to_with_item(item, ret, func, default)
       end)
 
-    {defaults, withs}
+    {Enum.reverse(defaults), withs}
   end
 
   defp generate_vars_with_prefix(prefix, l) do
@@ -68,7 +67,6 @@ defmodule Pathex.Builder.Composition.Concat do
     quote do
       unquote(item).(:force_update, {unquote(arg), unquote(func), unquote(default)})
     end
-    |> wrap_case()
   end
   defp do_build_force_update([head | item_tail], [default | default_tail], arg, func) do
     inner_arg = {:x, [], Elixir}
@@ -78,7 +76,6 @@ defmodule Pathex.Builder.Composition.Concat do
         unquote(inner)
       end, unquote(default)})
     end
-    |> wrap_case()
   end
 
   # Update
@@ -102,7 +99,6 @@ defmodule Pathex.Builder.Composition.Concat do
     quote do
       unquote(item).(:update, {unquote(arg), unquote(func)})
     end
-    |> wrap_case()
   end
   defp do_build_update([head | tail], arg, func) do
     inner_arg = {:x, [], Elixir}
@@ -111,26 +107,6 @@ defmodule Pathex.Builder.Composition.Concat do
       unquote(head).(:update, {unquote(arg), fn unquote(inner_arg) ->
         unquote(inner)
       end})
-    end
-    |> wrap_case()
-  end
-
-  # defp wrap_case(argument) do
-  #   quote do
-  #     unquote(argument)
-  #     |> case do
-  #       {:ok, x} -> x
-  #       :error   -> throw :path_not_found
-  #     end
-  #   end
-  # end
-
-  defp wrap_case(argument) do
-    quote do
-      case unquote(argument) do
-        {:ok, x} -> x
-        :error   -> throw :path_not_found
-      end
     end
   end
 
@@ -147,7 +123,6 @@ defmodule Pathex.Builder.Composition.Concat do
         unquote(inner)
       end})
     end
-    |> wrap_view_case()
     |> Code.new([structure, func])
   end
 
@@ -155,7 +130,6 @@ defmodule Pathex.Builder.Composition.Concat do
     quote do
       unquote(item).(:view, {unquote(arg), unquote(func)})
     end
-    #|> wrap_view_case()
   end
 
   defp do_build_view([head | tail], arg, func) do
@@ -165,15 +139,6 @@ defmodule Pathex.Builder.Composition.Concat do
       unquote(head).(:view, {unquote(arg), fn unquote(inner_arg) ->
         unquote(inner)
       end})
-    end
-    |> wrap_view_case()
-  end
-
-  defp wrap_view_case(argument) do
-    quote do
-      with {:ok, x} <- unquote(argument) do
-        x
-      end
     end
   end
 

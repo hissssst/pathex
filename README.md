@@ -143,7 +143,7 @@ Any `path` or `~P` is a macro for creating a closure.
 
 ## Contributions
 
-Welcome!
+Welcome! You can check existing `TODO`'s
 
 ---
 

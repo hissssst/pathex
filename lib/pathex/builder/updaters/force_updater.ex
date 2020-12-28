@@ -34,6 +34,10 @@ defmodule Pathex.Builder.ForceUpdater do
     setfunc =
       quote do
         unquote(@function_variable).()
+        |> case do
+          {:ok, value} -> value
+          :error       -> throw :path_not_found
+        end
       end
     {setfunc, @default_variable}
   end

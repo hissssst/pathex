@@ -26,6 +26,10 @@ defmodule Pathex.Builder.SimpleUpdater do
   defp initial do
     quote do
       unquote(@function_variable).()
+      |> case do
+        {:ok, value} -> value
+        :error       -> throw :path_not_found
+      end
     end
   end
 

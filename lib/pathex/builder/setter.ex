@@ -36,9 +36,14 @@ defmodule Pathex.Builder.Setter do
   def create_setter({:keyword, key}, tail) when is_atom(key) do
     quote do
       [{_, _} | _] = keyword ->
-        Keyword.update!(keyword, unquote(key), fn val ->
-          val |> unquote(tail)
-        end)
+        key = unquote(key)
+        if Keyword.has_key?(keyword, key) do
+          Keyword.update!(keyword, key, fn val ->
+            val |> unquote(tail)
+          end)
+        else
+          throw :path_not_found
+        end
     end
   end
 

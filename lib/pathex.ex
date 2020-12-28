@@ -14,6 +14,18 @@ defmodule Pathex do
   end
   ```
 
+  Or you can use `use`
+  ```elixir
+  defmodule MyModule do
+
+    # default_mod option is optional
+    use Pathex, default_mod: :json
+
+    ...
+  end
+  ```
+  This will import all operatiors and `path` macro
+
   > Note:
   > There is no `__using__/2` macro avaliable here
   > because it would be better to explicitly define that the
@@ -45,6 +57,21 @@ defmodule Pathex do
   @typedoc "More about [modifiers](modifiers.md)"
   @type mod :: :map | :json | :naive
 
+  defmacro __using__(opts) do
+    mod = Keyword.get(opts, :default_mod, :naive)
+    quote do
+      require Pathex
+      import Pathex, only: [path: 2, "~>": 2, "&&&": 2, "|||": 2, alongside: 1]
+
+      defmacrop path(p) do
+        mod = unquote(mod)
+        quote do
+          Pathex.path(unquote(p), unquote(mod))
+        end
+      end
+    end
+  end
+
   @doc """
   Macro of three arguments which applies given function
   for item in the given path of given structure
@@ -65,7 +92,7 @@ defmodule Pathex do
       ** (ArithmeticError) bad argument in arithmetic expression
   """
   defmacro over(struct, path, func) do
-    gen(path, :update, [struct, func], __CALLER__)
+    gen(path, :update, [struct, wrap_ok(func)], __CALLER__)
   end
 
   @doc """
@@ -82,7 +109,7 @@ defmodule Pathex do
   """
   defmacro over!(struct, path, func) do
     path
-    |> gen(:update, [struct, func], __CALLER__)
+    |> gen(:update, [struct, wrap_ok(func)], __CALLER__)
     |> bang()
   end
 
@@ -98,7 +125,7 @@ defmodule Pathex do
       iex> {:ok, %{"hey" => [123, [2]]}} = set %{"hey" => [1, [2]]}, p, 123
   """
   defmacro set(struct, path, value) do
-    gen(path, :update, [struct, quote(do: fn _ -> unquote(value) end)], __CALLER__)
+    gen(path, :update, [struct, quote(do: fn _ -> {:ok, unquote(value)} end)], __CALLER__)
   end
 
   @doc """
@@ -114,7 +141,7 @@ defmodule Pathex do
   """
   defmacro set!(struct, path, value) do
     path
-    |> gen(:update, [struct, quote(do: fn _ -> unquote(value) end)], __CALLER__)
+    |> gen(:update, [struct, quote(do: fn _ -> {:ok, unquote(value)} end)], __CALLER__)
     |> bang()
   end
 
@@ -139,7 +166,7 @@ defmodule Pathex do
       iex> :error = force_set %{"hey" => {1, 2}}, p, "value"
   """
   defmacro force_set(struct, path, value) do
-    gen(path, :force_update, [struct, quote(do: fn _ -> unquote(value) end), value], __CALLER__)
+    gen(path, :force_update, [struct, quote(do: fn _ -> {:ok, unquote(value)} end), value], __CALLER__)
   end
 
   @doc """
@@ -165,7 +192,7 @@ defmodule Pathex do
   """
   defmacro force_set!(struct, path, value) do
     path
-    |> gen(:force_update, [struct, quote(do: fn _ -> unquote(value) end), value], __CALLER__)
+    |> gen(:force_update, [struct, quote(do: fn _ -> {:ok, unquote(value)} end), value], __CALLER__)
     |> bang("Type mismatch in structure")
   end
 
@@ -193,7 +220,7 @@ defmodule Pathex do
   > Default "default" value is nil
   """
   defmacro force_over(struct, path, func, value \\ nil) do
-    gen(path, :force_update, [struct, func, value], __CALLER__)
+    gen(path, :force_update, [struct, wrap_ok(func), value], __CALLER__)
   end
 
   @doc """
@@ -222,7 +249,7 @@ defmodule Pathex do
   """
   defmacro force_over!(struct, path, func, value \\ nil) do
     path
-    |> gen(:force_update, [struct, func, value], __CALLER__)
+    |> gen(:force_update, [struct, wrap_ok(func), value], __CALLER__)
     |> bang("Type mismatch in structure")
   end
 
@@ -238,7 +265,7 @@ defmodule Pathex do
       iex> {:ok, {:here, 9}} = at(%{"hey" => {9, -9}}, p, & {:here, &1})
   """
   defmacro at(struct, path, func) do
-    gen(path, :view, [struct, func], __CALLER__)
+    gen(path, :view, [struct, wrap_ok(func)], __CALLER__)
   end
 
   @doc """
@@ -254,7 +281,7 @@ defmodule Pathex do
   """
   defmacro at!(struct, path, func) do
     path
-    |> gen(:view, [struct, func], __CALLER__)
+    |> gen(:view, [struct, wrap_ok(func)], __CALLER__)
     |> bang()
   end
 
@@ -269,7 +296,7 @@ defmodule Pathex do
       iex> {:ok, 9} = view %{"hey" => {9, -9}}, p
   """
   defmacro view(struct, path) do
-    gen(path, :view, [struct, quote(do: fn x -> x end)], __CALLER__)
+    gen(path, :view, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
   end
 
   @doc """
@@ -284,7 +311,7 @@ defmodule Pathex do
   """
   defmacro view!(struct, path) do
     path
-    |> gen(:view, [struct, quote(do: fn x -> x end)], __CALLER__)
+    |> gen(:view, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
     |> bang()
   end
 
@@ -300,7 +327,7 @@ defmodule Pathex do
       iex> :default = get %{"hey" => [x: 1]}, p, :default
   """
   defmacro get(struct, path, default \\ nil) do
-    res = gen(path, :view, [struct, quote(do: fn x -> x end)], __CALLER__)
+    res = gen(path, :view, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
     quote do
       case unquote(res) do
         {:ok, value} -> value
@@ -348,7 +375,7 @@ defmodule Pathex do
   * every integer is treated as index to tuple, list or key to map
   * every other data is treated as key to map
 
-  > Note:
+  > Note:  
   > `-1` allows data to be prepended to the list
       iex> require Pathex; import Pathex
       iex> x = -1
@@ -486,6 +513,12 @@ defmodule Pathex do
       unquote(path).(unquote(op), {unquote_splicing(args)})
     end
     |> set_generated()
+  end
+
+  defp wrap_ok(func) do
+    quote do
+      fn xu -> {:ok, unquote(func).(xu)} end
+    end
   end
 
   # Helper for generating raising functions
