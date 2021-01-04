@@ -37,9 +37,11 @@ end
    require Pathex
    import Pathex, only: [path: 1, path: 2, "~>": 2]
    ```
-
-> Note:
-> There is no `__using__/2` macro since it's better to explicitly define what macros will be exported
+   Or you can just `use` Pathex!
+   ```elixir
+   # This will require Pathex and import all operators and path/2 macro
+   use Pathex
+   ```
 
 2. You need to create the path which defines the path to the item in elixir structure you want to get:
    ```elixir
