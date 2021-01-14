@@ -18,7 +18,7 @@ For example setting the value in structure with Pathex is `70-160x` faster than 
 
 ## Check out Pathex documentation!
 
-You can find complete documentation with examples, howto's, guides as https://hexdocs.pm/pathex
+You can find complete documentation with examples, howto's, guides at https://hexdocs.pm/pathex
 
 ## Installation
 
