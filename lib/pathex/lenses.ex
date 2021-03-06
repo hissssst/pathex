@@ -181,7 +181,6 @@ defmodule Pathex.Lenses do
     quote(do: {:ok, unquote(code)})
   end
 
-
   @doc """
   Path function which works with **all** possible keys it can find
   It takes all keys **and than** applies inner function (or concated path)
@@ -327,12 +326,12 @@ defmodule Pathex.Lenses do
       iex> %{x: %{y: 1}, z: [3]} = Pathex.set!(%{x: %{y: 0}, z: [3]}, starl ~> path(:y, :map), 1)
       iex> {:ok, [1, 2, 3]} = Pathex.view([x: 1, y: 2, z: 3], starl)
 
-  > Note:  
-  > Force update works the same way as `all` lens  
+  > Note:
+  > Force update works the same way as `all` lens
   > And update leaves unusable data unchanged
   """
   @spec star() :: Pathex.t()
-  def star() do
+  def star do
     fn
       :view, {%{} = map, func} ->
         map
