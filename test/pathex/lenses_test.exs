@@ -57,7 +57,7 @@ defmodule Pathex.LensesTest do
     assert :error = force_set %{k: {}}, any ~> px, 1
 
     assert :error = force_set {{}}, any ~> px, 1
-    assert {:ok, {%{x: 1}}}= force_set {%{}}, any ~> px, 1
+    assert {:ok, {%{x: 1}}} = force_set {%{}}, any ~> px, 1
 
     assert :error = force_set [x: {}], any ~> px, 1
     assert :error = force_set [{}], any ~> px, 1
