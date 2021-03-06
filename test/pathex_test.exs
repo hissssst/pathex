@@ -253,7 +253,6 @@ defmodule PathexTest do
   end
 
   test "tricky path" do
-    x = :x
     p = path {:x, [], nil}
     assert {:ok, 1} = view(%{{:x, [], nil} => 1, :x => 2}, p)
   end
