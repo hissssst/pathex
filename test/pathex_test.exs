@@ -7,6 +7,8 @@ defmodule PathexTest do
   require Pathex
   import Pathex
 
+  @compile :nowarn_unused_vars
+
   test "view: naive sigil path: binary" do
     path = ~P["hey"]naive
     assert {:ok, true} = view %{"hey" => true}, path
@@ -253,6 +255,8 @@ defmodule PathexTest do
   end
 
   test "tricky path" do
+    # This one is necessary for testing macro hygiene
+    x = :x
     p = path {:x, [], nil}
     assert {:ok, 1} = view(%{{:x, [], nil} => 1, :x => 2}, p)
   end
