@@ -375,7 +375,7 @@ defmodule Pathex do
   * every integer is treated as index to tuple, list or key to map
   * every other data is treated as key to map
 
-  > Note:
+  > Note:  
   > `-1` allows data to be prepended to the list
       iex> require Pathex; import Pathex
       iex> x = -1
