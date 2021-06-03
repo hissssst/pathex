@@ -25,7 +25,7 @@ You can find complete documentation with examples, howto's, guides at https://he
 ```elixir
 def deps do
   [
-    {:pathex, "~> 1.0.0"}
+    {:pathex, "~> 1.2.0"}
   ]
 end
 ```
