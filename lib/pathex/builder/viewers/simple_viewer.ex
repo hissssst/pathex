@@ -8,7 +8,7 @@ defmodule Pathex.Builder.SimpleViewer do
   """
 
   alias Pathex.Common
-  import Pathex.Builder.Viewer
+  alias Pathex.Builder.Viewer
   @behaviour Pathex.Builder
 
   @structure_variable {:x, [], Elixir}
@@ -24,7 +24,7 @@ defmodule Pathex.Builder.SimpleViewer do
     combination
     |> Enum.reverse()
     |> Enum.reduce(initial(), &reduce_into/2)
-    |> Macro.prewalk(&expand_local/1)
+    |> Macro.prewalk(&Viewer.expand_local/1)
     #|> Macro.to_string()
     #|> IO.puts
     |> Pathex.Builder.Code.new_arg_pipe([@structure_variable, @function_variable])
@@ -32,8 +32,8 @@ defmodule Pathex.Builder.SimpleViewer do
 
   defp reduce_into(path_items, acc) do
     path_items
-    |> Enum.flat_map(& create_getter(&1, acc))
-    |> Kernel.++(fallback())
+    |> Enum.flat_map(& Viewer.create_getter(&1, acc))
+    |> Kernel.++(Viewer.fallback())
     |> Common.to_case()
   end
 
@@ -41,12 +41,6 @@ defmodule Pathex.Builder.SimpleViewer do
     quote do
       unquote(@function_variable).()
     end
-  end
-
-  defp expand_local({:and, _, _} = quoted), do: quoted # Some bug in Macro.expand
-  defp expand_local(quoted) do
-    env = %Macro.Env{requires: [__MODULE__]}
-    Macro.expand(quoted, env)
   end
 
 end

@@ -5,55 +5,6 @@ defmodule Pathex.Lenses do
   """
 
   @doc """
-  Path function for tuple with specified first element
-
-  Example:
-      iex> require Pathex; import Pathex
-      iex> okl = Pathex.Lenses.either(:ok)
-      iex> 8 = view! {:ok, 8}, okl
-      iex> {:ok, 10} = set! {:ok, 8}, okl, 10
-      iex> {:ok, 123} = force_set! {:error, :x}, okl, 123
-  """
-  @spec either(any()) :: Pathex.t()
-  def either(head) do
-    fn
-      :view, {{^head, value}, f} -> f.(value)
-      :view, _ -> :error
-
-      :update, {{^head, value}, f} ->
-        with {:ok, new_value} <- f.(value) do
-          {:ok, {head, new_value}}
-        end
-      :update, _ -> :error
-
-      :force_update, {{^head, value}, f, _} ->
-        with {:ok, new_value} <- f.(value) do
-          {:ok, {head, new_value}}
-        end
-      :force_update, {{_, _}, _, d} -> {:ok, {head, d}}
-      :force_update, _ -> :error
-    end
-  end
-
-  @doc """
-  Path function which works like unix path `./`
-  Works with every existing value (not only Enumerable)
-
-  Example:
-      iex> require Pathex
-      iex> idl = Pathex.Lenses.id()
-      iex> {:ok, 8} = Pathex.view 8, idl
-      iex> {:ok, 9} = Pathex.set 8, idl, 9
-      iex> {:ok, 9} = Pathex.force_set 8, idl, 9
-  """
-  @spec id() :: Pathex.t()
-  def id do
-    fn
-      _, x -> :erlang.element(2, x).(:erlang.element(1, x))
-    end
-  end
-
-  @doc """
   Path function which works with **any** possible key it can find
   It takes any key **and than** applies inner function (or concated path)
 
@@ -79,107 +30,7 @@ defmodule Pathex.Lenses do
       iex> {:ok, [1, 2]} = Pathex.set([{"some_tuple", "here"}, 2], anyl, 1)
   """
   @spec any() :: Pathex.t()
-  def any do
-    fn
-      :view, {%{} = map, func} ->
-        :maps.iterator(map)
-        |> :maps.next()
-        |> case do
-          :none -> :error
-          {_, v, _} -> func.(v)
-        end
-      :view, {t, func} when is_tuple(t) and tuple_size(t) > 0 ->
-        func.(:erlang.element(1, t))
-      :view, {[{a, v} | _], func} when is_atom(a) ->
-        func.(v)
-      :view, {[v | _], func} ->
-        func.(v)
-
-      :update, {%{} = map, func} ->
-        :maps.iterator(map)
-        |> :maps.next()
-        |> case do
-          :none -> :error
-          {key, value, _} ->
-            with {:ok, new_value} <- func.(value) do
-              {:ok, %{map | key => new_value}}
-            end
-        end
-      :update, {t, func} when is_tuple(t) and tuple_size(t) > 0 ->
-        with {:ok, new_element} <- func.(:erlang.element(1, t)) do
-          {:ok, :erlang.setelement(1, t, new_element)}
-        end
-      :update, {[{a, value} | tail], func} when is_atom(a) ->
-        with {:ok, new_value} <- func.(value) do
-          {:ok, [{a, new_value} | tail]}
-        end
-      :update, {[value | tail], func} ->
-        with {:ok, new_value} <- func.(value) do
-          {:ok, [new_value | tail]}
-        end
-
-      :force_update, {%{} = map, func, _} ->
-        :maps.iterator(map)
-        |> :maps.next()
-        |> case do
-          :none -> :error
-          {key, value, _} ->
-            with {:ok, new_value} <- func.(value) do
-              {:ok, %{map | key => new_value}}
-            end
-        end
-      :force_update, {t, func, _} when is_tuple(t) and tuple_size(t) > 0 ->
-        with {:ok, new_element} <- func.(:erlang.element(1, t)) do
-          {:ok, :erlang.setelement(1, t, new_element)}
-        end
-      :force_update, {t, _, default} when is_tuple(t) ->
-        {:ok, {default}}
-      :force_update, {[{a, value} | tail], func, _} when is_atom(a) ->
-        with {:ok, new_value} <- func.(value) do
-          {:ok, [{a, new_value} | tail]}
-        end
-      :force_update, {[value | tail], func, _} ->
-        with {:ok, new_value} <- func.(value) do
-          {:ok, [new_value | tail]}
-        end
-      :force_update, {[], _, default} ->
-        {:ok, [default]}
-      op, _ when op in ~w[view update force_update]a ->
-        :error
-    end
-  end
-
-  # Helpers for `all` lens
-
-  defmacrop at_pattern(pipe, pattern, do: code) do
-    quote do
-      case unquote(pipe) do
-        unquote(pattern) -> unquote(code)
-        other            -> other
-      end
-    end
-  end
-
-  defmacrop cont(func, value, acc) do
-    quote do
-      case unquote(func).(unquote(value)) do
-        {:ok, v} -> {:cont, {:ok, [v | unquote(acc)]}}
-        :error   -> {:halt, :error}
-      end
-    end
-  end
-
-  defmacrop reverse_if_ok(res) do
-    quote do
-      with {:ok, l} <- unquote(res) do
-        {:ok, :lists.reverse(l)}
-      end
-    end
-  end
-
-  defmacrop wrap_ok(code) do
-    quote(do: {:ok, unquote(code)})
-  end
+  def any(), do: Pathex.Lenses.Any.any()
 
   @doc """
   Path function which works with **all** possible keys it can find
@@ -194,126 +45,7 @@ defmodule Pathex.Lenses do
       iex> {:ok, [x: 2, y: 2]} = Pathex.set([x: 1, y: 0], alll, 2)
   """
   @spec all() :: Pathex.t()
-  def all do
-    fn
-      :view, {%{} = map, func} ->
-        Enum.reduce_while(map, {:ok, []}, fn {_key, value}, {_, acc} ->
-          func |> cont(value, acc)
-        end)
-
-      :view, {t, func} when is_tuple(t) and tuple_size(t) > 0 ->
-        t
-        |> Tuple.to_list()
-        |> Enum.reduce_while({:ok, []}, fn value, {_, acc} ->
-          func |> cont(value, acc)
-        end)
-        |> reverse_if_ok()
-
-      :view, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        Enum.reduce_while(kwd, {:ok, []}, fn {_key, value}, {_, acc} ->
-          func |> cont(value, acc)
-        end)
-        |> reverse_if_ok()
-
-      :view, {l, func} when is_list(l) ->
-        Enum.reduce_while(l, {:ok, []}, fn value, {_, acc} ->
-          func |> cont(value, acc)
-        end)
-        |> reverse_if_ok()
-
-      :update, {%{} = map, func} ->
-        res =
-          Enum.reduce_while(map, {:ok, []}, fn {key, value}, {_, acc} ->
-            case func.(value) do
-              {:ok, v} -> {:cont, {:ok, [{key, v} | acc]}}
-              :error   -> {:halt, :error}
-            end
-          end)
-
-        with {:ok, pairs} <- res do
-          {:ok, Map.new(pairs)}
-        end
-
-      :update, {t, func} when is_tuple(t) and tuple_size(t) > 0 ->
-        t
-        |> Tuple.to_list()
-        |> Enum.reduce_while({:ok, []}, fn value, {_, acc} ->
-          func |> cont(value, acc)
-        end)
-        |> at_pattern({:ok, list}) do
-          {:ok, list |> :lists.reverse() |> List.to_tuple()}
-        end
-
-      :update, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        Enum.reduce_while(kwd, {:ok, []}, fn {key, value}, {_, acc} ->
-          case func.(value) do
-            {:ok, v} -> {:cont, {:ok, [{key, v} | acc]}}
-            :error   -> {:halt, :error}
-          end
-        end)
-        |> reverse_if_ok()
-
-      :update, {l, func} when is_list(l) ->
-        Enum.reduce_while(l, {:ok, []}, fn value, {_, acc} ->
-          cont(func, value, acc)
-        end)
-        |> reverse_if_ok()
-
-      :force_update, {%{} = map, func, default} ->
-        map
-        |> Map.new(fn {key, value} ->
-          case func.(value) do
-            {:ok, v} -> {key, v}
-            :error   -> {key, default}
-          end
-        end)
-        |> wrap_ok()
-
-      :force_update, {t, func, default} when is_tuple(t) and tuple_size(t) > 0 ->
-        t
-        |> Tuple.to_list()
-        |> Enum.map(fn value ->
-          case func.(value) do
-            {:ok, v} -> v
-            :error   -> default
-          end
-        end)
-        |> List.to_tuple()
-        |> wrap_ok()
-
-      :force_update, {[{a, _} | _] = kwd, func, default} when is_atom(a) ->
-        kwd
-        |> Enum.map(fn {key, value} ->
-          case func.(value) do
-            {:ok, v} -> {key, v}
-            :error   -> {key, default}
-          end
-        end)
-        |> wrap_ok()
-
-      :force_update, {l, func, default} when is_list(l) ->
-        l
-        |> Enum.map(fn value ->
-          case func.(value) do
-            {:ok, v} -> v
-            :error   -> default
-          end
-        end)
-        |> wrap_ok()
-
-      op, _ when op in ~w[view update force_update]a ->
-        :error
-    end
-  end
-
-  defmacro extend_if_ok(func, value, acc) do
-    quote do
-      case unquote(func).(unquote(value)) do
-        {:ok, result} -> [result | unquote(acc)]
-        :error        -> unquote(acc)
-      end
-    end
-  end
+  def all(), do: Pathex.Lenses.All.all()
 
   @doc """
   Path function which applies inner function (or concated path-closure)
@@ -329,125 +61,311 @@ defmodule Pathex.Lenses do
   > Note:  
   > Force update works the same way as `all` lens  
   > And update leaves unusable data unchanged
+
+  Think of this function as `filter`. It is particulary useful for filtering  
+  and selecting needed values with custom functions or `matching/1` macro
+
+  Example:
+      iex> require Pathex; import Pathex; require Pathex.Lenses
+      iex> starl = Pathex.Lenses.star()
+      iex> structure = [{1, 4}, {2, 8}, {3, 6}, {4, 10}]
+      iex> #
+      iex> # For example we want to select all tuples with first element greater than 2
+      iex> #
+      iex> greater_than_2 = Pathex.Lenses.matching({x, _} when x > 2)
+      iex> {:ok, [{3, 6}, {4, 10}]} = Pathex.view(structure, starl ~> greater_than_2)
   """
   @spec star() :: Pathex.t()
-  def star do
+  def star(), do: Pathex.Lenses.Star.star()
+
+  @doc """
+  This macro creates path-closure which works like `id/0` but
+  successes only for matching data.
+
+  This function is useful when composed with `star/0` and `some/0`
+
+  Example:
+      iex> import Pathex.Lenses; import Pathex
+      iex> adminl = matching(%{role: :admin})
+      iex> {:ok, %{name: "Name", role: :admin}} = Pathex.view(%{name: "Name", role: :admin}, adminl)
+      iex> :error = Pathex.view(%{}, adminl)
+
+      iex> import Pathex.Lenses; import Pathex
+      iex> dots2d = [{1, 1}, {1, 5}, {3, 0}, {4, 3}]
+      iex> higher_than_2 = matching({_x, y} when y > 2)
+      iex> {:ok, [{1, 5}, {4, 3}]} = Pathex.view(dots2d, star() ~> higher_than_2)
+  """
+  # This case is just an optimization for `id/0`-like lens
+  defmacro matching({:_, meta, ctx}) when is_list(meta) and (is_nil(ctx) or is_atom(ctx)) do
+    quote do
+      fn
+        _, x -> :erlang.element(2, x).(:erlang.element(1, x))
+      end
+    end
+  end
+  defmacro matching({:when, _, [pattern, condition]}) do
+    quote do
+      fn
+        op, {unquote(pattern) = x, func} when op in ~w[update view]a and unquote(condition) ->
+          func.(x)
+
+        :force_update, {unquote(pattern) = x, func, default} when unquote(condition) ->
+          func.(x)
+
+        :force_update, {_x, func, default} ->
+          default
+
+        op, _ when op in ~w[view update delete force_update]a ->
+          :error
+      end
+    end
+  end
+  defmacro matching(pattern) do
+    quote do
+      fn
+        op, {unquote(pattern) = x, func} when op in ~w[update view]a ->
+          func.(x)
+
+        :force_update, {unquote(pattern) = x, func, default} ->
+          func.(x)
+
+        :force_update, {_x, func, default} ->
+          default
+
+        op, _ when op in ~w[view update delete force_update]a ->
+          :error
+      end
+    end
+  end
+
+  @doc """
+  Path function which applies inner function (or concated path-closure)
+  to the first value it can apply it to
+
+  Example:
+      iex> require Pathex; import Pathex
+      iex> somel = Pathex.Lenses.some()
+      iex> 11 = Pathex.view!([x: [11], y: [22], z: 33], somel ~> path(0))
+      iex> [x: %{y: 1}, z: %{y: 0}] = Pathex.set!([x: %{y: 0}, z: %{y: 0}], somel ~> path(:y, :map), 1)
+      iex> {:ok, 1} = Pathex.view([x: 1, y: 2, z: 3], somel)
+
+  > Note:  
+  > Force update fails for empty structures
+
+  Think of this function as `star() ~> any()` but optimized to work with only first element
+  """
+  @spec some() :: Pathex.t()
+  def some do
     fn
       :view, {%{} = map, func} ->
-        map
-        |> Enum.reduce([], fn {_key, value}, acc ->
-          extend_if_ok(func, value, acc)
+        Enum.find_value(map, :error, fn {_k, v} ->
+          with :error <- func.(v) do
+            false
+          end
         end)
-        |> wrap_ok()
-
-      :view, {t, func} when is_tuple(t) and tuple_size(t) > 0 ->
-        t
-        |> Tuple.to_list()
-        |> Enum.reduce([], fn value, acc ->
-          extend_if_ok(func, value, acc)
-        end)
-        |> :lists.reverse()
-        |> wrap_ok()
 
       :view, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        Enum.reduce(kwd, [], fn {_key, value}, acc ->
-          extend_if_ok(func, value, acc)
+        Enum.find_value(kwd, :error, fn {_k, v} ->
+          with :error <- func.(v) do
+            false
+          end
         end)
-        |> :lists.reverse()
-        |> wrap_ok()
 
       :view, {l, func} when is_list(l) ->
-        Enum.reduce(l, [], fn value, acc ->
-          extend_if_ok(func, value, acc)
+        Enum.find_value(l, :error, fn v ->
+          with :error <- func.(v) do
+            false
+          end
         end)
-        |> :lists.reverse()
-        |> wrap_ok()
+
+      :view, {t, func} when is_tuple(t) ->
+        Enum.find_value(Tuple.to_list(t), :error, fn v ->
+          with :error <- func.(v) do
+            false
+          end
+        end)
 
       :update, {%{} = map, func} ->
-        map
-        |> Map.new(fn {key, value} ->
-          case func.(value) do
-            {:ok, new_value} -> {key, new_value}
-            :error           -> {key, value}
-          end
-        end)
-        |> wrap_ok()
+        found =
+          Enum.find_value(map, :error, fn {k, v} ->
+            case func.(v) do
+              {:ok, v} -> {k, v}
+              :error   -> false
+            end
+          end)
 
-      :update, {t, func} when is_tuple(t) and tuple_size(t) > 0 ->
-        t
-        |> Tuple.to_list()
-        |> Enum.map(fn value ->
-          case func.(value) do
-            {:ok, new_value} -> new_value
-            :error           -> value
-          end
-        end)
-        |> List.to_tuple()
-        |> wrap_ok()
+        with {k, v} <- found do
+          {:ok, Map.put(map, k, v)}
+        end
 
+      # TODO: optimize through reduce and prepend
       :update, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        kwd
-        |> Enum.map(fn {key, value} ->
-          case func.(value) do
-            {:ok, new_value} -> {key, new_value}
-            :error           -> {key, value}
-          end
-        end)
-        |> wrap_ok()
+        found =
+          Enum.find_value(kwd, :error, fn {k, v} ->
+            case func.(v) do
+              {:ok, v} -> {k, v}
+              :error   -> false
+            end
+          end)
+
+        with {k, v} <- found do
+          {:ok, Keyword.put(kwd, k, v)}
+        end
 
       :update, {l, func} when is_list(l) ->
-        Enum.map(l, fn value ->
-          case func.(value) do
-            {:ok, new_value} -> new_value
-            :error           -> value
+        Enum.reduce(l, {:error, []}, fn
+          v, {:error, acc} ->
+            case func.(v) do
+              {:ok, v} -> {:ok, [v | acc]}
+              :error   -> {:error, [v | acc]}
+            end
+
+          v, {:ok, acc} ->
+            {:ok, [v | acc]}
+        end)
+        |> case do
+          {:error, _} -> :error
+          {:ok, list} -> {:ok, :lists.reverse(list)}
+        end
+
+      :update, {t, func} when is_tuple(t) ->
+        t
+        |> Tuple.to_list()
+        |> Enum.reduce_while(1, fn v, index ->
+          case func.(v) do
+            {:ok, v} -> {:halt, {index, v}}
+            :error   -> {:cont, index + 1}
           end
         end)
-        |> wrap_ok()
+        |> case do
+          {index, v} ->
+            {:ok, :erlang.setelement(index, t, v)}
+
+          _ ->
+            :error
+        end
 
       :force_update, {%{} = map, func, default} ->
         map
-        |> Map.new(fn {key, value} ->
-          case func.(value) do
-            {:ok, v} -> {key, v}
-            :error   -> {key, default}
+        |> Enum.find_value(:error, fn {k, v} ->
+          case func.(v) do
+            {:ok, v} -> {k, v}
+            :error   -> false
           end
         end)
-        |> wrap_ok()
+        |> case do
+          {k, v} ->
+            {:ok, Map.put(map, k, v)}
+
+          :error ->
+            map
+            |> :maps.iterator()
+            |> :maps.next()
+            |> case do
+              {k, _, _} ->
+                {:ok, Map.put(map, k, default)}
+
+              :none ->
+                :error
+            end
+        end
+
+      :force_update, {[{a, _} | _] = kwd, func, default} when is_atom(a) ->
+        kwd
+        |> Enum.find_value(:error, fn {k, v} ->
+          case func.(v) do
+            {:ok, v} -> {k, v}
+            :error   -> false
+          end
+        end)
+        |> case do
+          {k, v} ->
+            {:ok, Keyword.put(kwd, k, v)}
+
+          :error ->
+            {:ok, Keyword.put(kwd, a, default)}
+        end
+
+      :force_update, {list, func, default} when is_list(list) ->
+        list
+        |> Enum.reduce({:error, []}, fn
+          v, {:error, acc} ->
+            case func.(v) do
+              {:ok, v} -> {:ok, [v | acc]}
+              :error   -> {:error, [v | acc]}
+            end
+
+          v, {:ok, acc} ->
+            {:ok, [v | acc]}
+        end)
+        |> case do
+          {:error, list} ->
+            [_first | list] = :lists.reverse(list)
+            {:ok, [default | list]}
+
+          {:ok, list} ->
+            {:ok, :lists.reverse(list)}
+        end
 
       :force_update, {t, func, default} when is_tuple(t) and tuple_size(t) > 0 ->
         t
         |> Tuple.to_list()
-        |> Enum.map(fn value ->
-          case func.(value) do
-            {:ok, v} -> v
-            :error   -> default
+        |> Enum.reduce_while(1, fn v, index ->
+          case func.(v) do
+            {:ok, v} -> {:halt, {index, v}}
+            :error   -> {:cont, index + 1}
           end
         end)
-        |> List.to_tuple()
-        |> wrap_ok()
+        |> case do
+          {index, v} ->
+            {:ok, :erlang.setelement(index, t, v)}
 
-      :force_update, {[{a, _} | _] = kwd, func, default} when is_atom(a) ->
-        kwd
-        |> Enum.map(fn {key, value} ->
-          case func.(value) do
-            {:ok, v} -> {key, v}
-            :error   -> {key, default}
-          end
-        end)
-        |> wrap_ok()
-
-      :force_update, {l, func, default} when is_list(l) ->
-        l
-        |> Enum.map(fn value ->
-          case func.(value) do
-            {:ok, v} -> v
-            :error   -> default
-          end
-        end)
-        |> wrap_ok()
+          _ ->
+            {:ok, :erlang.setelement(0, t, default)}
+        end
 
       op, _ when op in ~w[view update force_update]a ->
         :error
+    end
+  end
+
+  @deprecated """
+  Use `matching({:ok, _}) ~> path(1)` macro with `path(1)` instead.  
+  Will be removed in future releases.
+  """
+  def either(head) do
+    fn
+      :view, {{^head, value}, f} -> f.(value)
+      :view, _ -> :error
+
+      :update, {{^head, value}, f} ->
+        with {:ok, new_value} <- f.(value) do
+          {:ok, {head, new_value}}
+        end
+      :update, _ -> :error
+
+      :delete, {{^head, value}, f} ->
+        with {:ok, _} <- f.(value) do
+          {:ok, {:ok, nil}}
+        end
+      :delete, _ -> :error
+
+      :force_update, {{^head, value}, f, _} ->
+        with {:ok, new_value} <- f.(value) do
+          {:ok, {head, new_value}}
+        end
+      :force_update, {{_, _}, _, d} -> {:ok, {head, d}}
+      :force_update, _ -> :error
+    end
+  end
+
+  @deprecated """
+  Use `matching(_)` instead.  
+  Will be removed in future releases.
+  """
+  def id do
+    fn
+      _, x -> :erlang.element(2, x).(:erlang.element(1, x))
     end
   end
 

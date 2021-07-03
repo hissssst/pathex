@@ -2,6 +2,7 @@ defmodule Pathex.LensesTest do
 
   use ExUnit.Case
 
+  alias Pathex.Lenses
   doctest Pathex.Lenses
 
   require Pathex
@@ -9,7 +10,7 @@ defmodule Pathex.LensesTest do
 
   test "Tricky alls" do
     px = path :x
-    all = Pathex.Lenses.all()
+    all = Lenses.all()
 
     inc = fn x -> x + 1 end
 
@@ -32,7 +33,7 @@ defmodule Pathex.LensesTest do
 
   test "Catching in either" do
     px = path :x
-    hi = Pathex.Lenses.either(:hi)
+    hi = Lenses.either(:hi)
 
     assert :error = force_set {:hi, {}}, hi ~> px, 1
     assert :error = force_set {}, hi ~> px, 1
@@ -51,7 +52,7 @@ defmodule Pathex.LensesTest do
 
   test "Catching in any" do
     px  = path :x
-    any = Pathex.Lenses.any()
+    any = Lenses.any()
 
     assert :error = force_set %{}, any ~> px, 1
     assert :error = force_set %{k: {}}, any ~> px, 1
@@ -73,7 +74,7 @@ defmodule Pathex.LensesTest do
 
   test "Catching in all" do
     px = path :x
-    all = Pathex.Lenses.all()
+    all = Lenses.all()
 
     assert {:ok, [%{x: 1}]}     = force_set [{}], all ~> px, 1
     assert {:ok, %{x: %{x: 1}}} = force_set %{x: {}}, all ~> px, 1
@@ -84,6 +85,60 @@ defmodule Pathex.LensesTest do
     assert :error = set %{x: {}}, all ~> px, 1
     assert :error = set [x: {}], all ~> px, 1
     assert :error = set {{}}, all ~> px, 1
+  end
+
+  test "Some" do
+    px = path :x
+    pb = path :b
+    some = Lenses.some()
+
+    # View
+    assert {:ok, 2} = view [%{y: 1}, %{x: 2}], some ~> px
+    assert {:ok, 1} = view [%{x: 1}, %{x: 2}], some ~> px
+    assert :error = view [%{z: :z}, %{y: :y}], some ~> px
+    assert :error = view [%{z: :z}, %{y: :y}], px ~> some ~> px
+    assert :error = view %{x: [%{z: :z}, %{y: :y}]}, px ~> some ~> px
+    assert {:ok, :x} = view %{x: [%{z: :z}, %{x: :x}]}, px ~> some ~> px
+
+    # Update
+    assert {:ok, [%{a: 1}, %{b: 2}, %{c: 3}]} = set [%{a: 1}, %{b: 0}, %{c: 3}], some ~> pb, 2
+    assert {:ok, {%{a: 1}, %{b: 2}, %{c: 3}}} = set {%{a: 1}, %{b: 0}, %{c: 3}}, some ~> pb, 2
+    assert {:ok, %{x: %{a: 1}, y: %{b: 2}}} = set %{x: %{a: 1}, y: %{b: 0}}, some ~> pb, 2
+    assert [x: [a: 1], y: %{b: 2}] = set!([x: [a: 1], y: %{b: 0}], some ~> pb, 2) |> Enum.sort()
+
+    # Force update
+    assert {:ok, [%{a: 1, b: 2}, %{b: 0}, %{c: 3}]} = force_set [%{a: 1}, %{b: 0}, %{c: 3}], some ~> pb, 2
+    assert {:ok, {%{a: 1, b: 2}, %{b: 0}, %{c: 3}}} = force_set {%{a: 1}, %{b: 0}, %{c: 3}}, some ~> pb, 2
+    assert {:ok, %{x: %{a: 1, b: 2}, y: %{b: 0}}} = force_set %{x: %{a: 1}, y: %{b: 0}}, some ~> pb, 2
+    assert {:ok, [x: [a: 1, b: 2], y: %{b: 0}]} = force_set [x: [a: 1], y: %{b: 0}], some ~> pb, 2
+
+    assert {:ok, [%{a: 1, b: 2}]} = force_set [%{a: 1}], some ~> pb, 2
+    assert {:ok, {%{a: 1, b: 2}}} = force_set {%{a: 1}}, some ~> pb, 2
+    assert {:ok, [x: %{a: 1, b: 2}, y: %{c: 3}]} = force_set [x: %{a: 1}, y: %{c: 3}], some ~> pb, 2
+    assert {:ok, %{x: [a: 1, b: 2], y: %{c: 3}}} = force_set %{x: [a: 1], y: %{c: 3}}, some ~> pb, 2
+  end
+
+  test "Some recur" do
+    px = path :x
+    some = Lenses.some()
+
+    sx = some ~> px
+
+    IO.inspect px, label: :px
+    IO.inspect sx, label: :sx
+    IO.inspect some, label: :some
+
+    xl1 = px ||| (some ~> px)
+
+    xl2 = px ||| sx
+
+    s = %{a: 1, y: %{x: 2, y: 3}}
+
+    assert {:ok, 2} == view s, xl2
+
+    assert {:ok, 2} == view s, xl1
+
+    IO.puts "Some recur passed"
   end
 
 end

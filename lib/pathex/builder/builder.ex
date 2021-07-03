@@ -8,15 +8,13 @@ defmodule Pathex.Builder do
   alias Pathex.Builder.Composition
   alias Pathex.Operations
 
-  # Formatting here looks really bad but what can I do...
-  alias __MODULE__.{
-    ForceUpdater, MatchableViewer, SimpleViewer, SimpleUpdater
-  }
+  @type t :: module()
 
-  @type t :: ForceUpdater
-  | MatchableViewer
-  | SimpleViewer
-  | SimpleUpdater
+  @composition_builders %{
+    "&&&": Composition.And,
+    "|||": Composition.Or,
+    "~>":  Composition.Concat
+  }
 
   # Behaviour
 
@@ -37,7 +35,7 @@ defmodule Pathex.Builder do
 
   It will look like
       iex> fn
-        :view, {struct} -> ...
+        :view, {struct, fun} -> ...
         :update, {struct, fun} -> ...
         ...
       end
@@ -68,49 +66,34 @@ defmodule Pathex.Builder do
   This function creates quoted path-closure which is a composition
   of multiple quoted paths
   """
-  @spec build_composition([Macro.t()], atom()) :: Macro.t()
-  def build_composition(items, :"&&&") do
-    {binds, vars} = bind_items(items)
-    func =
-      vars
-      |> Composition.And.build()
-      |> Code.multiple_to_fn()
-    quote do
-      unquote_splicing(binds)
-      unquote(func)
-    end
-  end
-  def build_composition(items, :"|||") do
-    {binds, vars} = bind_items(items)
-    func =
-      vars
-      |> Composition.Or.build()
-      |> Code.multiple_to_fn()
-    quote do
-      unquote_splicing(binds)
-      unquote(func)
-    end
-  end
-  def build_composition(items, :"~>") do
-    {binds, vars} = bind_items(items)
-    func =
-      vars
-      |> Composition.Concat.build()
-      |> Code.multiple_to_fn()
-    quote do
-      unquote_splicing(binds)
-      unquote(func)
+  @spec build_composition([Macro.t()], atom(), Macro.Env.t()) :: Macro.t()
+  for {composition, builder} <- @composition_builders do
+    def build_composition(items, unquote(composition), env) do
+      context = :"pathex_context_#{:erlang.unique_integer([:positive])}"
+      {binds, vars} = bind_items(items, env, context)
+      func =
+        vars
+        |> unquote(builder).build()
+        |> Code.multiple_to_fn()
+
+      quote do
+        unquote_splicing(binds)
+        unquote(func)
+      end
     end
   end
 
   # Returns bindings for variables which works like
   # quote's bind_quoted
-  @spec bind_items(vars :: [Macro.t()]) :: {binds :: [Macro.t()], vars :: [Macro.t()]}
-  defp bind_items(items) do
+  @spec bind_items(vars :: [Macro.t()], env :: Macro.Env.t(), context :: atom())
+  :: {binds :: [Macro.t()], vars :: [Macro.t()]}
+  defp bind_items(items, env, context) do
     {binds, vars, _} =
       Enum.reduce(items, {[], [], 0}, fn item, {binds, vars, idx} ->
-        var = {:"variable_#{idx}", [], Elixir}
-        {[quote(do: unquote(var) = unquote(item)) | binds], [var | vars], idx + 1}
+        var = {:"variable_#{idx}", [], context}
+        item = Macro.expand(item, env)
+        bind = quote(do: unquote(var) = unquote(item))
+        {[bind | binds], [var | vars], idx + 1}
       end)
     {Enum.reverse(binds), Enum.reverse(vars)}
   end

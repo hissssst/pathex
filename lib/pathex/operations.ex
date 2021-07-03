@@ -8,10 +8,10 @@ defmodule Pathex.Operations do
   alias Pathex.Builder
   alias Builder.{
     ForceUpdater, MatchableViewer,
-    SimpleUpdater, SimpleViewer
+    SimpleUpdater, SimpleViewer, SimpleDeleter
   }
 
-  @type name :: :view | :force_update | :update
+  @type name :: :view | :force_update | :update | :delete
   @type t :: %{name() => Builder.t()}
 
   @doc """
@@ -23,14 +23,16 @@ defmodule Pathex.Operations do
     %{
       view:         SimpleViewer,
       force_update: ForceUpdater,
-      update:       SimpleUpdater
+      update:       SimpleUpdater,
+      delete:       SimpleDeleter
     }
   end
   def from_mod(mod) when mod in ~w[json map]a do
     %{
       view:         MatchableViewer,
       force_update: ForceUpdater,
-      update:       SimpleUpdater
+      update:       SimpleUpdater,
+      delete:       SimpleDeleter
     }
   end
   def from_mod(mod) when is_atom(mod) do

@@ -26,24 +26,26 @@ defmodule Pathex do
   ```
   This will import all operatiors and `path` macro
 
-  > Note:
-  > There is no `__using__/2` macro avaliable here
-  > because it would be better to explicitly define that the
-  > `Pathex` is used and what macros are exported
-
-  Any macro here belongs to one of two categories:
+  Any macro here belongs to one of three categories:
   1. Macro which creates path closure (`sigil_P/2`, `path/2`, `~>/2`)
-  2. Macro which uses path closure as path (`over/3`, `set/3`, `view/2`, etc.)
+  2. Macro which uses path closure as path (`over/3`, `set/3`, `view/2`, ...)
+  3. Macro which creates path composition (`~>/2`, `|||/2`, ...)
   """
 
   alias Pathex.Builder
   alias Pathex.Combination
+  alias Pathex.Common
   alias Pathex.Operations
   alias Pathex.Parser
   alias Pathex.QuotedParser
 
-  @typep update_args :: {pathex_compatible_structure(), (any() -> any())}
-  @typep force_update_args :: {pathex_compatible_structure(), (any() -> any()), any()}
+  @typedoc """
+  Function which is passed to path-closure as second element in args tuple
+  """
+  @type inner_func :: (any() -> {:ok, any()} | :error)
+
+  @type update_args :: {pathex_compatible_structure(), inner_func()}
+  @type force_update_args :: {pathex_compatible_structure(), inner_func(), any()}
 
   @typedoc "This depends on the modifier"
   @type pathex_compatible_structure :: map() | list() | Keyword.t() | tuple()
@@ -334,7 +336,18 @@ defmodule Pathex do
         :error -> unquote(default)
       end
     end
-    |> set_generated()
+    |> Common.set_generated()
+  end
+
+  #TODO
+  defmacro delete(struct, path) do
+    gen(path, :delete, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
+  end
+
+  defmacro delete!(struct, path) do
+    path
+    |> gen(:delete, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
+    |> bang()
   end
 
   @doc """
@@ -356,7 +369,7 @@ defmodule Pathex do
     |> Parser.parse(mod)
     |> assert_combination_length(__CALLER__)
     |> Builder.build(Operations.from_mod(mod))
-    |> set_generated()
+    |> Common.set_generated()
   end
 
   @doc """
@@ -384,13 +397,13 @@ defmodule Pathex do
       iex> {:ok, [1, 2]} = force_set([2], p1, 1)
       iex> {:ok, [1, 2]} = force_set([2], p2, 1)
   """
-  defmacro path(quoted, mod \\ 'naive') do
+  defmacro path(quoted, mod \\ :naive) do
     mod = detect_mod(mod)
     quoted
     |> QuotedParser.parse(__CALLER__, mod)
     |> assert_combination_length(__CALLER__)
     |> Builder.build(Operations.from_mod(mod))
-    |> set_generated()
+    |> Common.set_generated()
   end
 
   @doc """
@@ -406,8 +419,8 @@ defmodule Pathex do
   defmacro a ~> b do
     {:"~>", [], [a, b]}
     |> QuotedParser.parse_composition(:"~>")
-    |> Builder.build_composition(:"~>")
-    |> set_generated()
+    |> Builder.build_composition(:"~>", __CALLER__)
+    |> Common.set_generated()
   end
 
   @doc """
@@ -427,8 +440,8 @@ defmodule Pathex do
   defmacro a &&& b do
     {:"&&&", [], [a, b]}
     |> QuotedParser.parse_composition(:"&&&")
-    |> Builder.build_composition(:"&&&")
-    |> set_generated()
+    |> Builder.build_composition(:"&&&", __CALLER__)
+    |> Common.set_generated()
   end
 
   @doc """
@@ -448,8 +461,8 @@ defmodule Pathex do
   defmacro a ||| b do
     {:"|||", [], [a, b]}
     |> QuotedParser.parse_composition(:"|||")
-    |> Builder.build_composition(:"|||")
-    |> set_generated()
+    |> Builder.build_composition(:"|||", __CALLER__)
+    |> Common.set_generated()
   end
 
   @doc """
@@ -457,9 +470,7 @@ defmodule Pathex do
 
   Example:
       iex> require Pathex; import Pathex
-      iex> p1 = path :x
-      iex> p2 = path :y
-      iex> pa = alongside [p1, p2]
+      iex> pa = alongside [path(:x), path(:y)]
       iex> {:ok, [1, 2]} = view(%{x: 1, y: 2}, pa)
       iex> {:ok, %{x: 3, y: 3}} = set(%{x: 1, y: 2}, pa, 3)
       iex> :error = set(%{x: 1}, pa, 3)
@@ -471,7 +482,7 @@ defmodule Pathex do
         :view, {input_struct, func} ->
           list
           |> Enum.reverse()
-          |> Enum.reduce_while({:ok, []}, fn path, {:ok, res} ->
+          |> Enum.reduce_while({:ok, []}, fn path, {_, res} ->
             case path.(:view, {input_struct, func}) do
               {:ok, v} -> {:cont, {:ok, [v | res]}}
               :error   -> {:halt, :error}
@@ -479,7 +490,7 @@ defmodule Pathex do
           end)
 
         :update, {input_struct, func} ->
-          Enum.reduce_while(list, {:ok, input_struct}, fn path, {:ok, res} ->
+          Enum.reduce_while(list, {:ok, input_struct}, fn path, {_, res} ->
             case path.(:update, {res, func}) do
               {:ok, res} -> {:cont, {:ok, res}}
               :error     -> {:halt, :error}
@@ -487,15 +498,23 @@ defmodule Pathex do
           end)
 
         :force_update, {input_struct, func, default} ->
-          Enum.reduce_while(list, {:ok, input_struct}, fn path, {:ok, res} ->
+          Enum.reduce_while(list, {:ok, input_struct}, fn path, {_, res} ->
             case path.(:force_update, {res, func, default}) do
+              {:ok, res} -> {:cont, {:ok, res}}
+              :error     -> {:halt, :error}
+            end
+          end)
+
+        :delete, {input_struct, func} ->
+          Enum.reduce_while(list, {:ok, input_struct}, fn path, {_, res} ->
+            case path.(:delete, {input_struct, func}) do
               {:ok, res} -> {:cont, {:ok, res}}
               :error     -> {:halt, :error}
             end
           end)
       end
     end
-    |> set_generated()
+    |> Common.set_generated()
   end
 
   # Helper for generating code for path operation
@@ -505,14 +524,14 @@ defmodule Pathex do
     quote generated: true do
       unquote(path_func).(unquote_splicing(args))
     end
-    |> set_generated()
+    |> Common.set_generated()
   end
   # Case for not inlined paths
   defp gen(path, op, args, _caller) do
     quote generated: true do
       unquote(path).(unquote(op), {unquote_splicing(args)})
     end
-    |> set_generated()
+    |> Common.set_generated()
   end
 
   defp wrap_ok(func) do
@@ -533,11 +552,13 @@ defmodule Pathex do
   end
 
   # Helper for detecting mod
+  @spec detect_mod(mod() | charlist()) :: mod() | no_return()
   defp detect_mod(mod) when mod in ~w(naive map json)a, do: mod
   defp detect_mod(str) when is_binary(str), do: detect_mod('#{str}')
   defp detect_mod('json'), do: :json
   defp detect_mod('map'), do: :map
-  defp detect_mod(_), do: :naive
+  defp detect_mod('naive'), do: :naive
+  defp detect_mod(_), do: raise("Can't have this modifier set")
 
   defp build_only(path, opname, caller, mod \\ :naive) do
     %{^opname => builder} = Operations.from_mod(mod)
@@ -558,14 +579,6 @@ defmodule Pathex do
     end
     |> QuotedParser.parse(caller, mod)
     |> Builder.build_only(builder)
-  end
-
-  # This functions puts `generated: true` flag in meta for every node in AST
-  # to avoid raising errors for dead code and stuff
-  defp set_generated(ast) do
-    Macro.prewalk(ast, fn item ->
-      Macro.update_meta(item, & Keyword.put(&1, :generated, true))
-    end)
   end
 
   # This function raises warning if combination will lead to very big closure

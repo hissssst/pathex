@@ -8,7 +8,6 @@ defmodule Pathex.Builder.Code do
   """
 
   @enforce_keys [:code]
-
   defstruct [
     vars: [],
   ] ++ @enforce_keys
@@ -80,7 +79,12 @@ defmodule Pathex.Builder.Code do
     import Inspect.Algebra
 
     def inspect(%{vars: vars, code: code}, opts) do
-      code = Macro.to_string(code)
+      code =
+        code
+        |> Macro.to_string()
+        |> Code.format_string!()
+        |> IO.iodata_to_binary()
+
       vars = Enum.map(vars, & elem(&1, 0))
       concat(["#Pathex.Builder.Code<", to_doc(vars, opts), "\n", code, "\n>"])
     end

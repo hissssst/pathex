@@ -7,11 +7,12 @@ defmodule Pathex.Builder.Composition.Concat do
   @behaviour Pathex.Builder.Composition
   alias Pathex.Builder.Code
 
-  def build(items) do
+  def build(paths) do
     [
-      view:         build_view(items),
-      update:       build_update(items),
-      force_update: build_force_update(items)
+      view:         build_view(paths),
+      update:       build_update(paths),
+      delete:       build_delete(paths),
+      force_update: build_force_update(paths)
     ]
   end
 
@@ -38,8 +39,7 @@ defmodule Pathex.Builder.Composition.Concat do
   end
 
   defp generate_withs(items, func, default) do
-    l = length(items)
-    rets = generate_vars_with_prefix("default", l)
+    rets = generate_vars_with_prefix("default", length(items))
     defaults = [default | rets]
     items = Enum.reverse(items)
 
@@ -105,6 +105,38 @@ defmodule Pathex.Builder.Composition.Concat do
     inner = do_build_update(tail, inner_arg, func)
     quote do
       unquote(head).(:update, {unquote(arg), fn unquote(inner_arg) ->
+        unquote(inner)
+      end})
+    end
+  end
+
+  # Delete
+
+  defp build_delete([head | tail]) do
+    structure  = {:input_struct, [], Elixir}
+    func       = {:func, [], Elixir}
+    inner_arg  = {:x, [], Elixir}
+
+    inner = do_build_delete(tail, inner_arg, func)
+
+    quote do
+      unquote(head).(:delete, {unquote(structure), fn unquote(inner_arg) ->
+        unquote(inner)
+      end})
+    end
+    |> Code.new([structure, func])
+  end
+
+  defp do_build_delete([item], arg, func) do
+    quote do
+      unquote(item).(:delete, {unquote(arg), unquote(func)})
+    end
+  end
+  defp do_build_delete([head | tail], arg, func) do
+    inner_arg = {:x, [], Elixir}
+    inner = do_build_delete(tail, inner_arg, func)
+    quote do
+      unquote(head).(:delete, {unquote(arg), fn unquote(inner_arg) ->
         unquote(inner)
       end})
     end

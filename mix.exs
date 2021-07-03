@@ -24,7 +24,7 @@ defmodule Pathex.MixProject do
     "Code generation library for functional lenses"
   end
 
-  defp package() do
+  defp package do
     [
       description: description(),
       licenses: ["BSD-2-Clause"],
@@ -41,7 +41,7 @@ defmodule Pathex.MixProject do
     ]
   end
 
-  defp deps() do
+  defp deps do
     [
       {:ex_doc,   "~> 0.23.0", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0",  only: :dev, runtime: false},
@@ -51,7 +51,7 @@ defmodule Pathex.MixProject do
 
   # Docs section
 
-  defp docs() do
+  defp docs do
     [
       source_ref:         "v#{@version}",
       main:               "readme",
@@ -68,7 +68,7 @@ defmodule Pathex.MixProject do
     ]
   end
 
-  defp groups_for_modules() do
+  defp groups_for_modules do
     [
       "Public": [
         Pathex,

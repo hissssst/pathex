@@ -5,7 +5,7 @@ defmodule Pathex.Builder.SimpleUpdater do
   """
 
   alias Pathex.Common
-  import Pathex.Builder.Setter
+  alias Pathex.Builder.Setter
   @behaviour Pathex.Builder
 
   @structure_variable {:x, [], Elixir}
@@ -15,12 +15,12 @@ defmodule Pathex.Builder.SimpleUpdater do
     combination
     |> Enum.reverse()
     |> Enum.reduce(initial(), &reduce_into/2)
-    |> wrap_to_code([@structure_variable, @function_variable])
+    |> Setter.wrap_to_code([@structure_variable, @function_variable])
   end
 
   defp reduce_into(path_items, acc) do
-    setters = Enum.flat_map(path_items, & create_setter(&1, acc))
-    Common.to_case(setters ++ fallback())
+    setters = Enum.flat_map(path_items, & Setter.create_setter(&1, acc))
+    Common.to_case(setters ++ Setter.fallback())
   end
 
   defp initial do

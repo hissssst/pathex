@@ -93,4 +93,10 @@ defmodule Pathex.Builder.Viewer do
     end
   end
 
+  def expand_local({:and, _, _} = quoted), do: quoted # Some bug in Macro.expand
+  def expand_local(quoted) do
+    env = %Macro.Env{requires: [__MODULE__]}
+    Macro.expand(quoted, env)
+  end
+
 end

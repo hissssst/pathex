@@ -11,7 +11,8 @@ defmodule Pathex.Builder.Composition.And do
     [
       view:         build_view(items),
       update:       build_update(items),
-      force_update: build_force_update(items)
+      force_update: build_force_update(items),
+      delete:       build_delete(items)
     ]
   end
 
@@ -49,6 +50,17 @@ defmodule Pathex.Builder.Composition.And do
     |> Code.new([structure, func, default])
   end
 
+  defp build_delete([head | tail]) do
+    ret        = {:x, [], Elixir}
+    structure  = {:input_struct, [], Elixir}
+    func       = {:func, [], Elixir}
+    first_case = to_delete(head, ret, structure, func)
+
+    [first_case | Enum.map(tail, & to_delete(&1, ret, ret, func))]
+    |> to_with(ret)
+    |> Code.new([structure, func])
+  end
+
   defp to_with(cases, ret) do
     quote do
       with unquote_splicing(cases) do
@@ -74,6 +86,12 @@ defmodule Pathex.Builder.Composition.And do
   defp to_force_update(item, ret, structure, func, default) do
     quote do
       {:ok, unquote(ret)} <- unquote(item).(:force_update, {unquote(structure), unquote(func), unquote(default)})
+    end
+  end
+
+  defp to_delete(item, ret, structure, func) do
+    quote do
+      {:ok, unquote(ret)} <- unquote(item).(:delete, {unquote(structure), unquote(func)})
     end
   end
 
