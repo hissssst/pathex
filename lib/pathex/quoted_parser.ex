@@ -16,12 +16,20 @@ defmodule Pathex.QuotedParser do
     |> Operations.filter_combination(mod)
   end
 
+  @doc """
+  Parses chained binary operator call into list of operands
+  For example:
+      iex> quoted = quote(do: 1 ~> 2 ~> 3)
+      iex> parse_composition(quote, :"~>")
+      [1, 2, 3]
+  """
   @spec parse_composition(Macro.t(), atom()) :: [Macro.t()]
   def parse_composition({symbol, _, [l, r]}, symbol) do
     parse_composition(l, symbol) ++ parse_composition(r, symbol)
   end
   def parse_composition(other, _symbol), do: [other]
 
+  @spec detect_quoted(Macro.t()) :: Pathex.Combination.t()
   defp detect_quoted(var) when is_var(var) do
     [map: var, keyword: var, list: var, tuple: var]
   end

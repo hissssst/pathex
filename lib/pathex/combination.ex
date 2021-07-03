@@ -73,6 +73,10 @@ defmodule Pathex.Combination do
     end)
   end
 
+  @doc """
+  Counts total size of clauses created from this composition
+  """
+  @spec size(t()) :: non_neg_integer()
   def size(combination) do
     Enum.reduce(combination, 1, & length(&1) * &2)
   end
