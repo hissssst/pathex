@@ -1,16 +1,16 @@
 defmodule Pathex.Common do
-
   @moduledoc """
   Util functions for working with AST in Pathex
   Shared among all Pathex projects
   """
 
-  defguard is_var(t) when is_tuple(t)
-    and tuple_size(t) == 3
-    and is_atom(:erlang.element(1, t))
-    and is_list(:erlang.element(2, t))
-    and (is_atom(:erlang.element(3, t))
-    or is_nil(:erlang.element(3, t)))
+  defguard is_var(t)
+           when is_tuple(t) and
+                  tuple_size(t) == 3 and
+                  is_atom(:erlang.element(1, t)) and
+                  is_list(:erlang.element(2, t)) and
+                  (is_atom(:erlang.element(3, t)) or
+                     is_nil(:erlang.element(3, t)))
 
   @typep context :: atom() | nil
 
@@ -22,6 +22,7 @@ defmodule Pathex.Common do
     Macro.postwalk(ast, fn
       {n, c, ^context} = v when is_atom(n) and is_list(c) ->
         func.(v)
+
       other ->
         other
     end)
@@ -48,11 +49,14 @@ defmodule Pathex.Common do
   """
   @spec list_match(non_neg_integer(), Macro.t()) :: Macro.t()
   def list_match(index, inner \\ {:x, [], Elixir})
+
   def list_match(0, inner) do
     quote(do: [unquote(inner) | _])
   end
+
   def list_match(index, inner) do
     unders = Enum.map(1..index, fn _ -> {:_, [], Elixir} end)
+
     quote generated: true do
       [unquote_splicing(unders), unquote(inner) | _]
     end
@@ -65,6 +69,7 @@ defmodule Pathex.Common do
   def pin(ast) when is_var(ast) do
     quote(do: ^unquote(ast))
   end
+
   def pin(ast), do: ast
 
   @doc """
@@ -84,8 +89,7 @@ defmodule Pathex.Common do
   @spec set_generated(Macro.t()) :: Macro.t()
   def set_generated(ast) do
     Macro.prewalk(ast, fn item ->
-      Macro.update_meta(item, & Keyword.put(&1, :generated, true))
+      Macro.update_meta(item, &Keyword.put(&1, :generated, true))
     end)
   end
-
 end

@@ -1,5 +1,4 @@
 defmodule Pathex.Builder.SimpleViewer do
-
   @moduledoc """
   Simple viewer-builder for functions which apply func to value in the path
 
@@ -7,8 +6,8 @@ defmodule Pathex.Builder.SimpleViewer do
   to not create another function call
   """
 
-  alias Pathex.Common
   alias Pathex.Builder.Viewer
+  alias Pathex.Common
   @behaviour Pathex.Builder
 
   @structure_variable {:x, [], Elixir}
@@ -25,14 +24,14 @@ defmodule Pathex.Builder.SimpleViewer do
     |> Enum.reverse()
     |> Enum.reduce(initial(), &reduce_into/2)
     |> Macro.prewalk(&Viewer.expand_local/1)
-    #|> Macro.to_string()
-    #|> IO.puts
+    # |> Macro.to_string()
+    # |> IO.puts
     |> Pathex.Builder.Code.new_arg_pipe([@structure_variable, @function_variable])
   end
 
   defp reduce_into(path_items, acc) do
     path_items
-    |> Enum.flat_map(& Viewer.create_getter(&1, acc))
+    |> Enum.flat_map(&Viewer.create_getter(&1, acc))
     |> Kernel.++(Viewer.fallback())
     |> Common.to_case()
   end
@@ -42,5 +41,4 @@ defmodule Pathex.Builder.SimpleViewer do
       unquote(@function_variable).()
     end
   end
-
 end

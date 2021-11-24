@@ -1,5 +1,4 @@
 defmodule Pathex.Lenses.All do
-
   @moduledoc """
   Private module for `all()` lens
   """
@@ -10,7 +9,7 @@ defmodule Pathex.Lenses.All do
     quote do
       case unquote(pipe) do
         unquote(pattern) -> unquote(code)
-        other            -> other
+        other -> other
       end
     end
   end
@@ -19,7 +18,7 @@ defmodule Pathex.Lenses.All do
     quote do
       case unquote(func).(unquote(value)) do
         {:ok, v} -> {:cont, {:ok, [v | unquote(acc)]}}
-        :error   -> {:halt, :error}
+        :error -> {:halt, :error}
       end
     end
   end
@@ -80,7 +79,7 @@ defmodule Pathex.Lenses.All do
           Enum.reduce_while(map, {:ok, []}, fn {key, value}, {_, acc} ->
             case func.(value) do
               {:ok, v} -> {:cont, {:ok, [{key, v} | acc]}}
-              :error   -> {:halt, :error}
+              :error -> {:halt, :error}
             end
           end)
 
@@ -102,7 +101,7 @@ defmodule Pathex.Lenses.All do
         Enum.reduce_while(kwd, {:ok, []}, fn {key, value}, {_, acc} ->
           case func.(value) do
             {:ok, v} -> {:cont, {:ok, [{key, v} | acc]}}
-            :error   -> {:halt, :error}
+            :error -> {:halt, :error}
           end
         end)
         |> reverse_if_ok()
@@ -113,33 +112,12 @@ defmodule Pathex.Lenses.All do
         end)
         |> reverse_if_ok()
 
-      :delete, {%{} = map, func} ->
-        map
-        |> Enum.all?(fn {_key, value} -> match?({:ok, _}, func.(value)) end)
-        |> bool_to_either(%{})
-
-      :delete, {tuple, func} when is_tuple(tuple) and tuple_size(tuple) > 0 ->
-        tuple
-        |> Tuple.to_list()
-        |> Enum.all?(fn value -> match?({:ok, _}, func.(value)) end)
-        |> bool_to_either({})
-
-      :delete, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        kwd
-        |> Enum.all?(fn {_key, value} -> match?({:ok, _}, func.(value)) end)
-        |> bool_to_either([])
-
-      :delete, {list, func} when is_list(list) ->
-        list
-        |> Enum.all?(fn value -> match?({:ok, _}, func.(value)) end)
-        |> bool_to_either([])
-
       :force_update, {%{} = map, func, default} ->
         map
         |> Map.new(fn {key, value} ->
           case func.(value) do
             {:ok, v} -> {key, v}
-            :error   -> {key, default}
+            :error -> {key, default}
           end
         end)
         |> wrap_ok()
@@ -150,7 +128,7 @@ defmodule Pathex.Lenses.All do
         |> Enum.map(fn value ->
           case func.(value) do
             {:ok, v} -> v
-            :error   -> default
+            :error -> default
           end
         end)
         |> List.to_tuple()
@@ -161,7 +139,7 @@ defmodule Pathex.Lenses.All do
         |> Enum.map(fn {key, value} ->
           case func.(value) do
             {:ok, v} -> {key, v}
-            :error   -> {key, default}
+            :error -> {key, default}
           end
         end)
         |> wrap_ok()
@@ -171,12 +149,12 @@ defmodule Pathex.Lenses.All do
         |> Enum.map(fn value ->
           case func.(value) do
             {:ok, v} -> v
-            :error   -> default
+            :error -> default
           end
         end)
         |> wrap_ok()
 
-      op, _ when op in ~w[view update delete force_update]a ->
+      op, _ when op in ~w[view update force_update]a ->
         :error
     end
   end

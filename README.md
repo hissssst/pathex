@@ -32,25 +32,31 @@ end
 
 ## Usage
 
-1. You need to import and require Pathex since it mainly operates macros
+1. Import it
+
    ```elixir
    require Pathex
    import Pathex, only: [path: 1, path: 2, "~>": 2]
    ```
-   Or you can just `use` Pathex!
-   ```elixir
-   # This will require Pathex and import all operators and path/2 macro
-   use Pathex
-   ```
 
-2. You need to create the path which defines the path to the item in elixir structure you want to get:
+   > Or you can just `use` Pathex!
+   >
+   > ```elixir
+   > # This will require Pathex and import all operators and path/2 macro
+   > use Pathex
+   > ```
+
+2. Create path
+
    ```elixir
    path_to_strees = path :user / :private / :addresses / 0 / :street
    path_in_json = ~P"users/1/street"json
    ```
-   This creates closure with `fn` which can get, set and update values in this path
+
+   This creates closure which can get, set and update values in this path
 
 3. Use the path!
+
    ```elixir
    {:ok, "6th avenue" = street} =
        %{
@@ -75,73 +81,82 @@ end
 
 ## Features
 
-1. Speed.  
-   Paths are really a set of pattern-matching cases. This is done to extract maximum efficency from BEAM's pattern-matching compiler
-   ```elixir
-   # Code for viewing variables for path
-   path(1 / "y", :map)
+### Speed
 
-   # Almost equals to
-   case do
-     %{1 => %{"y" => res}} -> {:ok, res}
-     _                     -> :error
-   end
+Paths are really a set of pattern-matching cases.
+This is done to extract maximum efficency from BEAM's pattern-matching compiler
+
+```elixir
+# Code for viewing variables for path
+path(1 / "y", :map)
+
+# Almost equals to
+case do
+  %{1 => %{"y" => res}} -> {:ok, res}
+  _                     -> :error
+end
    ```
 
-2. Reusability.  
-   Paths can be created and used or composed later with rich set of composition functions
-   ```elixir
-   # Takes username from user structure
-   username = path(:personal / :fname)
+### Reusability
 
-   {:ok, "Kabs"} =
-     %{
-       personal: %{fname: "Kabs", sname: "Rocks"},
-       phone: "123-456-789"
-     }
+Paths can be created and used or composed later with rich set of composition functions
 
-   # Takes all usernames!
-   all = Pathex.Lenses.all()
+```elixir
+# Takes username from user structure
+username = path(:personal / :fname)
 
-   {:ok, ["Kabs", "Blabs"]} =
-     [
-       %{
-         personal: %{fname: "Kabs", sname: "Rocks"},
-         phone: "123-456-789"
-       },
-       %{
-         personal: %{fname: "Blabs"},
-         phone: "123-456-790"
-       }
-     ]
-     |> Pathex.view(all ~> username)
-   ```
+{:ok, "Kabs"} =
+  %{
+    personal: %{fname: "Kabs", sname: "Rocks"},
+    phone: "123-456-789"
+  }
 
-3. Rich toolkit.  
-   Perform create, update, select operation with different behaviours using `Pathex.Lenses` module
-   High level operations like filtering and updating nested values have never been this easy
-   ```elixir
-   import Pathex; import Pathex.Lenses
+# Takes all usernames!
+all = Pathex.Lenses.all()
 
-   # Change first username in a list
-   [
-     %{personal: %{fname: "Alabs", sname: "Rocks"}},
-     %{personal: %{fname: "Blabs"}}
-   ] =
-     [
-       %{personal: %{fname: "Kabs", sname: "Rocks"}},
-       %{personal: %{fname: "Blabs"}}
-     ]
-     |> Pathex.set!(some() ~> path(:personal / :fname), "Alabs")
-   ```
+{:ok, ["Kabs", "Blabs"]} =
+  [
+    %{
+      personal: %{fname: "Kabs", sname: "Rocks"},
+      phone: "123-456-789"
+    },
+    %{
+      personal: %{fname: "Blabs"},
+      phone: "123-456-790"
+    }
+  ]
+  |> Pathex.view(all ~> username)
+```
 
-4. Powerfull abstraction.  
-   Pathex is built around simple primitive called `path`, therefore can be simply extended.  
-   `path` or `path-closure` is just a closure with special primitives. Anything complying with `Pathex.t()` spec can
-   be used within `Pathex`
+### Rich toolkit
 
-5. Safe and simple  
-   All path-closures are pure and macro are hygienic. There is no magic
+Perform create, update, select operation with different behaviours using `Pathex.Lenses` module
+High level operations like filtering and updating nested values have never been this easy
+
+```elixir
+import Pathex; import Pathex.Lenses
+
+# Change first username in a list
+[
+  %{personal: %{fname: "Alabs", sname: "Rocks"}},
+  %{personal: %{fname: "Blabs"}}
+] =
+  [
+    %{personal: %{fname: "Kabs", sname: "Rocks"}},
+    %{personal: %{fname: "Blabs"}}
+  ]
+  |> Pathex.set!(some() ~> path(:personal / :fname), "Alabs")
+```
+
+### Powerfull abstraction
+
+Pathex is built around simple primitive called `path`, therefore can be simply extended.  
+`path` or `path-closure` is just a closure with special primitives. Anything complying with `Pathex.t()` spec can
+be used within `Pathex`
+
+### Safe and simple
+
+All path-closures are pure and macro are hygienic. There is no magic
 
 ## Contributions
 
@@ -151,5 +166,7 @@ Welcome! You can check existing `TODO`'s
 
 By the way
 
-* If you have any suggestions or wan't to change something in this library don't hesitate to open an issue
-* If you have any whitepapers about functional lenses, you can add them in a PR to the bottom of this readme
+* If you have any suggestions or want to change something in this library don't
+hesitate to open an issue
+* If you have any whitepapers about functional lenses, you can add them in a PR
+to the bottom of this readme

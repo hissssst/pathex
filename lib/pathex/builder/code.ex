@@ -1,5 +1,4 @@
 defmodule Pathex.Builder.Code do
-
   @moduledoc """
   Structure for working with closures as ASTs
   ### Fields
@@ -9,15 +8,15 @@ defmodule Pathex.Builder.Code do
 
   @enforce_keys [:code]
   defstruct [
-    vars: [],
-  ] ++ @enforce_keys
+              vars: []
+            ] ++ @enforce_keys
 
   @type code_type :: :one_arg_pipe
 
   @type t :: %__MODULE__{
-    vars: [{atom(), list(), atom() | nil}] | [],
-    code: Macro.t(),
-  }
+          vars: [{atom(), list(), atom() | nil}] | [],
+          code: Macro.t()
+        }
 
   @doc """
   Converts code structure to quoted fn-closure
@@ -48,11 +47,12 @@ defmodule Pathex.Builder.Code do
   """
   @spec multiple_to_fn([{atom(), t()}] | %{atom() => t()}) :: Macro.t()
   def multiple_to_fn(codes) do
-    cases = Enum.flat_map(codes, fn {key, %{vars: vars, code: code}} ->
-      quote generated: true do
-        unquote(key), {unquote_splicing(vars)} -> unquote(code)
-      end
-    end)
+    cases =
+      Enum.flat_map(codes, fn {key, %{vars: vars, code: code}} ->
+        quote generated: true do
+          unquote(key), {unquote_splicing(vars)} -> unquote(code)
+        end
+      end)
 
     {:fn, [], cases}
   end
@@ -85,10 +85,8 @@ defmodule Pathex.Builder.Code do
         |> Code.format_string!()
         |> IO.iodata_to_binary()
 
-      vars = Enum.map(vars, & elem(&1, 0))
+      vars = Enum.map(vars, &elem(&1, 0))
       concat(["#Pathex.Builder.Code<", to_doc(vars, opts), "\n", code, "\n>"])
     end
-
   end
-
 end

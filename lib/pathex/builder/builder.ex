@@ -1,5 +1,4 @@
 defmodule Pathex.Builder do
-
   @moduledoc """
   Module for building combinations into path-closures
   """
@@ -11,9 +10,9 @@ defmodule Pathex.Builder do
   @type t :: module()
 
   @composition_builders %{
-    "&&&": Composition.And,
-    "|||": Composition.Or,
-    "~>":  Composition.Concat
+    &&&: Composition.And,
+    |||: Composition.Or,
+    ~>: Composition.Concat
   }
 
   # Behaviour
@@ -71,6 +70,7 @@ defmodule Pathex.Builder do
     def build_composition(items, unquote(composition), env) do
       context = :"pathex_context_#{:erlang.unique_integer([:positive])}"
       {binds, vars} = bind_items(items, env, context)
+
       func =
         vars
         |> unquote(builder).build()
@@ -85,8 +85,8 @@ defmodule Pathex.Builder do
 
   # Returns bindings for variables which works like
   # quote's bind_quoted
-  @spec bind_items(vars :: [Macro.t()], env :: Macro.Env.t(), context :: atom())
-  :: {binds :: [Macro.t()], vars :: [Macro.t()]}
+  @spec bind_items(vars :: [Macro.t()], env :: Macro.Env.t(), context :: atom()) ::
+          {binds :: [Macro.t()], vars :: [Macro.t()]}
   defp bind_items(items, env, context) do
     {binds, vars, _} =
       Enum.reduce(items, {[], [], 0}, fn item, {binds, vars, idx} ->
@@ -95,7 +95,7 @@ defmodule Pathex.Builder do
         bind = quote(do: unquote(var) = unquote(item))
         {[bind | binds], [var | vars], idx + 1}
       end)
+
     {Enum.reverse(binds), Enum.reverse(vars)}
   end
-
 end

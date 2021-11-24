@@ -1,5 +1,4 @@
 defmodule Pathex do
-
   @moduledoc """
   Main module. Use it inside your project to call Pathex macros
 
@@ -18,7 +17,8 @@ defmodule Pathex do
   ```elixir
   defmodule MyModule do
 
-    # default_mod option is optional
+    # `default_mod` option is optional
+    # when no mod is specified, `:naive` is selected
     use Pathex, default_mod: :json
 
     ...
@@ -60,17 +60,26 @@ defmodule Pathex do
   @type mod :: :map | :json | :naive
 
   defmacro __using__(opts) do
-    mod = Keyword.get(opts, :default_mod, :naive)
-    quote do
-      require Pathex
-      import Pathex, only: [path: 2, "~>": 2, "&&&": 2, "|||": 2, alongside: 1]
-
-      defmacrop path(p) do
-        mod = unquote(mod)
+    case Keyword.get(opts, :default_mod, :naive) do
+      :naive ->
         quote do
-          Pathex.path(unquote(p), unquote(mod))
+          require Pathex
+          import Pathex, only: [path: 1, path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
         end
-      end
+
+      mod ->
+        quote do
+          require Pathex
+          import Pathex, only: [path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
+
+          defmacrop path(p) do
+            mod = unquote(mod)
+
+            quote do
+              Pathex.path(unquote(p), unquote(mod))
+            end
+          end
+        end
     end
   end
 
@@ -168,7 +177,12 @@ defmodule Pathex do
       iex> :error = force_set %{"hey" => {1, 2}}, p, "value"
   """
   defmacro force_set(struct, path, value) do
-    gen(path, :force_update, [struct, quote(do: fn _ -> {:ok, unquote(value)} end), value], __CALLER__)
+    gen(
+      path,
+      :force_update,
+      [struct, quote(do: fn _ -> {:ok, unquote(value)} end), value],
+      __CALLER__
+    )
   end
 
   @doc """
@@ -194,7 +208,11 @@ defmodule Pathex do
   """
   defmacro force_set!(struct, path, value) do
     path
-    |> gen(:force_update, [struct, quote(do: fn _ -> {:ok, unquote(value)} end), value], __CALLER__)
+    |> gen(
+      :force_update,
+      [struct, quote(do: fn _ -> {:ok, unquote(value)} end), value],
+      __CALLER__
+    )
     |> bang("Type mismatch in structure")
   end
 
@@ -330,6 +348,7 @@ defmodule Pathex do
   """
   defmacro get(struct, path, default \\ nil) do
     res = gen(path, :view, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
+
     quote do
       case unquote(res) do
         {:ok, value} -> value
@@ -337,17 +356,6 @@ defmodule Pathex do
       end
     end
     |> Common.set_generated()
-  end
-
-  #TODO
-  defmacro delete(struct, path) do
-    gen(path, :delete, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
-  end
-
-  defmacro delete!(struct, path) do
-    path
-    |> gen(:delete, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
-    |> bang()
   end
 
   @doc """
@@ -365,6 +373,7 @@ defmodule Pathex do
   """
   defmacro sigil_P({_, _, [string]}, mod) do
     mod = detect_mod(mod)
+
     string
     |> Parser.parse(mod)
     |> assert_combination_length(__CALLER__)
@@ -417,9 +426,9 @@ defmodule Pathex do
       iex> {:ok, 1} = view %{x: [y: [a: [a: 0, b: 1]]]}, composed_path
   """
   defmacro a ~> b do
-    {:"~>", [], [a, b]}
-    |> QuotedParser.parse_composition(:"~>")
-    |> Builder.build_composition(:"~>", __CALLER__)
+    {:~>, [], [a, b]}
+    |> QuotedParser.parse_composition(:~>)
+    |> Builder.build_composition(:~>, __CALLER__)
     |> Common.set_generated()
   end
 
@@ -438,9 +447,9 @@ defmodule Pathex do
   """
   # This code is generated with experimental composition generator
   defmacro a &&& b do
-    {:"&&&", [], [a, b]}
-    |> QuotedParser.parse_composition(:"&&&")
-    |> Builder.build_composition(:"&&&", __CALLER__)
+    {:&&&, [], [a, b]}
+    |> QuotedParser.parse_composition(:&&&)
+    |> Builder.build_composition(:&&&, __CALLER__)
     |> Common.set_generated()
   end
 
@@ -459,9 +468,9 @@ defmodule Pathex do
       iex> {:ok, %{x: %{}, a: [b: 1]}} = force_set %{x: %{y: 1}, a: [b: 1]}, op, 2
   """
   defmacro a ||| b do
-    {:"|||", [], [a, b]}
-    |> QuotedParser.parse_composition(:"|||")
-    |> Builder.build_composition(:"|||", __CALLER__)
+    {:|||, [], [a, b]}
+    |> QuotedParser.parse_composition(:|||)
+    |> Builder.build_composition(:|||, __CALLER__)
     |> Common.set_generated()
   end
 
@@ -485,7 +494,7 @@ defmodule Pathex do
           |> Enum.reduce_while({:ok, []}, fn path, {_, res} ->
             case path.(:view, {input_struct, func}) do
               {:ok, v} -> {:cont, {:ok, [v | res]}}
-              :error   -> {:halt, :error}
+              :error -> {:halt, :error}
             end
           end)
 
@@ -493,7 +502,7 @@ defmodule Pathex do
           Enum.reduce_while(list, {:ok, input_struct}, fn path, {_, res} ->
             case path.(:update, {res, func}) do
               {:ok, res} -> {:cont, {:ok, res}}
-              :error     -> {:halt, :error}
+              :error -> {:halt, :error}
             end
           end)
 
@@ -501,15 +510,7 @@ defmodule Pathex do
           Enum.reduce_while(list, {:ok, input_struct}, fn path, {_, res} ->
             case path.(:force_update, {res, func, default}) do
               {:ok, res} -> {:cont, {:ok, res}}
-              :error     -> {:halt, :error}
-            end
-          end)
-
-        :delete, {input_struct, func} ->
-          Enum.reduce_while(list, {:ok, input_struct}, fn path, {_, res} ->
-            case path.(:delete, {input_struct, func}) do
-              {:ok, res} -> {:cont, {:ok, res}}
-              :error     -> {:halt, :error}
+              :error -> {:halt, :error}
             end
           end)
       end
@@ -519,13 +520,16 @@ defmodule Pathex do
 
   # Helper for generating code for path operation
   # Special case for inline paths
-  defp gen({:path, _, [path]}, op, args, caller) do
-    path_func = build_only(path, op, caller)
+  defp gen({:path, _, [path | tail]}, op, args, caller) do
+    mod = List.first(tail) || :naive
+    path_func = build_only(path, op, caller, mod)
+
     quote generated: true do
       unquote(path_func).(unquote_splicing(args))
     end
     |> Common.set_generated()
   end
+
   # Case for not inlined paths
   defp gen(path, op, args, _caller) do
     quote generated: true do
@@ -536,7 +540,7 @@ defmodule Pathex do
 
   defp wrap_ok(func) do
     quote do
-      fn xu -> {:ok, unquote(func).(xu)} end
+      fn x -> {:ok, unquote(func).(x)} end
     end
   end
 
@@ -560,16 +564,18 @@ defmodule Pathex do
   defp detect_mod('naive'), do: :naive
   defp detect_mod(_), do: raise("Can't have this modifier set")
 
-  defp build_only(path, opname, caller, mod \\ :naive) do
+  defp build_only(path, opname, caller, mod) do
     %{^opname => builder} = Operations.from_mod(mod)
-    case Macro.prewalk(path, & Macro.expand(&1, caller)) do
-      {{:".", _, [__MODULE__, :path]}, _, args} ->
+
+    case Macro.prewalk(path, &Macro.expand(&1, caller)) do
+      {{:., _, [__MODULE__, :path]}, _, args} ->
         args
 
       {:path, meta, args} = full ->
         case Keyword.fetch(meta, :import) do
           {:ok, __MODULE__} ->
             args
+
           _ ->
             full
         end
@@ -582,22 +588,25 @@ defmodule Pathex do
   end
 
   # This function raises warning if combination will lead to very big closure
-  @maximum_combination_size 128
+  @maximum_combination_size 256
   defp assert_combination_length(combination, env) do
     size = Combination.size(combination)
+
     if size > @maximum_combination_size do
       {func, arity} = env.function || {:nofunc, 0}
       stacktrace = [{env.module, func, arity, [file: '#{env.file}', line: env.line]}]
+
       """
       This path will generate too many clauses, and therefore will slow down
-      the compilation and increase amount of generated code. Size of current
-      combination is #{size} while suggested size is #{@maximum_combination_size}
+      the compilation and increase amount of generated code. Current
+      combination has #{size} clauses while suggested amount is #{@maximum_combination_size}
 
       It would be better to split this closure in different paths with `Pathex.~>/2`
       Or change the modifier to one which generates less code: `:map` or `:json`
       """
       |> IO.warn(stacktrace)
     end
+
     combination
   end
 
@@ -608,5 +617,4 @@ defmodule Pathex do
     """
     defexception [:message]
   end
-
 end

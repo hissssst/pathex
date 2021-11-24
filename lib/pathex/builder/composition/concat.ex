@@ -1,5 +1,4 @@
 defmodule Pathex.Builder.Composition.Concat do
-
   @moduledoc """
   Builder for paths concatenation (with `~>`)
   """
@@ -9,9 +8,8 @@ defmodule Pathex.Builder.Composition.Concat do
 
   def build(paths) do
     [
-      view:         build_view(paths),
-      update:       build_update(paths),
-      delete:       build_delete(paths),
+      view: build_view(paths),
+      update: build_update(paths),
       force_update: build_force_update(paths)
     ]
   end
@@ -20,8 +18,8 @@ defmodule Pathex.Builder.Composition.Concat do
 
   defp build_force_update([head | tail]) do
     structure = {:input_struct, [], Elixir}
-    func      = {:func, [], Elixir}
-    default   = {:default, [], Elixir}
+    func = {:func, [], Elixir}
+    default = {:default, [], Elixir}
 
     {[head_default | defaults], withs} = generate_withs(tail, func, default)
 
@@ -30,9 +28,13 @@ defmodule Pathex.Builder.Composition.Concat do
 
     quote do
       with unquote_splicing(withs) do
-        unquote(head).(:force_update, {unquote(structure), fn unquote(inner_arg) ->
-          unquote(inner)
-        end, unquote(head_default)})
+        unquote(head).(
+          :force_update,
+          {unquote(structure),
+           fn unquote(inner_arg) ->
+             unquote(inner)
+           end, unquote(head_default)}
+        )
       end
     end
     |> Code.new([structure, func, default])
@@ -68,29 +70,39 @@ defmodule Pathex.Builder.Composition.Concat do
       unquote(item).(:force_update, {unquote(arg), unquote(func), unquote(default)})
     end
   end
+
   defp do_build_force_update([head | item_tail], [default | default_tail], arg, func) do
     inner_arg = {:x, [], Elixir}
     inner = do_build_force_update(item_tail, default_tail, inner_arg, func)
+
     quote do
-      unquote(head).(:force_update, {unquote(arg), fn unquote(inner_arg) ->
-        unquote(inner)
-      end, unquote(default)})
+      unquote(head).(
+        :force_update,
+        {unquote(arg),
+         fn unquote(inner_arg) ->
+           unquote(inner)
+         end, unquote(default)}
+      )
     end
   end
 
   # Update
 
   defp build_update([head | tail]) do
-    structure  = {:input_struct, [], Elixir}
-    func       = {:func, [], Elixir}
-    inner_arg  = {:x, [], Elixir}
+    structure = {:input_struct, [], Elixir}
+    func = {:func, [], Elixir}
+    inner_arg = {:x, [], Elixir}
 
     inner = do_build_update(tail, inner_arg, func)
 
     quote do
-      unquote(head).(:update, {unquote(structure), fn unquote(inner_arg) ->
-        unquote(inner)
-      end})
+      unquote(head).(
+        :update,
+        {unquote(structure),
+         fn unquote(inner_arg) ->
+           unquote(inner)
+         end}
+      )
     end
     |> Code.new([structure, func])
   end
@@ -100,60 +112,38 @@ defmodule Pathex.Builder.Composition.Concat do
       unquote(item).(:update, {unquote(arg), unquote(func)})
     end
   end
+
   defp do_build_update([head | tail], arg, func) do
     inner_arg = {:x, [], Elixir}
     inner = do_build_update(tail, inner_arg, func)
-    quote do
-      unquote(head).(:update, {unquote(arg), fn unquote(inner_arg) ->
-        unquote(inner)
-      end})
-    end
-  end
-
-  # Delete
-
-  defp build_delete([head | tail]) do
-    structure  = {:input_struct, [], Elixir}
-    func       = {:func, [], Elixir}
-    inner_arg  = {:x, [], Elixir}
-
-    inner = do_build_delete(tail, inner_arg, func)
 
     quote do
-      unquote(head).(:delete, {unquote(structure), fn unquote(inner_arg) ->
-        unquote(inner)
-      end})
-    end
-    |> Code.new([structure, func])
-  end
-
-  defp do_build_delete([item], arg, func) do
-    quote do
-      unquote(item).(:delete, {unquote(arg), unquote(func)})
-    end
-  end
-  defp do_build_delete([head | tail], arg, func) do
-    inner_arg = {:x, [], Elixir}
-    inner = do_build_delete(tail, inner_arg, func)
-    quote do
-      unquote(head).(:delete, {unquote(arg), fn unquote(inner_arg) ->
-        unquote(inner)
-      end})
+      unquote(head).(
+        :update,
+        {unquote(arg),
+         fn unquote(inner_arg) ->
+           unquote(inner)
+         end}
+      )
     end
   end
 
   # View
 
   defp build_view([head | tail]) do
-    structure  = {:input_struct, [], Elixir}
-    func       = {:func, [], Elixir}
-    inner_arg  = {:x, [], Elixir}
-    inner      = do_build_view(tail, inner_arg, func)
+    structure = {:input_struct, [], Elixir}
+    func = {:func, [], Elixir}
+    inner_arg = {:x, [], Elixir}
+    inner = do_build_view(tail, inner_arg, func)
 
     quote do
-      unquote(head).(:view, {unquote(structure), fn unquote(inner_arg) ->
-        unquote(inner)
-      end})
+      unquote(head).(
+        :view,
+        {unquote(structure),
+         fn unquote(inner_arg) ->
+           unquote(inner)
+         end}
+      )
     end
     |> Code.new([structure, func])
   end
@@ -166,12 +156,16 @@ defmodule Pathex.Builder.Composition.Concat do
 
   defp do_build_view([head | tail], arg, func) do
     inner_arg = {:x, [], Elixir}
-    inner     = do_build_view(tail, inner_arg, func)
+    inner = do_build_view(tail, inner_arg, func)
+
     quote do
-      unquote(head).(:view, {unquote(arg), fn unquote(inner_arg) ->
-        unquote(inner)
-      end})
+      unquote(head).(
+        :view,
+        {unquote(arg),
+         fn unquote(inner_arg) ->
+           unquote(inner)
+         end}
+      )
     end
   end
-
 end

@@ -17,8 +17,8 @@ Currently only three modifiers are avaliable:
 Modifiers are specified as second argument in `path/2` like
 
 ```elixir
-path(:x / :y, :naive)
-path(0 / :x, :json)
+path :x / :y, :naive
+path 0 / :x, :json
 ```
 
 Or for sigil paths like
@@ -32,7 +32,9 @@ Or for sigil paths like
 
 This modifier matches lists, tuples, keyword and maps
 It generates matches for every structure like
-```
+
+```elixir
+# For `path :x`
 case input do
   %{x: value} ->
      ...
@@ -44,14 +46,15 @@ end
 ```
 
 > Note:
-> Variables are treaded as their values
+> Variables are treated as their values
 
 ## Json modifier
 
-This modifier macthes lists (for integer keys only) and maps
+This modifier specifies paths which macth lists (for integer keys only) and maps
 
 > Note:
 > This modifier treats variables as map keys, this means that
+>
 > ```elixir
 > iex> x = 1
 > iex> p = path x, :json
@@ -60,9 +63,10 @@ This modifier macthes lists (for integer keys only) and maps
 > ```
 
 But passed integers are exanded into list matching
-this makes it very efficent for view data from structure
+this makes it very efficent to view data from the structure
 
-For example `path(1 / :x, :json)` will generate closure with
+For example `path 1 / :x, :json` generates closure with
+
 ```elixir
 case input do
   [_, %{x: value} | _] ->
@@ -86,7 +90,8 @@ Which extracts maximum efficency from BEAM's pattern-matching
 
 This modifier matches only maps and therefore is the fastest modifier avaliable
 
-For example `path(1 / :x / "y", :json)` will generate closure with
+For example `path 1 / :x / "y", :json` will generate closure with
+
 ```elixir
 case input do
   %{1 => %{x: %{"y" => value}}} ->

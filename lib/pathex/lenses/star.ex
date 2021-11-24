@@ -1,5 +1,4 @@
 defmodule Pathex.Lenses.Star do
-
   @moduledoc """
   Private module for `star()` lens
   """
@@ -10,7 +9,7 @@ defmodule Pathex.Lenses.Star do
     quote do
       case unquote(func).(unquote(value)) do
         {:ok, result} -> [result | unquote(acc)]
-        :error        -> unquote(acc)
+        :error -> unquote(acc)
       end
     end
   end
@@ -22,7 +21,7 @@ defmodule Pathex.Lenses.Star do
   # Lens
 
   @spec star() :: Pathex.t()
-  def star() do
+  def star do
     fn
       :view, {%{} = map, func} ->
         map
@@ -59,7 +58,7 @@ defmodule Pathex.Lenses.Star do
         |> Map.new(fn {key, value} ->
           case func.(value) do
             {:ok, new_value} -> {key, new_value}
-            :error           -> {key, value}
+            :error -> {key, value}
           end
         end)
         |> wrap_ok()
@@ -70,7 +69,7 @@ defmodule Pathex.Lenses.Star do
         |> Enum.map(fn value ->
           case func.(value) do
             {:ok, new_value} -> new_value
-            :error           -> value
+            :error -> value
           end
         end)
         |> List.to_tuple()
@@ -81,7 +80,7 @@ defmodule Pathex.Lenses.Star do
         |> Enum.map(fn {key, value} ->
           case func.(value) do
             {:ok, new_value} -> {key, new_value}
-            :error           -> {key, value}
+            :error -> {key, value}
           end
         end)
         |> wrap_ok()
@@ -90,48 +89,7 @@ defmodule Pathex.Lenses.Star do
         Enum.map(l, fn value ->
           case func.(value) do
             {:ok, new_value} -> new_value
-            :error           -> value
-          end
-        end)
-        |> wrap_ok()
-
-      :delete, {%{} = map, func} ->
-        map
-        |> Enum.reduce(%{}, fn {key, value}, acc ->
-          case func.(value) do
-            {:ok, _} -> acc
-            :error   -> Map.put(acc, key, value)
-          end
-        end)
-        |> wrap_ok()
-
-      :delete, {t, func} when is_tuple(t) and tuple_size(t) > 0 ->
-        t
-        |> Tuple.to_list()
-        |> Enum.flat_map(fn value ->
-          case func.(value) do
-            {:ok, _} -> []
-            :error   -> [value]
-          end
-        end)
-        |> List.to_tuple()
-        |> wrap_ok()
-
-      :delete, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        kwd
-        |> Enum.flat_map(fn {key, value} ->
-          case func.(value) do
-            {:ok, _} -> []
-            :error   -> [{key, value}]
-          end
-        end)
-        |> wrap_ok()
-
-      :delete, {l, func} when is_list(l) ->
-        Enum.flat_map(l, fn value ->
-          case func.(value) do
-            {:ok, _} -> []
-            :error   -> [value]
+            :error -> value
           end
         end)
         |> wrap_ok()
@@ -141,7 +99,7 @@ defmodule Pathex.Lenses.Star do
         |> Map.new(fn {key, value} ->
           case func.(value) do
             {:ok, v} -> {key, v}
-            :error   -> {key, default}
+            :error -> {key, default}
           end
         end)
         |> wrap_ok()
@@ -152,7 +110,7 @@ defmodule Pathex.Lenses.Star do
         |> Enum.map(fn value ->
           case func.(value) do
             {:ok, v} -> v
-            :error   -> default
+            :error -> default
           end
         end)
         |> List.to_tuple()
@@ -163,7 +121,7 @@ defmodule Pathex.Lenses.Star do
         |> Enum.map(fn {key, value} ->
           case func.(value) do
             {:ok, v} -> {key, v}
-            :error   -> {key, default}
+            :error -> {key, default}
           end
         end)
         |> wrap_ok()
@@ -173,14 +131,13 @@ defmodule Pathex.Lenses.Star do
         |> Enum.map(fn value ->
           case func.(value) do
             {:ok, v} -> v
-            :error   -> default
+            :error -> default
           end
         end)
         |> wrap_ok()
 
-      op, _ when op in ~w[view update delete force_update]a ->
+      op, _ when op in ~w[view update force_update]a ->
         :error
     end
   end
-
 end

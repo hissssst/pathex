@@ -16,10 +16,12 @@ Here we will take a look at common tasks in nested data structure manipulation
 
 What if we need to update all values matching matching specific pattern
 
-This simple task can be solved using Elixir's `Enum` module but is kind of tought to
-be polymorphic and reusable for different patterns or types of collections
+This simple task can be solved using Elixir's `Enum` module but is kind of tought
+to be polymorphic and reusable for different patterns or types of collections
 
-Let's say we have a list of users with roles and we want to add access to admin_page for all admins:
+Let's say we have a list of users with roles and we want to add access to admin
+page for all admins:
+
 ```elixir
 # The list looks like this
 users = [
@@ -31,6 +33,7 @@ users = [
 ```
 
 With `Enum` this would look like
+
 ```elixir
 new_users =
   Enum.map(users, fn
@@ -43,6 +46,7 @@ new_users =
 ```
 
 But using `Pathex.Lenses` this would look like
+
 ```elixir
 use Pathex
 import Pathex.Lenses
@@ -73,10 +77,43 @@ With `Enum` this would look really terrible.
 I couldn't come up with polymorphic solution which would fit less than 20 lines of code
 
 But with `Pathex.Lenses` this would be as simple as
+
 ```elixir
 use Pathex; import Pathex.Lenses
 def update_first_hello(collection, update_func) do
   hellol = matching({:hello, _})
   Pathex.over(collection, some() ~> hellol, update_func)
+end
+```
+
+### Matching lens
+
+Conditional lens, which returns the value if the value itself matches the given pattern
+
+```elixir
+use Pathex
+import Pathex.Lenses
+
+adminl = matching(%{role: :admin})
+
+user1 = %User{role: :user, name: "Mr Dog"}
+:error = Pathex.view(user1, adminl)
+
+user2 = %User{role: :admin, name: "Mr Dog"}
+{:ok, ^user2} = Pathex.view(user2, adminl)
+```
+
+Most useful lens in combination with `start` and `some`
+
+```elixir
+use Pathex
+import Pathex.Lenses
+
+@spec change_roles([User.t()]) :: :ok
+def change_roles(users) do
+  adminsl = star() ~> matching(%{role: :admin})
+  Pathex.at(users, adminsl, &send_email/1)
+
+  :ok
 end
 ```

@@ -1,5 +1,4 @@
 defmodule Pathex.QuotedParser do
-
   @moduledoc """
   Utils module for parsing paths created with `Pathex.path/2`
   """
@@ -27,20 +26,23 @@ defmodule Pathex.QuotedParser do
   def parse_composition({symbol, _, [l, r]}, symbol) do
     parse_composition(l, symbol) ++ parse_composition(r, symbol)
   end
+
   def parse_composition(other, _symbol), do: [other]
 
   @spec detect_quoted(Macro.t()) :: Pathex.Combination.t()
   defp detect_quoted(var) when is_var(var) do
     [map: var, keyword: var, list: var, tuple: var]
   end
+
   defp detect_quoted(key) when is_atom(key) do
     [map: key, keyword: key]
   end
+
   defp detect_quoted(key) when is_integer(key) do
     [map: key, list: key, tuple: key]
   end
+
   defp detect_quoted(other) do
     [map: other]
   end
-
 end

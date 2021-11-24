@@ -1,12 +1,11 @@
 defmodule Pathex.Lenses.Recur do
-
   @moduledoc """
   > see `Pathex.Lenses.Recur.recur/1` documentation
   """
 
   @compile {:inline, do_recurl: 3, on_error: 2}
 
-  #defguardp is_coll(x) when is_list(x) or is_tuple(x) or is_map(x)
+  # defguardp is_coll(x) when is_list(x) or is_tuple(x) or is_map(x)
 
   @doc """
   This is function which makes you lens recursive
@@ -37,10 +36,11 @@ defmodule Pathex.Lenses.Recur do
   # Helpers
 
   defp update_argtuple(lens, op, {s, f}) do
-    {s, & do_recurl(lens, op, {&1, f})}
+    {s, &do_recurl(lens, op, {&1, f})}
   end
+
   defp update_argtuple(lens, :force_update, {s, f, d}) do
-    {s, & do_recurl(lens, :force_update, {&1, f, d}), d}
+    {s, &do_recurl(lens, :force_update, {&1, f, d}), d}
   end
 
   defp do_recurl(lens, op, t) do
@@ -52,10 +52,10 @@ defmodule Pathex.Lenses.Recur do
   defp on_error(op, {term, func}) when op in ~w[view update]a do
     func.(term)
   end
+
   defp on_error(:force_update, {term, func, default}) do
     with :error <- func.(term) do
       {:ok, default}
     end
   end
-
 end

@@ -11,6 +11,7 @@ refer to `test/guides/different_api_verstions_test.exs` to have some more inform
 Imagine a situation when you need to support different version of API.
 
 For example you webapplication path `/api/v1/users` should respond:
+
 ```json
 [
   {
@@ -39,6 +40,7 @@ For example you webapplication path `/api/v1/users` should respond:
 ```
 
 And `/api/v2/users` should respond:
+
 ```json
 {
   1: {
@@ -59,6 +61,7 @@ And `/api/v2/users` should respond:
 ```
 
 But your inner user representation looks like this:
+
 ```elixir
 %User{
   id: 1,
@@ -85,20 +88,22 @@ But this is not the best solution because
 ## Part 2. Using closures with Pathex
 
 To be inner-user-structure independent we should create lenses for User
+
 ```elixir
 defmodule User do
 
-  require Pathex
-  import Pathex, only: [path: 1, path: 2]
+  use Pathex, default_mod: :map
 
   ...
 
   @doc "This function returns lens for passed user attribute"
   @spec attrlens(atom()) :: Pathex.t()
   def attrlens(attr) when attr in ~w[street house]a do
-    path(:address / attr, :map)
+    path :address / attr
   end
-  def attrlens(attr), do: path(attr, :map)
+  def attrlens(attr) do
+    path attr
+  end
 
 end
 ```
@@ -108,8 +113,7 @@ And define single view which builds data using paths
 ```elixir
 defmodule ApiView do
 
-  require Pathex
-  import Pathex, only: [path: 1, path: 2, "~>": 2]
+  use Pathex, default_mod: :map
 
   @attrs ~w[id name phone street house]a
 
@@ -138,25 +142,25 @@ defmodule ApiView do
   # This functions defines where to put user
   defp userlens(:v1, %User{id: id}, model) do
     idx = Enum.find_index(model, & match?(%{id: ^id}, &1)) || -1
-    path idx
+    path idx, :naive
   end
   defp userlens(:v2, %User{id: id}, _) do
-    path id, :map
+    path id
   end
 
   # This function defines where to put attribute in user
   defp attrlens(:v1, attr) when attr in ~w[id name]a do
-    path attr, :map
+    path attr
   end
   defp attrlens(:v1, attr) when attr in ~w[street house]a do
-    path :personal_data / :address / attr, :map
+    path :personal_data / :address / attr
   end
   defp attrlens(:v1, attr) do
-    path :personal_data / attr, :map
+    path :personal_data / attr
   end
   # For version 2
   defp attrlens(:v2, attr) do
-    path attr, :map
+    path attr
   end
 
 end
@@ -170,8 +174,7 @@ converting list of structures to aggregatable view back and forth
 ```elixir
 defmodule StructuresToAggregatableView do
 
-  require Pathex
-  import Pathex, only: [path: 1, path: 2, "~>": 2]
+  use Pathex
 
   @doc "Converts list of users into model"
   def to_model(users, ver, %{

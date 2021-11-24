@@ -1,8 +1,9 @@
 defmodule Pathex.Lenses do
-
   @moduledoc """
   Module with collection of prebuilt paths
   """
+
+  alias __MODULE__.{Some, Any, All, Star}
 
   @doc """
   Path function which works with **any** possible key it can find
@@ -30,7 +31,7 @@ defmodule Pathex.Lenses do
       iex> {:ok, [1, 2]} = Pathex.set([{"some_tuple", "here"}, 2], anyl, 1)
   """
   @spec any() :: Pathex.t()
-  def any(), do: Pathex.Lenses.Any.any()
+  def any, do: Any.any()
 
   @doc """
   Path function which works with **all** possible keys it can find
@@ -45,7 +46,7 @@ defmodule Pathex.Lenses do
       iex> {:ok, [x: 2, y: 2]} = Pathex.set([x: 1, y: 0], alll, 2)
   """
   @spec all() :: Pathex.t()
-  def all(), do: Pathex.Lenses.All.all()
+  def all, do: All.all()
 
   @doc """
   Path function which applies inner function (or concated path-closure)
@@ -76,7 +77,26 @@ defmodule Pathex.Lenses do
       iex> {:ok, [{3, 6}, {4, 10}]} = Pathex.view(structure, starl ~> greater_than_2)
   """
   @spec star() :: Pathex.t()
-  def star(), do: Pathex.Lenses.Star.star()
+  def star, do: Star.star()
+
+  @doc """
+  Path function which applies inner function (or concated path-closure)
+  to the first value it can apply it to
+
+  Example:
+      iex> require Pathex; import Pathex
+      iex> somel = Pathex.Lenses.some()
+      iex> 11 = Pathex.view!([x: [11], y: [22], z: 33], somel ~> path(0))
+      iex> [x: %{y: 1}, z: %{y: 0}] = Pathex.set!([x: %{y: 0}, z: %{y: 0}], somel ~> path(:y, :map), 1)
+      iex> {:ok, 1} = Pathex.view([x: 1, y: 2, z: 3], somel)
+
+  > Note:  
+  > Force update fails for empty structures
+
+  Think of this function as `star() ~> any()` but optimized to work with only first element
+  """
+  @spec some() :: Pathex.t()
+  def some, do: Some.some()
 
   @doc """
   This macro creates path-closure which works like `id/0` but
@@ -103,6 +123,7 @@ defmodule Pathex.Lenses do
       end
     end
   end
+
   defmacro matching({:when, _, [pattern, condition]}) do
     quote do
       fn
@@ -115,11 +136,12 @@ defmodule Pathex.Lenses do
         :force_update, {_x, func, default} ->
           default
 
-        op, _ when op in ~w[view update delete force_update]a ->
+        op, _ when op in ~w[view update force_update]a ->
           :error
       end
     end
   end
+
   defmacro matching(pattern) do
     quote do
       fn
@@ -132,200 +154,9 @@ defmodule Pathex.Lenses do
         :force_update, {_x, func, default} ->
           default
 
-        op, _ when op in ~w[view update delete force_update]a ->
+        op, _ when op in ~w[view update force_update]a ->
           :error
       end
-    end
-  end
-
-  @doc """
-  Path function which applies inner function (or concated path-closure)
-  to the first value it can apply it to
-
-  Example:
-      iex> require Pathex; import Pathex
-      iex> somel = Pathex.Lenses.some()
-      iex> 11 = Pathex.view!([x: [11], y: [22], z: 33], somel ~> path(0))
-      iex> [x: %{y: 1}, z: %{y: 0}] = Pathex.set!([x: %{y: 0}, z: %{y: 0}], somel ~> path(:y, :map), 1)
-      iex> {:ok, 1} = Pathex.view([x: 1, y: 2, z: 3], somel)
-
-  > Note:  
-  > Force update fails for empty structures
-
-  Think of this function as `star() ~> any()` but optimized to work with only first element
-  """
-  @spec some() :: Pathex.t()
-  def some do
-    fn
-      :view, {%{} = map, func} ->
-        Enum.find_value(map, :error, fn {_k, v} ->
-          with :error <- func.(v) do
-            false
-          end
-        end)
-
-      :view, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        Enum.find_value(kwd, :error, fn {_k, v} ->
-          with :error <- func.(v) do
-            false
-          end
-        end)
-
-      :view, {l, func} when is_list(l) ->
-        Enum.find_value(l, :error, fn v ->
-          with :error <- func.(v) do
-            false
-          end
-        end)
-
-      :view, {t, func} when is_tuple(t) ->
-        Enum.find_value(Tuple.to_list(t), :error, fn v ->
-          with :error <- func.(v) do
-            false
-          end
-        end)
-
-      :update, {%{} = map, func} ->
-        found =
-          Enum.find_value(map, :error, fn {k, v} ->
-            case func.(v) do
-              {:ok, v} -> {k, v}
-              :error   -> false
-            end
-          end)
-
-        with {k, v} <- found do
-          {:ok, Map.put(map, k, v)}
-        end
-
-      # TODO: optimize through reduce and prepend
-      :update, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        found =
-          Enum.find_value(kwd, :error, fn {k, v} ->
-            case func.(v) do
-              {:ok, v} -> {k, v}
-              :error   -> false
-            end
-          end)
-
-        with {k, v} <- found do
-          {:ok, Keyword.put(kwd, k, v)}
-        end
-
-      :update, {l, func} when is_list(l) ->
-        Enum.reduce(l, {:error, []}, fn
-          v, {:error, acc} ->
-            case func.(v) do
-              {:ok, v} -> {:ok, [v | acc]}
-              :error   -> {:error, [v | acc]}
-            end
-
-          v, {:ok, acc} ->
-            {:ok, [v | acc]}
-        end)
-        |> case do
-          {:error, _} -> :error
-          {:ok, list} -> {:ok, :lists.reverse(list)}
-        end
-
-      :update, {t, func} when is_tuple(t) ->
-        t
-        |> Tuple.to_list()
-        |> Enum.reduce_while(1, fn v, index ->
-          case func.(v) do
-            {:ok, v} -> {:halt, {index, v}}
-            :error   -> {:cont, index + 1}
-          end
-        end)
-        |> case do
-          {index, v} ->
-            {:ok, :erlang.setelement(index, t, v)}
-
-          _ ->
-            :error
-        end
-
-      :force_update, {%{} = map, func, default} ->
-        map
-        |> Enum.find_value(:error, fn {k, v} ->
-          case func.(v) do
-            {:ok, v} -> {k, v}
-            :error   -> false
-          end
-        end)
-        |> case do
-          {k, v} ->
-            {:ok, Map.put(map, k, v)}
-
-          :error ->
-            map
-            |> :maps.iterator()
-            |> :maps.next()
-            |> case do
-              {k, _, _} ->
-                {:ok, Map.put(map, k, default)}
-
-              :none ->
-                :error
-            end
-        end
-
-      :force_update, {[{a, _} | _] = kwd, func, default} when is_atom(a) ->
-        kwd
-        |> Enum.find_value(:error, fn {k, v} ->
-          case func.(v) do
-            {:ok, v} -> {k, v}
-            :error   -> false
-          end
-        end)
-        |> case do
-          {k, v} ->
-            {:ok, Keyword.put(kwd, k, v)}
-
-          :error ->
-            {:ok, Keyword.put(kwd, a, default)}
-        end
-
-      :force_update, {list, func, default} when is_list(list) ->
-        list
-        |> Enum.reduce({:error, []}, fn
-          v, {:error, acc} ->
-            case func.(v) do
-              {:ok, v} -> {:ok, [v | acc]}
-              :error   -> {:error, [v | acc]}
-            end
-
-          v, {:ok, acc} ->
-            {:ok, [v | acc]}
-        end)
-        |> case do
-          {:error, list} ->
-            [_first | list] = :lists.reverse(list)
-            {:ok, [default | list]}
-
-          {:ok, list} ->
-            {:ok, :lists.reverse(list)}
-        end
-
-      :force_update, {t, func, default} when is_tuple(t) and tuple_size(t) > 0 ->
-        t
-        |> Tuple.to_list()
-        |> Enum.reduce_while(1, fn v, index ->
-          case func.(v) do
-            {:ok, v} -> {:halt, {index, v}}
-            :error   -> {:cont, index + 1}
-          end
-        end)
-        |> case do
-          {index, v} ->
-            {:ok, :erlang.setelement(index, t, v)}
-
-          _ ->
-            {:ok, :erlang.setelement(0, t, default)}
-        end
-
-      op, _ when op in ~w[view update force_update]a ->
-        :error
     end
   end
 
@@ -335,27 +166,30 @@ defmodule Pathex.Lenses do
   """
   def either(head) do
     fn
-      :view, {{^head, value}, f} -> f.(value)
-      :view, _ -> :error
+      :view, {{^head, value}, f} ->
+        f.(value)
+
+      :view, _ ->
+        :error
 
       :update, {{^head, value}, f} ->
         with {:ok, new_value} <- f.(value) do
           {:ok, {head, new_value}}
         end
-      :update, _ -> :error
 
-      :delete, {{^head, value}, f} ->
-        with {:ok, _} <- f.(value) do
-          {:ok, {:ok, nil}}
-        end
-      :delete, _ -> :error
+      :update, _ ->
+        :error
 
       :force_update, {{^head, value}, f, _} ->
         with {:ok, new_value} <- f.(value) do
           {:ok, {head, new_value}}
         end
-      :force_update, {{_, _}, _, d} -> {:ok, {head, d}}
-      :force_update, _ -> :error
+
+      :force_update, {{_, _}, _, d} ->
+        {:ok, {head, d}}
+
+      :force_update, _ ->
+        :error
     end
   end
 
@@ -368,5 +202,4 @@ defmodule Pathex.Lenses do
       _, x -> :erlang.element(2, x).(:erlang.element(1, x))
     end
   end
-
 end
