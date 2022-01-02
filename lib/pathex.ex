@@ -67,19 +67,16 @@ defmodule Pathex do
           import Pathex, only: [path: 1, path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
         end
 
-      mod ->
+      mod when mod in ~w[json map]a ->
         quote do
           require Pathex
-          import Pathex, only: [path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
+          import Pathex, only: [path: 1, path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
 
-          defmacrop path(p) do
-            mod = unquote(mod)
-
-            quote do
-              Pathex.path(unquote(p), unquote(mod))
-            end
-          end
+          @pathex_default_mod unquote(mod)
         end
+
+      _wrong_mod ->
+        raise ArgumentError, "Pathex only works with navie, json and map mods"
     end
   end
 
@@ -89,7 +86,7 @@ defmodule Pathex do
   and returns modified structure
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> inc = fn x -> x + 1 end
       iex> {:ok, [0, %{x: 9}]} = over [0, %{x: 8}], path(x / :x), inc
@@ -98,10 +95,11 @@ defmodule Pathex do
 
   > Note:
   > Exceptions from passed function left unhandled
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> over(%{1 => "x"}, path(1), fn x -> x + 1 end)
       ** (ArithmeticError) bad argument in arithmetic expression
   """
+  @doc export: true
   defmacro over(struct, path, func) do
     gen(path, :update, [struct, wrap_ok(func)], __CALLER__)
   end
@@ -111,13 +109,14 @@ defmodule Pathex do
   for item in the given path of given structure
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> inc = fn x -> x + 1 end
       iex> [0, %{x: 9}] = over! [0, %{x: 8}], path(x / :x), inc
       iex> p = path "hey" / 0
       iex> %{"hey" => [2, [2]]} = over! %{"hey" => [1, [2]]}, p, inc
   """
+  @doc export: true
   defmacro over!(struct, path, func) do
     path
     |> gen(:update, [struct, wrap_ok(func)], __CALLER__)
@@ -129,12 +128,13 @@ defmodule Pathex do
   in the given path of given structure
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> {:ok, [0, %{x: 123}]} = set [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
       iex> {:ok, %{"hey" => [123, [2]]}} = set %{"hey" => [1, [2]]}, p, 123
   """
+  @doc export: true
   defmacro set(struct, path, value) do
     gen(path, :update, [struct, quote(do: fn _ -> {:ok, unquote(value)} end)], __CALLER__)
   end
@@ -144,12 +144,13 @@ defmodule Pathex do
   in the given path of given structure
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> [0, %{x: 123}] = set! [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
       iex> %{"hey" => [123, [2]]} = set! %{"hey" => [1, [2]]}, p, 123
   """
+  @doc export: true
   defmacro set!(struct, path, value) do
     path
     |> gen(:update, [struct, quote(do: fn _ -> {:ok, unquote(value)} end)], __CALLER__)
@@ -164,7 +165,7 @@ defmodule Pathex do
   when structure is unknown
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> {:ok, [0, %{x: 123}]} = force_set [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
@@ -172,10 +173,11 @@ defmodule Pathex do
 
   If the item in path doesn't have the right type, it returns `:error`
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> p = path "hey" / "you"
       iex> :error = force_set %{"hey" => {1, 2}}, p, "value"
   """
+  @doc export: true
   defmacro force_set(struct, path, value) do
     gen(
       path,
@@ -193,7 +195,7 @@ defmodule Pathex do
   when structure is unknown
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> [0, %{x: 123}] = force_set! [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
@@ -201,11 +203,12 @@ defmodule Pathex do
 
   If the item in path doesn't have the right type, it raises
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> p = path "hey" / "you"
       iex> force_set! %{"hey" => {1, 2}}, p, "value"
       ** (Pathex.Error) Type mismatch in structure
   """
+  @doc export: true
   defmacro force_set!(struct, path, value) do
     path
     |> gen(
@@ -224,7 +227,7 @@ defmodule Pathex do
   when structure is unknown and inserts default value
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> {:ok, [0, %{x: {:xxx, 8}}]} = force_over([0, %{x: 8}], path(x / :x), & {:xxx, &1}, 123)
       iex> p = path "hey" / 0
@@ -232,13 +235,14 @@ defmodule Pathex do
 
   If the item in path doesn't have the right type, it returns `:error`
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> p = path "hey" / "you"
       iex> :error = force_over %{"hey" => {1, 2}}, p, fn x -> x end, "value"
 
   > Note:
   > Default "default" value is nil
   """
+  @doc export: true
   defmacro force_over(struct, path, func, value \\ nil) do
     gen(path, :force_update, [struct, wrap_ok(func), value], __CALLER__)
   end
@@ -251,7 +255,7 @@ defmodule Pathex do
   when structure is unknown and inserts default value
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> [0, %{x: {:xxx, 8}}] = force_over!([0, %{x: 8}], path(x / :x), & {:xxx, &1}, 123)
       iex> p = path "hey" / 0
@@ -259,7 +263,7 @@ defmodule Pathex do
 
   If the item in path doesn't have the right type, it raises
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> p = path "hey" / "you"
       iex> force_over! %{"hey" => {1, 2}}, p, fn x -> x end, "value"
       ** (Pathex.Error) Type mismatch in structure
@@ -267,6 +271,7 @@ defmodule Pathex do
   > Note:
   > Default `default` value is `nil`
   """
+  @doc export: true
   defmacro force_over!(struct, path, func, value \\ nil) do
     path
     |> gen(:force_update, [struct, wrap_ok(func), value], __CALLER__)
@@ -278,12 +283,13 @@ defmodule Pathex do
   or error
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> {:ok, 9} = at [0, %{x: 8}], path(x / :x), fn x -> x + 1 end
       iex> p = path "hey" / 0
       iex> {:ok, {:here, 9}} = at(%{"hey" => {9, -9}}, p, & {:here, &1})
   """
+  @doc export: true
   defmacro at(struct, path, func) do
     gen(path, :view, [struct, wrap_ok(func)], __CALLER__)
   end
@@ -293,12 +299,13 @@ defmodule Pathex do
   or error
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> 9 = at! [0, %{x: 8}], path(x / :x), fn x -> x + 1 end
       iex> p = path "hey" / 0
       iex> {:here, 9} = at!(%{"hey" => {9, -9}}, p, & {:here, &1})
   """
+  @doc export: true
   defmacro at!(struct, path, func) do
     path
     |> gen(:view, [struct, wrap_ok(func)], __CALLER__)
@@ -309,12 +316,13 @@ defmodule Pathex do
   Macro gets the value in the given path of the given structure
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> {:ok, 8} = view [0, %{x: 8}], path(x / :x)
       iex> p = path "hey" / 0
       iex> {:ok, 9} = view %{"hey" => {9, -9}}, p
   """
+  @doc export: true
   defmacro view(struct, path) do
     gen(path, :view, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
   end
@@ -323,12 +331,13 @@ defmodule Pathex do
   Macro gets the value in the given path of the given structure
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> 8 = view! [0, %{x: 8}], path(x / :x)
       iex> p = path "hey" / 0
       iex> 9 = view! %{"hey" => {9, -9}}, p
   """
+  @doc export: true
   defmacro view!(struct, path) do
     path
     |> gen(:view, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
@@ -340,12 +349,14 @@ defmodule Pathex do
   or returns default value if not found
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
-      iex> 8 = get [0, %{x: 8}], path(x / :x)
+      iex> 8 = get([0, %{x: 8}], path(x / :x))
       iex> p = path "hey" / "you"
-      iex> :default = get %{"hey" => [x: 1]}, p, :default
+      iex> nil = get(%{"hey" => [x: 1]}, p)
+      iex> :default = get(%{"hey" => [x: 1]}, p, :default)
   """
+  @doc export: true
   defmacro get(struct, path, default \\ nil) do
     res = gen(path, :view, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
 
@@ -359,18 +370,43 @@ defmodule Pathex do
   end
 
   @doc """
+  Macro gets the value in the given path of the given structure
+  or returns default value if not found
+
+  Example:
+      iex> import Pathex
+      iex> x = 1
+      iex> true = exists?([0, %{x: 8}], path(x / :x))
+      iex> p = path "hey" / "you"
+      iex> false = exists?(%{"hey" => [x: 1]}, p)
+  """
+  @doc export: true
+  defmacro exists?(struct, path) do
+    res = gen(path, :view, [struct, quote(do: fn _ -> true end)], __CALLER__)
+
+    quote do
+      with :error <- unquote(res) do
+        false
+      end
+    end
+    |> Common.set_generated()
+  end
+
+
+  @doc """
   Sigil for paths. Three [modifiers](modifiers.md) are avaliable:
   * `naive` (default) paths should look like `~P["string"/:atom/1]`
   * `json` paths should look like `~P[string/this_one_is_too/1/0]json`
   * `map` paths should look like `~P[:x/1]map`
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> mypath = path 1 / :atom / "string" / {"tuple?"} / x
       iex> structure = [0, [atom: %{"string" => %{{"tuple?"} => %{1 => 2}}}]]
       iex> {:ok, 2} = view structure, mypath
   """
+  @doc export: true
   defmacro sigil_P({_, _, [string]}, mod) do
     mod = detect_mod(mod)
 
@@ -385,7 +421,7 @@ defmodule Pathex do
   Creates path for given structure
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = 1
       iex> mypath = path 1 / :atom / "string" / {"tuple?"} / x
       iex> structure = [0, [atom: %{"string" => %{{"tuple?"} => %{1 => 2}}}]]
@@ -399,15 +435,16 @@ defmodule Pathex do
 
   > Note:  
   > `-1` allows data to be prepended to the list
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> x = -1
       iex> p1 = path(-1)
       iex> p2 = path(x)
       iex> {:ok, [1, 2]} = force_set([2], p1, 1)
       iex> {:ok, [1, 2]} = force_set([2], p2, 1)
   """
-  defmacro path(quoted, mod \\ :naive) do
-    mod = detect_mod(mod)
+  @doc export: true
+  defmacro path(quoted, mod \\ nil) do
+    mod = mod && detect_mod(mod) || Module.get_attribute(__CALLER__.module, :pathex_default_mod, :naive)
     quoted
     |> QuotedParser.parse(__CALLER__, mod)
     |> assert_combination_length(__CALLER__)
@@ -419,16 +456,32 @@ defmodule Pathex do
   Creates composition of two paths similar to concating them together
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> composed_path = p1 ~> p2
       iex> {:ok, 1} = view %{x: [y: [a: [a: 0, b: 1]]]}, composed_path
   """
-  defmacro a ~> b do
+  @doc export: true
+  defmacro a ~> b, do: do_concat(a, b, __CALLER__)
+
+  @doc """
+  The same as `Pathex.~>/2` for those who do not like operators
+
+  Example:
+      iex> import Pathex
+      iex> p1 = path :x / :y
+      iex> p2 = path :a / :b
+      iex> composed_path = concat(p1, p2)
+      iex> {:ok, 1} = view %{x: [y: [a: [a: 0, b: 1]]]}, composed_path
+  """
+  @doc export: true
+  defmacro concat(a, b), do: do_concat(a, b, __CALLER__)
+
+  defp do_concat(a, b, caller) do
     {:~>, [], [a, b]}
     |> QuotedParser.parse_composition(:~>)
-    |> Builder.build_composition(:~>, __CALLER__)
+    |> Builder.build_composition(:~>, caller)
     |> Common.set_generated()
   end
 
@@ -436,7 +489,7 @@ defmodule Pathex do
   Creates composition of two paths which has some inspiration from logical `and`
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> ap = p1 &&& p2
@@ -445,7 +498,7 @@ defmodule Pathex do
       iex> {:ok, %{x: %{y: 2}, a: [b: 2]}} = set %{x: %{y: 1}, a: [b: 1]}, ap, 2
       iex> {:ok, %{x: %{y: 2}, a: %{b: 2}}} = force_set %{}, ap, 2
   """
-  # This code is generated with experimental composition generator
+  @doc export: true
   defmacro a &&& b do
     {:&&&, [], [a, b]}
     |> QuotedParser.parse_composition(:&&&)
@@ -457,7 +510,7 @@ defmodule Pathex do
   Creates composition of two paths which has some inspiration from logical `or`
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> op = p1 ||| p2
@@ -467,6 +520,7 @@ defmodule Pathex do
       iex> {:ok, %{x: %{y: 2}}} = force_set %{}, op, 2
       iex> {:ok, %{x: %{}, a: [b: 1]}} = force_set %{x: %{y: 1}, a: [b: 1]}, op, 2
   """
+  @doc export: true
   defmacro a ||| b do
     {:|||, [], [a, b]}
     |> QuotedParser.parse_composition(:|||)
@@ -478,13 +532,14 @@ defmodule Pathex do
   This macro creates compositions of paths which work along with each other
 
   Example:
-      iex> require Pathex; import Pathex
+      iex> import Pathex
       iex> pa = alongside [path(:x), path(:y)]
       iex> {:ok, [1, 2]} = view(%{x: 1, y: 2}, pa)
       iex> {:ok, %{x: 3, y: 3}} = set(%{x: 1, y: 2}, pa, 3)
       iex> :error = set(%{x: 1}, pa, 3)
       iex> {:ok, %{x: 1, y: 1}} = force_set(%{}, pa, 1)
   """
+  @doc export: true
   defmacro alongside(list) do
     quote generated: true, bind_quoted: [list: list] do
       fn
@@ -520,8 +575,8 @@ defmodule Pathex do
 
   # Helper for generating code for path operation
   # Special case for inline paths
-  defp gen({:path, _, [path | tail]}, op, args, caller) do
-    mod = List.first(tail) || :naive
+  defp gen({:path, _, [path | tail]}, op, args, %Macro.Env{module: module} = caller) do
+    mod = List.first(tail) || Module.get_attribute(module, :pathex_default_mod, :naive)
     path_func = build_only(path, op, caller, mod)
 
     quote generated: true do

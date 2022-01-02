@@ -1,6 +1,7 @@
 defmodule Pathex.Lenses.All do
   @moduledoc """
   Private module for `all()` lens
+  > see `Pathex.Lenses.all/0` documentation
   """
 
   # Helpers

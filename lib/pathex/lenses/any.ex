@@ -1,6 +1,7 @@
 defmodule Pathex.Lenses.Any do
   @moduledoc """
   Private module for `any()` lens
+  > see `Pathex.Lenses.any/0` documentation
   """
 
   @spec any() :: Pathex.t()

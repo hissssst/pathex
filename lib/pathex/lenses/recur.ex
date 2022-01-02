@@ -29,6 +29,7 @@ defmodule Pathex.Lenses.Recur do
       iex> %{x: %{x: %{x: %{x: %{x: 2}}}}} = Pathex.set!(nested, recur_xlens, 2)
       iex> %{x: %{x: %{x: %{x: %{x: 2}}}}} = Pathex.force_set!(nested, recur_xlens, 2)
   """
+  @doc export: true
   def recur(lens) when is_function(lens, 2) do
     fn op, t -> lens.(op, update_argtuple(lens, op, t)) end
   end

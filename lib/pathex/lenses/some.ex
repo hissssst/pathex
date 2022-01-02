@@ -1,6 +1,7 @@
 defmodule Pathex.Lenses.Some do
   @moduledoc """
   Private module for `some()` lens
+  > see `Pathex.Lenses.some/0` documentation
   """
 
   def some do

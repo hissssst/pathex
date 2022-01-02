@@ -2,7 +2,8 @@ defmodule Pathex.LensesTest do
   use ExUnit.Case
 
   alias Pathex.Lenses
-  doctest Pathex.Lenses
+  require Lenses
+  doctest Lenses
 
   require Pathex
   import Pathex
@@ -31,25 +32,6 @@ defmodule Pathex.LensesTest do
   end
 
   describe "Catching" do
-    test "in either" do
-      px = path(:x)
-      hi = Lenses.either(:hi)
-
-      assert :error = force_set({:hi, {}}, hi ~> px, 1)
-      assert :error = force_set({}, hi ~> px, 1)
-
-      assert :error = set({:hi, {}}, hi ~> px, 1)
-      assert :error = set({}, hi ~> px, 1)
-    end
-
-    test "in id" do
-      px = path(:x)
-      id = Pathex.Lenses.id()
-
-      assert :error = force_set({}, id ~> px, 1)
-      assert :error = set({}, id ~> px, 1)
-    end
-
     test "in any" do
       px = path(:x)
       any = Lenses.any()
@@ -147,18 +129,61 @@ defmodule Pathex.LensesTest do
     end
   end
 
-  test "Some recur" do
-    px = path(:x)
-    some = Lenses.some()
+  describe "recur" do
+    test "with some" do
+      px = path(:x)
+      some = Lenses.some()
 
-    sx = some ~> px
+      sx = some ~> px
 
-    xl1 = px ||| some ~> px
-    xl2 = px ||| sx
+      xl1 = px ||| some ~> px
+      xl2 = px ||| sx
 
-    s = %{a: 1, y: %{x: 2, y: 3}}
+      s = %{a: 1, y: %{x: 2, y: 3}}
 
-    assert {:ok, 2} == view(s, xl2)
-    assert {:ok, 2} == view(s, xl1)
+      assert {:ok, 2} == view(s, xl2)
+      assert {:ok, 2} == view(s, xl1)
+    end
   end
+
+  describe "conditional lenses" do
+    test "matching" do
+      ml1 = Lenses.matching({:ok, _})
+
+      assert {:ok, {:ok, 1}} == view({:ok, 1}, ml1)
+      assert :error == view({:error, 1}, ml1)
+
+      ml2 = Lenses.matching({:ok, 1})
+
+      assert {:ok, {:ok, 1}} == view({:ok, 1}, ml2)
+      assert :error == view({:ok, 2}, ml2)
+      assert :error == view({:error, 1}, ml2)
+
+      ml3 = Lenses.matching(_)
+      anythings = [
+        [], %{}, {}, 1, 2, 3, :a, [x: 1, y: %{x: 2}], -1, nil, %MapSet{}, true, false
+      ]
+
+      for anything <- anythings do
+        assert {:ok, anything} === view(anything, ml3)
+      end
+    end
+
+    test "filtering" do
+      fl1 = Lenses.filtering(fn %{h: height, w: width} -> height * width < 1000 end)
+
+      assert {:ok, %{h: 10, w: 10}} == view(%{h: 10, w: 10}, fl1)
+      assert :error == view(%{h: 10, w: 100}, fl1)
+
+      fl2 = Lenses.filtering(fn _ -> true end)
+      anythings = [
+        [], %{}, {}, 1, 2, 3, :a, [x: 1, y: %{x: 2}], -1, nil, %MapSet{}, true, false
+      ]
+
+      for anything <- anythings do
+        assert {:ok, anything} === view(anything, fl2)
+      end
+    end
+  end
+
 end

@@ -15,35 +15,6 @@ defmodule Pathex.Common do
   @typep context :: atom() | nil
 
   @doc """
-  Traverses AST and updates all variables in it
-  """
-  @spec update_variables(Macro.t(), (Macro.t() -> Macro.t()), context) :: Macro.t()
-  def update_variables(ast, func, context \\ nil) when is_function(func, 1) do
-    Macro.postwalk(ast, fn
-      {n, c, ^context} = v when is_atom(n) and is_list(c) ->
-        func.(v)
-
-      other ->
-        other
-    end)
-  end
-
-  @doc """
-  Traverses AST and detects all variables in it
-  """
-  @spec detect_variables(Macro.t(), context()) :: [{atom(), list(), context()}]
-  def detect_variables(ast, context \\ nil) do
-    Macro.prewalk(ast, [], fn
-      {name, ctx, ^context} = var, acc when is_atom(name) and is_list(ctx) ->
-        {var, [var | acc]}
-
-      other, acc ->
-        {other, acc}
-    end)
-    |> elem(1)
-  end
-
-  @doc """
   Creates clause which matches `index`-th element in list
   with `inner` variable
   """
@@ -92,4 +63,34 @@ defmodule Pathex.Common do
       Macro.update_meta(item, &Keyword.put(&1, :generated, true))
     end)
   end
+
+  # @doc """
+  # Traverses AST and updates all variables in it
+  # """
+  # @spec update_variables(Macro.t(), (Macro.t() -> Macro.t()), context) :: Macro.t()
+  # def update_variables(ast, func, context \\ nil) when is_function(func, 1) do
+  #   Macro.postwalk(ast, fn
+  #     {n, c, ^context} = v when is_atom(n) and is_list(c) ->
+  #       func.(v)
+
+  #     other ->
+  #       other
+  #   end)
+  # end
+
+  # @doc """
+  # Traverses AST and detects all variables in it
+  # """
+  # @spec detect_variables(Macro.t(), context()) :: [{atom(), list(), context()}]
+  # def detect_variables(ast, context \\ nil) do
+  #   Macro.prewalk(ast, [], fn
+  #     {name, ctx, ^context} = var, acc when is_atom(name) and is_list(ctx) ->
+  #       {var, [var | acc]}
+
+  #     other, acc ->
+  #       {other, acc}
+  #   end)
+  #   |> elem(1)
+  # end
+
 end

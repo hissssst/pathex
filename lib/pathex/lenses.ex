@@ -3,7 +3,7 @@ defmodule Pathex.Lenses do
   Module with collection of prebuilt paths
   """
 
-  alias __MODULE__.{Some, Any, All, Star}
+  alias __MODULE__.{Some, Any, All, Star, Matching, Filtering}
 
   @doc """
   Path function which works with **any** possible key it can find
@@ -30,6 +30,7 @@ defmodule Pathex.Lenses do
       iex> {:ok, [1, {:x, 2}]} = Pathex.set([0, {:x, 2}], anyl, 1)
       iex> {:ok, [1, 2]} = Pathex.set([{"some_tuple", "here"}, 2], anyl, 1)
   """
+  @doc export: true
   @spec any() :: Pathex.t()
   def any, do: Any.any()
 
@@ -45,6 +46,7 @@ defmodule Pathex.Lenses do
       iex> [1, 2, 3] = Pathex.view!(%{x: 1, y: 2, z: 3}, alll) |> Enum.sort()
       iex> {:ok, [x: 2, y: 2]} = Pathex.set([x: 1, y: 0], alll, 2)
   """
+  @doc export: true
   @spec all() :: Pathex.t()
   def all, do: All.all()
 
@@ -76,6 +78,7 @@ defmodule Pathex.Lenses do
       iex> greater_than_2 = Pathex.Lenses.matching({x, _} when x > 2)
       iex> {:ok, [{3, 6}, {4, 10}]} = Pathex.view(structure, starl ~> greater_than_2)
   """
+  @doc export: true
   @spec star() :: Pathex.t()
   def star, do: Star.star()
 
@@ -95,6 +98,7 @@ defmodule Pathex.Lenses do
 
   Think of this function as `star() ~> any()` but optimized to work with only first element
   """
+  @doc export: true
   @spec some() :: Pathex.t()
   def some, do: Some.some()
 
@@ -115,91 +119,48 @@ defmodule Pathex.Lenses do
       iex> higher_than_2 = matching({_x, y} when y > 2)
       iex> {:ok, [{1, 5}, {4, 3}]} = Pathex.view(dots2d, star() ~> higher_than_2)
   """
-  # This case is just an optimization for `id/0`-like lens
-  defmacro matching({:_, meta, ctx}) when is_list(meta) and (is_nil(ctx) or is_atom(ctx)) do
-    quote do
-      fn
-        _, x -> :erlang.element(2, x).(:erlang.element(1, x))
-      end
-    end
+  @doc export: true
+  defmacro matching(condition) do
+    Matching.matching_func(condition)
   end
 
-  defmacro matching({:when, _, [pattern, condition]}) do
-    quote do
-      fn
-        op, {unquote(pattern) = x, func} when op in ~w[update view]a and unquote(condition) ->
-          func.(x)
+  @doc """
+  This macro creates path-closure which works like `id/0` but
+  successes only for matching data.
 
-        :force_update, {unquote(pattern) = x, func, default} when unquote(condition) ->
-          func.(x)
+  This function is useful when composed with `star/0` and `some/0`
 
-        :force_update, {_x, func, default} ->
-          default
+  Example:
+      iex> import Pathex.Lenses; import Pathex
+      iex> adminl = filtering(& &1.role == :admin)
+      iex> {:ok, %{name: "Name", role: :admin}} = Pathex.view(%{name: "Name", role: :admin}, adminl)
+      iex> :error = Pathex.view(%{role: :user}, adminl)
 
-        op, _ when op in ~w[view update force_update]a ->
-          :error
-      end
-    end
-  end
-
-  defmacro matching(pattern) do
-    quote do
-      fn
-        op, {unquote(pattern) = x, func} when op in ~w[update view]a ->
-          func.(x)
-
-        :force_update, {unquote(pattern) = x, func, default} ->
-          func.(x)
-
-        :force_update, {_x, func, default} ->
-          default
-
-        op, _ when op in ~w[view update force_update]a ->
-          :error
-      end
-    end
+      iex> import Pathex.Lenses; import Pathex
+      iex> dots2d = [{1, 1}, {1, 5}, {3, 0}, {4, 3}]
+      iex> higher_than_2 = filtering(fn {_x, y} -> y > 2 end)
+      iex> {:ok, [{1, 5}, {4, 3}]} = Pathex.view(dots2d, star() ~> higher_than_2)
+  """
+  @doc export: true
+  def filtering(predicate) do
+    Filtering.filtering(predicate)
   end
 
   @deprecated """
-  Use `matching({:ok, _}) ~> path(1)` macro with `path(1)` instead.  
+  Use `matching({:ok, _}) ~> path(1)` macro instead.  
   Will be removed in future releases.
   """
+  @doc export: true
   def either(head) do
-    fn
-      :view, {{^head, value}, f} ->
-        f.(value)
-
-      :view, _ ->
-        :error
-
-      :update, {{^head, value}, f} ->
-        with {:ok, new_value} <- f.(value) do
-          {:ok, {head, new_value}}
-        end
-
-      :update, _ ->
-        :error
-
-      :force_update, {{^head, value}, f, _} ->
-        with {:ok, new_value} <- f.(value) do
-          {:ok, {head, new_value}}
-        end
-
-      :force_update, {{_, _}, _, d} ->
-        {:ok, {head, d}}
-
-      :force_update, _ ->
-        :error
-    end
+    import Pathex, only: [path: 1, "~>": 2]
+    matching({^head, _}) ~> path(1)
   end
 
   @deprecated """
   Use `matching(_)` instead.  
   Will be removed in future releases.
   """
-  def id do
-    fn
-      _, x -> :erlang.element(2, x).(:erlang.element(1, x))
-    end
-  end
+  @doc export: true
+  def id, do: matching(_)
+
 end

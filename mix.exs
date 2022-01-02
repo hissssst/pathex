@@ -14,7 +14,9 @@ defmodule Pathex.MixProject do
       deps:            deps(),
       name:            "Pathex",
       source_url:      "https://github.com/hissssst/pathex",
-      docs:            docs()
+      docs:            docs(),
+      #compilers:       [:unused | Mix.compilers()],
+      unused:          [{:_, :__using__, :_}, {:_, :__impl__, :_}]
     ]
   end
 
@@ -43,9 +45,10 @@ defmodule Pathex.MixProject do
 
   defp deps do
     [
-      {:ex_doc,   "~> 0.23.0", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0",  only: :dev, runtime: false},
-      {:credo,    "~> 1.5",    only: :dev, runtime: false}
+      {:mix_unused, "~> 0.3.0",  only: :dev, runtime: false},
+      {:ex_doc,     "~> 0.23.0", only: :dev, runtime: false},
+      {:dialyxir,   "~> 1.0.0",  only: :dev, runtime: false},
+      {:credo,      "~> 1.5",    only: :dev, runtime: false}
     ]
   end
 

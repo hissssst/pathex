@@ -25,6 +25,18 @@ defmodule Pathex.UsingTest do
     end
   end
 
+  defmodule MapUsed do
+    use Pathex, default_mod: :map
+
+    def inlined do
+      [
+        Pathex.view(%{x: %{y: 1}}, path(:x / :y)),
+        Pathex.view([x: %{y: 1}],  path(:x / :y)),
+        Pathex.view(%{x: [y: 1]},  path(:x / :y))
+      ]
+    end
+  end
+
   require Pathex
   import Pathex
 
@@ -50,5 +62,13 @@ defmodule Pathex.UsingTest do
     assert {:ok, 1} = view(%{x: [1]}, p)
     assert {:ok, 1} = view(%{x: {1}}, p)
     assert {:ok, 1} = view([x: [1]], p)
+  end
+
+  test "Inlined paths work correctly" do
+    assert [
+      {:ok, 1},
+      :error,
+      :error
+    ] == MapUsed.inlined()
   end
 end

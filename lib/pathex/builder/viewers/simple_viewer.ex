@@ -13,12 +13,6 @@ defmodule Pathex.Builder.SimpleViewer do
   @structure_variable {:x, [], Elixir}
   @function_variable {:function, [], Elixir}
 
-  defmacro wrap_ok(x) do
-    quote do
-      {:ok, unquote(x)}
-    end
-  end
-
   def build(combination) do
     combination
     |> Enum.reverse()
