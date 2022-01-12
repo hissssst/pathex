@@ -444,7 +444,7 @@ defmodule Pathex do
   """
   @doc export: true
   defmacro path(quoted, mod \\ nil) do
-    mod = mod && detect_mod(mod) || Module.get_attribute(__CALLER__.module, :pathex_default_mod, :naive)
+    mod = mod && detect_mod(mod) || (__CALLER__.module && Module.get_attribute(__CALLER__.module, :pathex_default_mod) || :naive)
     quoted
     |> QuotedParser.parse(__CALLER__, mod)
     |> assert_combination_length(__CALLER__)
