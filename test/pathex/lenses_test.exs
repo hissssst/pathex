@@ -160,8 +160,21 @@ defmodule Pathex.LensesTest do
       assert :error == view({:error, 1}, ml2)
 
       ml3 = Lenses.matching(_)
+
       anythings = [
-        [], %{}, {}, 1, 2, 3, :a, [x: 1, y: %{x: 2}], -1, nil, %MapSet{}, true, false
+        [],
+        %{},
+        {},
+        1,
+        2,
+        3,
+        :a,
+        [x: 1, y: %{x: 2}],
+        -1,
+        nil,
+        %MapSet{},
+        true,
+        false
       ]
 
       for anything <- anythings do
@@ -176,8 +189,21 @@ defmodule Pathex.LensesTest do
       assert :error == view(%{h: 10, w: 100}, fl1)
 
       fl2 = Lenses.filtering(fn _ -> true end)
+
       anythings = [
-        [], %{}, {}, 1, 2, 3, :a, [x: 1, y: %{x: 2}], -1, nil, %MapSet{}, true, false
+        [],
+        %{},
+        {},
+        1,
+        2,
+        3,
+        :a,
+        [x: 1, y: %{x: 2}],
+        -1,
+        nil,
+        %MapSet{},
+        true,
+        false
       ]
 
       for anything <- anythings do
@@ -185,5 +211,4 @@ defmodule Pathex.LensesTest do
       end
     end
   end
-
 end

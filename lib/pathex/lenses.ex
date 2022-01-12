@@ -152,7 +152,7 @@ defmodule Pathex.Lenses do
   """
   @doc export: true
   def either(head) do
-    import Pathex, only: [path: 1, "~>": 2]
+    import Pathex, only: [path: 1, ~>: 2]
     matching({^head, _}) ~> path(1)
   end
 
@@ -162,5 +162,4 @@ defmodule Pathex.Lenses do
   """
   @doc export: true
   def id, do: matching(_)
-
 end

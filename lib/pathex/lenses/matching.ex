@@ -8,7 +8,7 @@ defmodule Pathex.Lenses.Matching do
   defmacro matching(condition) do
     matching_func(condition)
   end
-  
+
   # This case is just an optimization for `id/0`-like lens
   def matching_func({:_, meta, ctx}) when is_list(meta) and (is_nil(ctx) or is_atom(ctx)) do
     quote do
@@ -53,5 +53,4 @@ defmodule Pathex.Lenses.Matching do
       end
     end
   end
-    
 end

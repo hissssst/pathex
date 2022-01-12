@@ -5,18 +5,18 @@ defmodule Pathex.MixProject do
 
   def project do
     [
-      app:             :pathex,
-      version:         @version,
-      elixir:          "~> 1.10",
+      app: :pathex,
+      version: @version,
+      elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
-      description:     description(),
-      package:         package(),
-      deps:            deps(),
-      name:            "Pathex",
-      source_url:      "https://github.com/hissssst/pathex",
-      docs:            docs(),
-      #compilers:       [:unused | Mix.compilers()],
-      unused:          [{:_, :__using__, :_}, {:_, :__impl__, :_}]
+      description: description(),
+      package: package(),
+      deps: deps(),
+      name: "Pathex",
+      source_url: "https://github.com/hissssst/pathex",
+      docs: docs(),
+      # compilers:       [:unused | Mix.compilers()],
+      unused: [{:_, :__using__, :_}, {:_, :__impl__, :_}]
     ]
   end
 
@@ -45,10 +45,10 @@ defmodule Pathex.MixProject do
 
   defp deps do
     [
-      {:mix_unused, "~> 0.3.0",  only: :dev, runtime: false},
-      {:ex_doc,     "~> 0.23.0", only: :dev, runtime: false},
-      {:dialyxir,   "~> 1.0.0",  only: :dev, runtime: false},
-      {:credo,      "~> 1.5",    only: :dev, runtime: false}
+      {:mix_unused, "~> 0.3.0", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.23.0", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0.0", only: :dev, runtime: false},
+      {:credo, "~> 1.5", only: :dev, runtime: false}
     ]
   end
 
@@ -56,11 +56,11 @@ defmodule Pathex.MixProject do
 
   defp docs do
     [
-      source_ref:         "v#{@version}",
-      main:               "readme",
-      extra_section:      "GUIDES",
+      source_ref: "v#{@version}",
+      main: "readme",
+      extra_section: "GUIDES",
       groups_for_modules: groups_for_modules(),
-      extras:             ["README.md" | Path.wildcard("guides/*")],
+      extras: ["README.md" | Path.wildcard("guides/*")],
       groups_for_extras: groups_for_extras()
     ]
   end
@@ -73,7 +73,7 @@ defmodule Pathex.MixProject do
 
   defp groups_for_modules do
     [
-      "Public": [
+      Public: [
         Pathex,
         Pathex.Lenses
       ],
@@ -100,12 +100,11 @@ defmodule Pathex.MixProject do
       "Compostitions generation": [
         Pathex.Builder.Composition,
         Pathex.Builder.Composition.And,
-        Pathex.Builder.Composition.Or,
+        Pathex.Builder.Composition.Or
       ],
-      "Utilities": [
+      Utilities: [
         Pathex.Common
       ]
     ]
   end
-
 end

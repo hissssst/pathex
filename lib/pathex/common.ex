@@ -12,8 +12,6 @@ defmodule Pathex.Common do
                   (is_atom(:erlang.element(3, t)) or
                      is_nil(:erlang.element(3, t)))
 
-  @typep context :: atom() | nil
-
   @doc """
   Creates clause which matches `index`-th element in list
   with `inner` variable
@@ -92,5 +90,4 @@ defmodule Pathex.Common do
   #   end)
   #   |> elem(1)
   # end
-
 end
