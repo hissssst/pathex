@@ -1,5 +1,4 @@
 defmodule Pathex.Combination do
-
   @moduledoc """
   Module for combination structures
   """
@@ -55,7 +54,7 @@ defmodule Pathex.Combination do
   """
   @spec from_path(path()) :: t()
   def from_path(path) do
-    Enum.map(path, & [&1])
+    Enum.map(path, &[&1])
   end
 
   @doc """
@@ -65,16 +64,20 @@ defmodule Pathex.Combination do
   @spec to_paths(t()) :: [path()]
   def to_paths([]), do: []
   def to_paths([last]), do: Enum.map(last, &List.wrap/1)
+
   def to_paths([heads | tail]) do
     Enum.flat_map(heads, fn head ->
       tail
       |> to_paths()
-      |> Enum.map(& [head | &1])
+      |> Enum.map(&[head | &1])
     end)
   end
 
+  @doc """
+  Counts total size of clauses created from this composition
+  """
+  @spec size(t()) :: non_neg_integer()
   def size(combination) do
-    Enum.reduce(combination, 1, & length(&1) * &2)
+    Enum.reduce(combination, 1, &(length(&1) * &2))
   end
-
 end

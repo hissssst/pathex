@@ -1,5 +1,4 @@
 defmodule Pathex.Builder.MatchableViewer do
-
   @moduledoc """
   Viewer-builder which creates function which matches with one big case
   """
@@ -15,7 +14,7 @@ defmodule Pathex.Builder.MatchableViewer do
     getters =
       combination
       |> Pathex.Combination.to_paths()
-      |> Enum.flat_map(& path_to_getter(&1))
+      |> Enum.flat_map(&path_to_getter(&1))
 
     (getters ++ fallback())
     |> Common.to_case()
@@ -25,9 +24,9 @@ defmodule Pathex.Builder.MatchableViewer do
   defp path_to_getter(path) do
     x = {:x, [], Elixir}
     {:ok, match} = match_from_path(path, x)
+
     quote do
       unquote(match) -> unquote(@function_variable).(unquote(x))
     end
   end
-
 end

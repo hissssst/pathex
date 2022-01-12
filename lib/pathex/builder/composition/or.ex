@@ -1,5 +1,4 @@
 defmodule Pathex.Builder.Composition.Or do
-
   @moduledoc """
   This builder builds composition for `|||` operator
   """
@@ -9,39 +8,39 @@ defmodule Pathex.Builder.Composition.Or do
 
   def build(items) do
     [
-      view:         build_view(items),
-      update:       build_update(items),
+      view: build_view(items),
+      update: build_update(items),
       force_update: build_force_update(items)
     ]
   end
 
   defp build_view([head | tail]) do
-    structure  = {:input_struct, [], Elixir}
-    func       = {:func, [], Elixir}
+    structure = {:input_struct, [], Elixir}
+    func = {:func, [], Elixir}
     first_case = to_view(head, structure, func)
 
-    [first_case | Enum.map(tail, & to_view(&1, structure, func))]
+    [first_case | Enum.map(tail, &to_view(&1, structure, func))]
     |> to_with()
     |> Code.new([structure, func])
   end
 
   defp build_update([head | tail]) do
-    structure  = {:input_struct, [], Elixir}
-    func       = {:func, [], Elixir}
+    structure = {:input_struct, [], Elixir}
+    func = {:func, [], Elixir}
     first_case = to_update(head, structure, func)
 
-    [first_case | Enum.map(tail, & to_update(&1, structure, func))]
+    [first_case | Enum.map(tail, &to_update(&1, structure, func))]
     |> to_with()
     |> Code.new([structure, func])
   end
 
   defp build_force_update([head | tail]) do
-    structure  = {:input_struct, [], Elixir}
-    func       = {:func, [], Elixir}
-    default    = {:default, [], Elixir}
+    structure = {:input_struct, [], Elixir}
+    func = {:func, [], Elixir}
+    default = {:default, [], Elixir}
     first_case = to_force_update(head, structure, func, default)
 
-    [first_case | Enum.map(tail, & to_force_update(&1, structure, func, default))]
+    [first_case | Enum.map(tail, &to_force_update(&1, structure, func, default))]
     |> to_with()
     |> Code.new([structure, func, default])
   end
@@ -70,8 +69,8 @@ defmodule Pathex.Builder.Composition.Or do
 
   defp to_force_update(item, structure, func, default) do
     quote do
-      :error <- unquote(item).(:force_update, {unquote(structure), unquote(func), unquote(default)})
+      :error <-
+        unquote(item).(:force_update, {unquote(structure), unquote(func), unquote(default)})
     end
   end
-
 end

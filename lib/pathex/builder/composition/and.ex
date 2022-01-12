@@ -1,5 +1,4 @@
 defmodule Pathex.Builder.Composition.And do
-
   @moduledoc """
   This builder builds composition for `&&&` operator
   """
@@ -9,42 +8,42 @@ defmodule Pathex.Builder.Composition.And do
 
   def build(items) do
     [
-      view:         build_view(items),
-      update:       build_update(items),
+      view: build_view(items),
+      update: build_update(items),
       force_update: build_force_update(items)
     ]
   end
 
   defp build_view([head | tail]) do
-    ret        = {:x, [], Elixir}
-    structure  = {:input_struct, [], Elixir}
-    func       = {:func, [], Elixir}
+    ret = {:x, [], Elixir}
+    structure = {:input_struct, [], Elixir}
+    func = {:func, [], Elixir}
     first_case = to_view(head, ret, structure, func)
 
-    [first_case | Enum.map(tail, & to_view(&1, quote(do: ^unquote(ret)), structure, func))]
+    [first_case | Enum.map(tail, &to_view(&1, quote(do: ^unquote(ret)), structure, func))]
     |> to_with(ret)
     |> Code.new([structure, func])
   end
 
   defp build_update([head | tail]) do
-    ret        = {:x, [], Elixir}
-    structure  = {:input_struct, [], Elixir}
-    func       = {:func, [], Elixir}
+    ret = {:x, [], Elixir}
+    structure = {:input_struct, [], Elixir}
+    func = {:func, [], Elixir}
     first_case = to_update(head, ret, structure, func)
 
-    [first_case | Enum.map(tail, & to_update(&1, ret, ret, func))]
+    [first_case | Enum.map(tail, &to_update(&1, ret, ret, func))]
     |> to_with(ret)
     |> Code.new([structure, func])
   end
 
   defp build_force_update([head | tail]) do
-    ret        = {:x, [], Elixir}
-    structure  = {:input_struct, [], Elixir}
-    func       = {:func, [], Elixir}
-    default    = {:default, [], Elixir}
+    ret = {:x, [], Elixir}
+    structure = {:input_struct, [], Elixir}
+    func = {:func, [], Elixir}
+    default = {:default, [], Elixir}
     first_case = to_force_update(head, ret, structure, func, default)
 
-    [first_case | Enum.map(tail, & to_force_update(&1, ret, ret, func, default))]
+    [first_case | Enum.map(tail, &to_force_update(&1, ret, ret, func, default))]
     |> to_with(ret)
     |> Code.new([structure, func, default])
   end
@@ -73,8 +72,8 @@ defmodule Pathex.Builder.Composition.And do
 
   defp to_force_update(item, ret, structure, func, default) do
     quote do
-      {:ok, unquote(ret)} <- unquote(item).(:force_update, {unquote(structure), unquote(func), unquote(default)})
+      {:ok, unquote(ret)} <-
+        unquote(item).(:force_update, {unquote(structure), unquote(func), unquote(default)})
     end
   end
-
 end
