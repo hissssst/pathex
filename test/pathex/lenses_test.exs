@@ -29,6 +29,10 @@ defmodule Pathex.LensesTest do
     # Force
     assert {:ok, [x: 2, y: 2]} = force_set([x: 1, y: 1], all, 2)
     assert {:ok, [x: %{x: 2}, y: %{x: 2}]} = force_set([x: %{x: 1}, y: 1], all ~> px, 2)
+
+    # Delete
+    assert {:ok, %{}} = delete(%{x: 1, y: 2, z: 3}, all)
+    assert {:ok, %{x: [], y: 2}} = delete(%{x: [1, 2, 3], y: 2}, px ~> all)
   end
 
   describe "Catching" do
@@ -52,6 +56,15 @@ defmodule Pathex.LensesTest do
 
       assert :error = set([x: {}], any ~> px, 1)
       assert :error = set([{}], any ~> px, 1)
+
+      assert :error = delete([x: {}], px ~> any)
+      assert :error = delete([x: []], px ~> any)
+      assert :error = delete([x: %{}], px ~> any)
+
+      assert :error = delete(%{}, any ~> px)
+      assert :error = delete(%{x: 1}, any ~> px)
+      assert :error = delete(%{y: 1}, any ~> px)
+      assert :error = delete(%{x: %{y: 2}}, any ~> px)
     end
 
     test "in all" do
@@ -67,6 +80,11 @@ defmodule Pathex.LensesTest do
       assert :error = set(%{x: {}}, all ~> px, 1)
       assert :error = set([x: {}], all ~> px, 1)
       assert :error = set({{}}, all ~> px, 1)
+
+      assert :error = delete([{}], all ~> px)
+      assert :error = delete(%{x: {}}, all ~> px)
+      assert :error = delete([x: {}], all ~> px)
+      assert :error = delete({{}}, all ~> px)
     end
   end
 
@@ -111,6 +129,10 @@ defmodule Pathex.LensesTest do
 
       assert {:ok, %{x: [a: 1, b: 2], y: %{c: 3}}} =
                force_set(%{x: [a: 1], y: %{c: 3}}, some ~> pb, 2)
+
+      # Delete
+      assert {:ok, %{x: [2, 3]}} = delete(%{x: [1, 2, 3]}, px ~> some)
+      assert {:ok, [1, %{}, 2, 3]} = delete([1, %{x: 1}, 2, 3], some ~> px)
     end
 
     test "just" do
@@ -126,6 +148,9 @@ defmodule Pathex.LensesTest do
       # Update
       assert {:ok, [1, 123]} = over([0, 123], some, inc)
       assert {:ok, %{x: 124, y: -1}} = over(%{x: 123, y: -1}, some, inc)
+
+      # Delete
+      assert {:ok, [1, 2, 3]} = delete([0, 1, 2, 3], some)
     end
   end
 
@@ -136,6 +161,7 @@ defmodule Pathex.LensesTest do
 
       sx = some ~> px
 
+      # Checking order of comptutations
       xl1 = px ||| some ~> px
       xl2 = px ||| sx
 
@@ -143,10 +169,21 @@ defmodule Pathex.LensesTest do
 
       assert {:ok, 2} == view(s, xl2)
       assert {:ok, 2} == view(s, xl1)
+
+      assert {:ok, %{a: 1, y: %{x: 4, y: 3}}} == set(s, xl1, 4)
+      assert {:ok, %{a: 1, y: %{x: 4, y: 3}}} == set(s, xl2, 4)
     end
   end
 
   describe "conditional lenses" do
+    test "deletion is not working for conditional lenses" do
+      m = Lenses.matching(_)
+      f = Lenses.filtering(fn _ -> true end)
+
+      assert :error = delete(%{x: 1}, m)
+      assert :error = delete(%{x: 1}, f)
+    end
+
     test "matching" do
       ml1 = Lenses.matching({:ok, _})
 

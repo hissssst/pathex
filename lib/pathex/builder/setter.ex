@@ -3,7 +3,7 @@ defmodule Pathex.Builder.Setter do
   Module with common functions for updaters
   """
 
-  import Pathex.Common, only: [list_match: 2, pin: 1]
+  import Pathex.Common, only: [list_match: 2, pin: 1, is_var: 1]
 
   # Helpers
 
@@ -41,10 +41,8 @@ defmodule Pathex.Builder.Setter do
   def create_setter({:keyword, key}, tail) when is_atom(key) do
     quote do
       [{_, _} | _] = keyword ->
-        key = unquote(key)
-
-        if Keyword.has_key?(keyword, key) do
-          Keyword.update!(keyword, key, fn val ->
+        if Keyword.has_key?(keyword, unquote(key)) do
+          Keyword.update!(keyword, unquote(key), fn val ->
             val |> unquote(tail)
           end)
         else
@@ -54,14 +52,19 @@ defmodule Pathex.Builder.Setter do
   end
 
   # Variable
-  def create_setter({:list, {_, _, _} = index}, tail) do
+
+  def create_setter({:list, index}, tail) when is_var(index) do
     quote do
-      l when is_list(l) ->
-        List.update_at(l, unquote(index), fn x -> x |> unquote(tail) end)
+      l when is_list(l) and is_integer(unquote(index)) ->
+        if abs(unquote(index)) > length(l) do
+          throw(:path_not_found)
+        else
+          List.update_at(l, unquote(index), fn x -> x |> unquote(tail) end)
+        end
     end
   end
 
-  def create_setter({:tuple, {_, _, _} = index}, tail) do
+  def create_setter({:tuple, index}, tail) when is_var(index) do
     quote do
       t
       when is_tuple(t) and is_integer(unquote(index)) and
@@ -75,12 +78,16 @@ defmodule Pathex.Builder.Setter do
     end
   end
 
-  def create_setter({:keyword, {_, _, _} = key}, tail) do
+  def create_setter({:keyword, key}, tail) when is_var(key) do
     quote do
       [{_, _} | _] = keyword when is_atom(unquote(key)) ->
-        Keyword.update!(keyword, unquote(key), fn val ->
-          val |> unquote(tail)
-        end)
+        if Keyword.has_key?(keyword, unquote(key)) do
+          Keyword.update!(keyword, unquote(key), fn val ->
+            val |> unquote(tail)
+          end)
+        else
+          throw(:path_not_found)
+        end
     end
   end
 

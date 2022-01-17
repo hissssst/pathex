@@ -8,7 +8,9 @@ defmodule Pathex.Lenses.Recur do
   # defguardp is_coll(x) when is_list(x) or is_tuple(x) or is_map(x)
 
   @doc """
-  This is function which makes you lens recursive
+  **This is not a lens!**
+
+  This is a function which makes your lens recursive
   Simple example:
 
       iex> import Pathex; import Pathex.Lenses.Recur
@@ -28,10 +30,39 @@ defmodule Pathex.Lenses.Recur do
       iex> {:ok, 1} = Pathex.view(nested, recur_xlens)
       iex> %{x: %{x: %{x: %{x: %{x: 2}}}}} = Pathex.set!(nested, recur_xlens, 2)
       iex> %{x: %{x: %{x: %{x: %{x: 2}}}}} = Pathex.force_set!(nested, recur_xlens, 2)
+
+  But there are few things you need to keep in mind when using this function
+
+  1. It performs depth-first traversal  
+  For example
+  ```
+      iex> import Pathex
+      iex> xlens = path(:x)
+
+      iex> 1 == view!(%{x: %{x: 1}}, xlens)
+      iex> %{x: 1} != view!(%{x: %{x: 1}}, xlens)
+
+  2. Self-referencing paths loop  
+  For example
+  ```
+      iex> import Pathex
+      iex> id = matching(_)
+
+      iex> Pathex.view(%{}, recur(id))
+      # And you get a loop here
   """
   @doc export: true
+  @spec recur(Pathex.t()) :: Pathex.t()
   def recur(lens) when is_function(lens, 2) do
-    fn op, t -> lens.(op, update_argtuple(lens, op, t)) end
+    fn
+      :delete, {s} ->
+        with :error <- lens.(:update, {s, &recur(lens).(:delete, {&1})}) do
+          lens.(:delete, {s})
+        end
+
+      op, t ->
+        lens.(op, update_argtuple(lens, op, t))
+    end
   end
 
   # Helpers

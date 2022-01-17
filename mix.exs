@@ -75,7 +75,8 @@ defmodule Pathex.MixProject do
     [
       Public: [
         Pathex,
-        Pathex.Lenses
+        Pathex.Lenses,
+        Pathex.Lenses.Recur
       ],
       "Code generation": [
         Pathex.Builder,
@@ -95,12 +96,23 @@ defmodule Pathex.MixProject do
       "Updaters generation": [
         Pathex.Builder.Setter,
         Pathex.Builder.ForceUpdater,
-        Pathex.Builder.SimpleUpdater
+        Pathex.Builder.SimpleUpdater,
+        Pathex.Builder.SimpleDeleter
       ],
       "Compostitions generation": [
         Pathex.Builder.Composition,
         Pathex.Builder.Composition.And,
+        Pathex.Builder.Composition.Concat,
         Pathex.Builder.Composition.Or
+      ],
+      Lenses: [
+        Pathex.Lenses.All,
+        Pathex.Lenses.Any,
+        Pathex.Lenses.Filtering,
+        Pathex.Lenses.Matching,
+        Pathex.Lenses.Recur,
+        Pathex.Lenses.Some,
+        Pathex.Lenses.Star
       ],
       Utilities: [
         Pathex.Common

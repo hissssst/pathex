@@ -62,8 +62,7 @@ defmodule Pathex.Lenses do
       iex> {:ok, [1, 2, 3]} = Pathex.view([x: 1, y: 2, z: 3], starl)
 
   > Note:  
-  > Force update works the same way as `all` lens  
-  > And update leaves unusable data unchanged
+  > It returns :error when no data was found or changed
 
   Think of this function as `filter`. It is particulary useful for filtering  
   and selecting needed values with custom functions or `matching/1` macro
@@ -142,9 +141,7 @@ defmodule Pathex.Lenses do
       iex> {:ok, [{1, 5}, {4, 3}]} = Pathex.view(dots2d, star() ~> higher_than_2)
   """
   @doc export: true
-  def filtering(predicate) do
-    Filtering.filtering(predicate)
-  end
+  def filtering(predicate), do: Filtering.filtering(predicate)
 
   @deprecated """
   Use `matching({:ok, _}) ~> path(1)` macro instead.  

@@ -46,6 +46,7 @@ defmodule Pathex do
 
   @type update_args :: {pathex_compatible_structure(), inner_func()}
   @type force_update_args :: {pathex_compatible_structure(), inner_func(), any()}
+  @type delete_args :: {pathex_compatible_structure()}
 
   @typedoc "This depends on the modifier"
   @type pathex_compatible_structure :: map() | list() | Keyword.t() | tuple()
@@ -54,7 +55,7 @@ defmodule Pathex do
   @type result :: {:ok, any()} | :error
 
   @typedoc "Also known as [path-closure](path.md)"
-  @type t :: (Operations.name(), force_update_args() | update_args() -> result())
+  @type t :: (Operations.name(), force_update_args() | update_args() | delete_args() -> result())
 
   @typedoc "More about [modifiers](modifiers.md)"
   @type mod :: :map | :json | :naive
@@ -393,6 +394,75 @@ defmodule Pathex do
   end
 
   @doc """
+  Macro deletes value in the structure
+
+  Example:
+      iex> import Pathex
+      iex> x = 1
+      iex> [0, %{}] = delete!([0, %{x: 8}], path(x / :x))
+  """
+  @doc export: true
+  defmacro delete(struct, path) do
+    gen(path, :delete, [struct], __CALLER__)
+  end
+
+  @doc """
+  Macro deletes value in the structure
+
+  Example:
+      iex> import Pathex
+      iex> x = 1
+      iex> [0, %{}] = delete!([0, %{x: 8}], path(x / :x))
+  """
+  @doc export: true
+  defmacro delete!(struct, path) do
+    path
+    |> gen(:delete, [struct], __CALLER__)
+    |> bang()
+  end
+
+  @doc """
+  Macro which gets value in the structure and deletes it
+
+  Example:
+      iex> import Pathex
+      iex> {:ok, {1, [2, 3]}} = pop([1, 2, 3], path(0))
+  """
+  @doc export: true
+  defmacro pop(struct, path) do
+    view = gen(path, :view, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
+    delete = gen(path, :delete, [struct], __CALLER__)
+
+    quote do
+      with(
+        {:ok, value} <- unquote(view),
+        {:ok, structure} <- unquote(delete)
+      ) do
+        {:ok, {value, structure}}
+      end
+    end
+  end
+
+  @doc """
+  Macro which gets value in the structure and deletes it
+
+  Example:
+      iex> import Pathex
+      iex> {1, [2, 3]} = pop!([1, 2, 3], path(0))
+  """
+  @doc export: true
+  defmacro pop!(struct, path) do
+    view = gen(path, :view, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__) |> bang()
+    delete = gen(path, :delete, [struct], __CALLER__) |> bang()
+
+    quote do
+      value = unquote(view)
+      structure = unquote(delete)
+      {value, structure}
+    end
+  end
+
+  @doc """
   Sigil for paths. Three [modifiers](modifiers.md) are avaliable:
   * `naive` (default) paths should look like `~P["string"/:atom/1]`
   * `json` paths should look like `~P[string/this_one_is_too/1/0]json`
@@ -534,6 +604,8 @@ defmodule Pathex do
   @doc """
   This macro creates compositions of paths which work along with each other
 
+  Think of `alongside([path1, path2, path3])` as `path1 &&& path2 &&& path3`
+
   Example:
       iex> import Pathex
       iex> pa = alongside [path(:x), path(:y)]
@@ -546,6 +618,14 @@ defmodule Pathex do
   defmacro alongside(list) do
     quote generated: true, bind_quoted: [list: list] do
       fn
+        :delete, {input_struct} ->
+          Enum.reduce_while(list, {:ok, input_struct}, fn path, {_, res} ->
+            case path.(:delete, {res}) do
+              {:ok, res} -> {:cont, {:ok, res}}
+              :error -> {:halt, :error}
+            end
+          end)
+
         :view, {input_struct, func} ->
           list
           |> Enum.reverse()
@@ -615,7 +695,7 @@ defmodule Pathex do
 
   # Helper for detecting mod
   @spec detect_mod(mod() | charlist()) :: mod() | no_return()
-  defp detect_mod(mod) when mod in ~w(naive map json)a, do: mod
+  defp detect_mod(mod) when mod in ~w[naive map json]a, do: mod
   defp detect_mod(str) when is_binary(str), do: detect_mod('#{str}')
   defp detect_mod('json'), do: :json
   defp detect_mod('map'), do: :map

@@ -13,6 +13,7 @@ defmodule Pathex.Lenses.Matching do
   def matching_func({:_, meta, ctx}) when is_list(meta) and (is_nil(ctx) or is_atom(ctx)) do
     quote do
       fn
+        :delete, _ -> :error
         _, x -> :erlang.element(2, x).(:erlang.element(1, x))
       end
     end
@@ -30,7 +31,7 @@ defmodule Pathex.Lenses.Matching do
         :force_update, {_x, func, default} ->
           default
 
-        op, _ when op in ~w[view update force_update]a ->
+        op, _ when op in ~w[delete view update force_update]a ->
           :error
       end
     end
@@ -48,7 +49,7 @@ defmodule Pathex.Lenses.Matching do
         :force_update, {_x, func, default} ->
           default
 
-        op, _ when op in ~w[view update force_update]a ->
+        op, _ when op in ~w[delete view update force_update]a ->
           :error
       end
     end

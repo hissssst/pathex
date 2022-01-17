@@ -8,10 +8,20 @@ defmodule Pathex.Builder.Composition.Or do
 
   def build(items) do
     [
-      view: build_view(items),
+      delete: build_delete(items),
+      force_update: build_force_update(items),
       update: build_update(items),
-      force_update: build_force_update(items)
+      view: build_view(items)
     ]
+  end
+
+  defp build_delete([head | tail]) do
+    structure = {:x, [], Elixir}
+    first_case = to_delete(head, structure)
+
+    [first_case | Enum.map(tail, &to_delete(&1, structure))]
+    |> to_with()
+    |> Code.new([structure])
   end
 
   defp build_view([head | tail]) do
@@ -45,7 +55,7 @@ defmodule Pathex.Builder.Composition.Or do
     |> Code.new([structure, func, default])
   end
 
-  # You can find the same code in `Pathex.Builder.Composition.And`
+  # You can find almost the same code in `Pathex.Builder.Composition.And`
   # But I don't mind some duplication
   defp to_with(cases) do
     quote do
@@ -64,6 +74,12 @@ defmodule Pathex.Builder.Composition.Or do
   defp to_update(item, structure, func) do
     quote do
       :error <- unquote(item).(:update, {unquote(structure), unquote(func)})
+    end
+  end
+
+  defp to_delete(item, structure) do
+    quote do
+      :error <- unquote(item).(:delete, {unquote(structure)})
     end
   end
 
