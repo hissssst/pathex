@@ -263,4 +263,15 @@ defmodule PathexTest do
     p = path({:x, [], nil})
     assert {:ok, 1} = view(%{{:x, [], nil} => 1, :x => 2}, p)
   end
+
+  test "delete: naive" do
+    y = :y
+    p = path(:x / y)
+    assert {:ok, %{x: %{z: 2}}} = delete(%{x: %{y: 1, z: 2}}, p)
+    assert {:ok, %{x: [z: 2]}} = delete(%{x: [y: 1, z: 2]}, p)
+
+    assert {:ok, [1, 3]} = delete([1, 2, 3], path(1))
+    assert {:ok, {1, 3}} = delete({1, 2, 3}, path(1))
+    assert {:ok, %{3 => 4}} = delete(%{1 => 2, 3 => 4}, path(1))
+  end
 end

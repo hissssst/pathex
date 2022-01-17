@@ -11,6 +11,10 @@ defmodule Pathex.Lenses.Filtering do
 
       :force_update, {structure, func, default} ->
         (predicate.(structure) && func.(structure)) || default
+
+      # Can't delete value from self-referencing lens
+      :delete, _ ->
+        :error
     end
   end
 end

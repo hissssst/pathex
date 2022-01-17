@@ -8,10 +8,21 @@ defmodule Pathex.Builder.Composition.And do
 
   def build(items) do
     [
-      view: build_view(items),
+      delete: build_delete(items),
+      force_update: build_force_update(items),
       update: build_update(items),
-      force_update: build_force_update(items)
+      view: build_view(items)
     ]
+  end
+
+  defp build_delete([head | tail]) do
+    ret = {:x, [], Elixir}
+    structure = {:x, [], Elixir}
+    first_case = to_delete(head, ret, structure)
+
+    [first_case | Enum.map(tail, &to_delete(&1, ret, ret))]
+    |> to_with(ret)
+    |> Code.new([structure])
   end
 
   defp build_view([head | tail]) do
@@ -67,6 +78,12 @@ defmodule Pathex.Builder.Composition.And do
   defp to_update(item, ret, structure, func) do
     quote do
       {:ok, unquote(ret)} <- unquote(item).(:update, {unquote(structure), unquote(func)})
+    end
+  end
+
+  defp to_delete(item, ret, structure) do
+    quote do
+      {:ok, unquote(ret)} <- unquote(item).(:delete, {unquote(structure)})
     end
   end
 

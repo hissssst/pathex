@@ -10,14 +10,46 @@ defmodule Pathex.Builder.Composition.Concat do
     [
       view: build_view(paths),
       update: build_update(paths),
+      delete: build_deleter(paths),
       force_update: build_force_update(paths)
     ]
+  end
+
+  # Deleter
+
+  defp build_deleter(paths) do
+    structure = {:x, [], Elixir}
+
+    paths
+    |> do_build_deleter(structure)
+    |> Code.new([structure])
+  end
+
+  defp do_build_deleter([head], structure) do
+    quote do
+      unquote(head).(:delete, {unquote(structure)})
+    end
+  end
+
+  defp do_build_deleter([head | tail], structure) do
+    inner_arg = {:x, [], Elixir}
+    deleter = do_build_deleter(tail, inner_arg)
+
+    quote do
+      unquote(head).(
+        :update,
+        {unquote(structure),
+         fn unquote(inner_arg) ->
+           unquote(deleter)
+         end}
+      )
+    end
   end
 
   # Force update
 
   defp build_force_update([head | tail]) do
-    structure = {:input_struct, [], Elixir}
+    structure = {:x, [], Elixir}
     func = {:func, [], Elixir}
     default = {:default, [], Elixir}
 
@@ -89,7 +121,7 @@ defmodule Pathex.Builder.Composition.Concat do
   # Update
 
   defp build_update([head | tail]) do
-    structure = {:input_struct, [], Elixir}
+    structure = {:x, [], Elixir}
     func = {:func, [], Elixir}
     inner_arg = {:x, [], Elixir}
 
@@ -131,7 +163,7 @@ defmodule Pathex.Builder.Composition.Concat do
   # View
 
   defp build_view([head | tail]) do
-    structure = {:input_struct, [], Elixir}
+    structure = {:x, [], Elixir}
     func = {:func, [], Elixir}
     inner_arg = {:x, [], Elixir}
     inner = do_build_view(tail, inner_arg, func)

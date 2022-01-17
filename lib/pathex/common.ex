@@ -4,6 +4,9 @@ defmodule Pathex.Common do
   Shared among all Pathex projects
   """
 
+  @doc """
+  Guard which checks if given AST contains a variable
+  """
   defguard is_var(t)
            when is_tuple(t) and
                   tuple_size(t) == 3 and

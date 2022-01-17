@@ -155,6 +155,15 @@ defmodule Pathex.Lenses.All do
         end)
         |> wrap_ok()
 
+      :delete, {tuple} when is_tuple(tuple) ->
+        {:ok, {}}
+
+      :delete, {list} when is_list(list) ->
+        {:ok, []}
+
+      :delete, {map} when is_map(map) ->
+        {:ok, %{}}
+
       op, _ when op in ~w[view update force_update]a ->
         :error
     end

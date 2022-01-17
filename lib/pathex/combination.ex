@@ -14,7 +14,7 @@ defmodule Pathex.Combination do
   @typedoc """
   Representation of one path combination
 
-  For example:
+  For example, viewer for this combination:
   ```elixir
   [
     [map: :x, keyword: :x]
@@ -22,7 +22,7 @@ defmodule Pathex.Combination do
   ]
   ```
 
-  Will expand to
+  Will look like
   ```elixir
   case do
     %{x: inner} ->

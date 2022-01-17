@@ -173,7 +173,24 @@ defmodule Pathex.Lenses.Some do
             {:ok, :erlang.setelement(0, t, default)}
         end
 
-      op, _ when op in ~w[view update force_update]a ->
+      :delete, {%{} = map} ->
+        :maps.iterator(map)
+        |> :maps.next()
+        |> case do
+          :none ->
+            :error
+
+          {key, _value, _iter} ->
+            {:ok, Map.delete(map, key)}
+        end
+
+      :delete, {t} when is_tuple(t) and tuple_size(t) > 0 ->
+        {:ok, :erlang.delete_element(1, t)}
+
+      :delete, {[_ | tail]} ->
+        {:ok, tail}
+
+      op, _ when op in ~w[delete view update force_update]a ->
         :error
     end
   end

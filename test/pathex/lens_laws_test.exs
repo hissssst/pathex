@@ -27,7 +27,7 @@ defmodule Pathex.LensLawsTest do
   end
 
   describe "Non-collection lenses" do
-    test "naive" do
+    test "naive map" do
       pxyz = path(:x / :y / :z)
       structure = %{x: %{y: %{z: 1}}, x1: %{y: %{z: 2}}}
 
