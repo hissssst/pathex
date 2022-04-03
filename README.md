@@ -110,6 +110,7 @@ username = path(:personal / :fname)
     personal: %{fname: "Kabs", sname: "Rocks"},
     phone: "123-456-789"
   }
+  |> Pathex.view(username)
 
 # Takes all usernames!
 all = Pathex.Lenses.all()
@@ -150,7 +151,7 @@ import Pathex; import Pathex.Lenses
 
 ### Powerfull abstraction
 
-Pathex is built around simple primitive called `path`, therefore can be simply extended.  
+Pathex is built around simple primitive called `path`, therefore can be simply extended.
 `path` or `path-closure` is just a closure with special primitives. Anything complying with `Pathex.t()` spec can
 be used within `Pathex`
 
