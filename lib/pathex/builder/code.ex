@@ -1,10 +1,9 @@
 defmodule Pathex.Builder.Code do
-  @moduledoc """
-  Structure for working with closures as ASTs
-  ### Fields
-  * vars - list of variables/arguments
-  * code - body of a closure
-  """
+  # Structure for working with closures as ASTs
+  # ### Fields
+  # * vars - list of variables/arguments
+  # * code - body of a closure
+  @moduledoc false
 
   @enforce_keys [:code]
   defstruct [
@@ -49,8 +48,14 @@ defmodule Pathex.Builder.Code do
   def multiple_to_fn(codes) do
     cases =
       Enum.flat_map(codes, fn {key, %{vars: vars, code: code}} ->
+        argtuple =
+          case vars do
+            [] -> {:_, [], Elixir}
+            vars -> quote(do: {unquote_splicing(vars)})
+          end
+
         quote generated: true do
-          unquote(key), {unquote_splicing(vars)} -> unquote(code)
+          unquote(key), unquote(argtuple) -> unquote(code)
         end
       end)
 

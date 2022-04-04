@@ -1,7 +1,6 @@
 defmodule Pathex.Combination do
-  @moduledoc """
-  Module for combination structures
-  """
+  # Module for combination structures
+  @moduledoc false
 
   @typep struct_type :: :map | :keyword | :list | :tuple
 

@@ -1,7 +1,6 @@
 defmodule Pathex.Builder.SimpleUpdater do
-  @moduledoc """
-  Updater-builder which generates function for simply updates value in the given path
-  """
+  # Updater-builder which generates function for simply updates value in the given path
+  @moduledoc false
 
   alias Pathex.Builder.Setter
   alias Pathex.Common

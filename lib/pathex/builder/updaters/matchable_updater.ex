@@ -1,7 +1,6 @@
 defmodule Pathex.Builder.MatchableUpdater do
-  @moduledoc """
-  Updater for matchable structures
-  """
+  # Updater for matchable structures
+  @moduledoc false
 
   alias Pathex.Combination
   alias Pathex.Common

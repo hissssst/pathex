@@ -46,7 +46,7 @@ defmodule Pathex.MixProject do
   defp deps do
     [
       {:mix_unused, "~> 0.3.0", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.23.0", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: :dev, runtime: false}
     ]
@@ -60,14 +60,15 @@ defmodule Pathex.MixProject do
       main: "readme",
       extra_section: "GUIDES",
       groups_for_modules: groups_for_modules(),
-      extras: ["README.md" | Path.wildcard("guides/*")],
+      extras: ["README.md" | Path.wildcard("guides/*/*")] ++ ["CHANGELOG.md"],
       groups_for_extras: groups_for_extras()
     ]
   end
 
   defp groups_for_extras do
     [
-      Tutorials: ~r/guides\/.*/
+      Tutorials: ~r/guides\/tutorials\/.*/  ,
+      "Usage examples": ~r/guides\/examples\/.*/  ,
     ]
   end
 
@@ -76,7 +77,8 @@ defmodule Pathex.MixProject do
       Public: [
         Pathex,
         Pathex.Lenses,
-        Pathex.Lenses.Recur
+        Pathex.Lenses.Recur,
+        Pathex.Debug
       ],
       "Code generation": [
         Pathex.Builder,
@@ -104,6 +106,12 @@ defmodule Pathex.MixProject do
         Pathex.Builder.Composition.And,
         Pathex.Builder.Composition.Concat,
         Pathex.Builder.Composition.Or
+      ],
+      "Deletion generation": [
+        Pathex.Builder.SimpleDeleter
+      ],
+      "Inspection generation": [
+        Pathex.Builder.Inspector
       ],
       Lenses: [
         Pathex.Lenses.All,

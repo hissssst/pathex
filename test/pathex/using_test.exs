@@ -7,6 +7,14 @@ defmodule Pathex.UsingTest do
     def p do
       path(:x / 0)
     end
+
+    def inlined_ok do
+      Pathex.view(%{x: [1]}, path(:x / 0))
+    end
+
+    def inlined_error do
+      Pathex.view(%{x: {1}}, path(:x / 0))
+    end
   end
 
   defmodule EmptyUsed do
@@ -43,7 +51,10 @@ defmodule Pathex.UsingTest do
   test "Testing if path is really a json path" do
     p = JsonUsed.p()
 
+    assert {:ok, 1} = JsonUsed.inlined_ok()
+    assert :error = JsonUsed.inlined_error()
     assert {:ok, 1} = view(%{x: [1]}, p)
+    assert :error = view(%{x: {1}}, p)
     assert :error = view(%{x: {1}}, p)
     assert :error = view([x: [1]], p)
   end

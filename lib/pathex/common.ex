@@ -1,8 +1,7 @@
 defmodule Pathex.Common do
-  @moduledoc """
-  Util functions for working with AST in Pathex
-  Shared among all Pathex projects
-  """
+  # Util functions for working with AST in Pathex
+  # Shared among all Pathex projects
+  @moduledoc false
 
   @doc """
   Guard which checks if given AST contains a variable
@@ -27,10 +26,10 @@ defmodule Pathex.Common do
   end
 
   def list_match(index, inner) do
-    unders = Enum.map(1..index, fn _ -> {:_, [], Elixir} end)
+    underscores = Enum.map(1..index, fn _ -> {:_, [], Elixir} end)
 
     quote generated: true do
-      [unquote_splicing(unders), unquote(inner) | _]
+      [unquote_splicing(underscores), unquote(inner) | _]
     end
   end
 

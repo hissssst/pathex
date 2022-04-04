@@ -1,7 +1,6 @@
 defmodule Pathex.QuotedParser do
-  @moduledoc """
-  Utils module for parsing paths created with `Pathex.path/2`
-  """
+  # Utils module for parsing paths created with `Pathex.path/2`
+  @moduledoc false
 
   import Pathex.Common, only: [is_var: 1]
   alias Pathex.Operations

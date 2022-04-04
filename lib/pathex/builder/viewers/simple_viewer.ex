@@ -1,10 +1,9 @@
 defmodule Pathex.Builder.SimpleViewer do
-  @moduledoc """
-  Simple viewer-builder for functions which apply func to value in the path
+  @moduledoc false
+  # Simple viewer-builder for functions which apply func to value in the path
 
-  With workaround to expand local macros
-  to not create another function call
-  """
+  # With workaround to expand local macros
+  # to not create another function call
 
   alias Pathex.Builder.Viewer
   alias Pathex.Common
@@ -18,8 +17,6 @@ defmodule Pathex.Builder.SimpleViewer do
     |> Enum.reverse()
     |> Enum.reduce(initial(), &reduce_into/2)
     |> Macro.prewalk(&Viewer.expand_local/1)
-    # |> Macro.to_string()
-    # |> IO.puts
     |> Pathex.Builder.Code.new_arg_pipe([@structure_variable, @function_variable])
   end
 

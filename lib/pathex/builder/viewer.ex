@@ -1,7 +1,6 @@
 defmodule Pathex.Builder.Viewer do
-  @moduledoc """
-  Module with common functions for viewers
-  """
+  # Module with common functions for viewers
+  @moduledoc false
 
   import Pathex.Common, only: [list_match: 2, pin: 1]
 
@@ -11,11 +10,8 @@ defmodule Pathex.Builder.Viewer do
     path
     |> Enum.reverse()
     |> Enum.reduce_while({:ok, initial}, fn
-      {:map, {_, _, _} = key}, {:ok, acc} ->
-        {:cont, {:ok, quote(do: %{^unquote(key) => unquote(acc)})}}
-
       {:map, key}, {:ok, acc} ->
-        {:cont, {:ok, quote(do: %{unquote(key) => unquote(acc)})}}
+        {:cont, {:ok, quote(do: %{unquote(pin(key)) => unquote(acc)})}}
 
       {:list, index}, {:ok, acc} ->
         {:cont, {:ok, list_match(index, acc)}}
@@ -43,10 +39,8 @@ defmodule Pathex.Builder.Viewer do
   end
 
   def create_getter({:map, key}, tail) do
-    key = pin(key)
-
     quote do
-      %{unquote(key) => x} -> x |> unquote(tail)
+      %{unquote(pin(key)) => x} -> x |> unquote(tail)
     end
   end
 

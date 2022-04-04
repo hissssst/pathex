@@ -1,7 +1,6 @@
 defmodule Pathex.Builder.ForceUpdater do
-  @moduledoc """
-  Forceupdater-builder which builds function for updates in given path
-  """
+  # Forceupdater-builder which builds function for updates in given path
+  @moduledoc false
 
   alias Pathex.Common
   import Pathex.Builder.Setter

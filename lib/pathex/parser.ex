@@ -1,7 +1,6 @@
 defmodule Pathex.Parser do
-  @moduledoc """
-  Module for parsing path created with sigils
-  """
+  # Module for parsing path created with sigils
+  @moduledoc false
 
   # TODO proper naive parsing
   @spec parse(binary(), Pathex.mod()) :: Pathex.Combination.t()

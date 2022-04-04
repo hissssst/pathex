@@ -1,8 +1,7 @@
 defmodule Pathex.Lenses.Filtering do
-  @moduledoc """
-  Private module for `filtering(condition)` lens
-  > see `Pathex.Lenses.filtering/1` documentation
-  """
+  # Private module for `filtering(condition)` lens
+  # > see `Pathex.Lenses.filtering/1` documentation
+  @moduledoc false
 
   def filtering(predicate) do
     fn
@@ -11,6 +10,9 @@ defmodule Pathex.Lenses.Filtering do
 
       :force_update, {structure, func, default} ->
         (predicate.(structure) && func.(structure)) || default
+
+      :inspect, _ ->
+        "filtering(#{inspect(predicate)})"
 
       # Can't delete value from self-referencing lens
       :delete, _ ->

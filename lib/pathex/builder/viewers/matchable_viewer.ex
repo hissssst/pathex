@@ -1,7 +1,6 @@
 defmodule Pathex.Builder.MatchableViewer do
-  @moduledoc """
-  Viewer-builder which creates function which matches with one big case
-  """
+  # Viewer-builder which creates function which matches with one big case
+  @moduledoc false
 
   alias Pathex.Common
   import Pathex.Builder.Viewer

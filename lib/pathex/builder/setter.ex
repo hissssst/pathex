@@ -1,7 +1,6 @@
 defmodule Pathex.Builder.Setter do
-  @moduledoc """
-  Module with common functions for updaters
-  """
+  # Module with common functions for updaters
+  @moduledoc false
 
   import Pathex.Common, only: [list_match: 2, pin: 1, is_var: 1]
 

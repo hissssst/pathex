@@ -1,16 +1,17 @@
 defmodule Pathex.Builder.Composition.Or do
-  @moduledoc """
-  This builder builds composition for `|||` operator
-  """
+  # This builder builds composition for `|||` operator
+  @moduledoc false
 
   @behaviour Pathex.Builder.Composition
   alias Pathex.Builder.Code
+  alias Pathex.Builder.Composition
 
   def build(items) do
     [
       delete: build_delete(items),
       force_update: build_force_update(items),
       update: build_update(items),
+      inspect: Composition.build_inspect(items, "|||"),
       view: build_view(items)
     ]
   end

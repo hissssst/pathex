@@ -1,8 +1,7 @@
 defmodule Pathex.Lenses.Any do
-  @moduledoc """
-  Private module for `any()` lens
-  > see `Pathex.Lenses.any/0` documentation
-  """
+  # Private module for `any()` lens
+  # > see `Pathex.Lenses.any/0` documentation
+  @moduledoc false
 
   @spec any() :: Pathex.t()
   def any do
@@ -102,6 +101,9 @@ defmodule Pathex.Lenses.Any do
 
       :delete, {[_ | tail]} ->
         {:ok, tail}
+
+      :inspect, _ ->
+        "any()"
 
       op, _ when op in ~w[delete view update force_update]a ->
         :error

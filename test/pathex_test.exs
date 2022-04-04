@@ -8,8 +8,8 @@ defmodule PathexTest do
 
   @compile :nowarn_unused_vars
 
-  test "view: naive sigil path: binary" do
-    path = ~P["hey"]naive
+  test "view: naive path: binary" do
+    path = path("hey")
     assert {:ok, true} = view(%{"hey" => true}, path)
     assert :error = view(%{}, path)
     assert :error = view(%{hey: true}, path)
@@ -18,16 +18,16 @@ defmodule PathexTest do
     assert :error = view([1, 2, 3, 4, 5], path)
   end
 
-  test "view: naive sigil path: atom" do
-    path = ~P[:hey]naive
+  test "view: naive path: atom" do
+    path = path(:hey)
     assert {:ok, true} = view(%{hey: true}, path)
     assert {:ok, true} = view([hey: true], path)
     assert :error = view(%{"hey" => true}, path)
     assert :error = view([{"hey", true}], path)
   end
 
-  test "view: naive sigil path: integer" do
-    path = ~P[1]naive
+  test "view: naive path: integer" do
+    path = path(1)
     assert {:ok, 2} = view([1, 2, 3], path)
     assert {:ok, 2} = view({1, 2, 3}, path)
     assert {:ok, :x} = view(%{1 => :x}, path)
@@ -36,8 +36,8 @@ defmodule PathexTest do
     assert :error = view({0}, path)
   end
 
-  test "view: naive sigil: long easy" do
-    path = ~P[1/:x/"y"]naive
+  test "view: naive path: long easy" do
+    path = path(1 / :x / "y")
     assert {:ok, 123} = view([1, [x: %{"y" => 123}], 2, 3], path)
     assert {:ok, 123} = view({1, [x: %{"y" => 123}], 2, 3}, path)
     assert {:ok, 123} = view(%{1 => [x: %{"y" => 123}], 2 => 3}, path)
@@ -47,31 +47,15 @@ defmodule PathexTest do
     assert :error = view([1, 123, 2, 3], path)
   end
 
-  # Commented, not skipped because compilation takes a lot of time
-  # test "view: naive sigil: composed hard" do
-  #   path = ~P[1/2/:x/3/4/"y"/:z/:z/:z/1]naive
-  #   assert {:ok, :yay!} = view path, %{
-  #     1 => [1, 2, %{
-  #       x: [1, 2, 3, [1, 2, 3, 4, %{
-  #         "y" => [
-  #           z: [z: %{z: [1, :yay!]}],
-  #           z: [z: %{z: [1, :nope]}]
-  #         ]
-  #       }]]
-  #     }]
-  #   }
-  # end
-
-  test "view: json sigil: binary" do
-    path = ~P[hey]json
+  test "view: json path: binary" do
+    path = path("hey", :json)
     assert {:ok, "hello sir"} = view(%{"hey" => "hello sir"}, path)
     assert :error = view([{"hey", "hello sir"}], path)
     assert :error = view([hey: "this is wrong"], path)
   end
 
-  test "view: json sigil: integer" do
-    path = ~P[1]json
-    assert {:ok, "here"} = view(%{"1" => "here"}, path)
+  test "view: json path: integer" do
+    path = path(1, :json)
     assert {:ok, "here"} = view(["1", "here"], path)
 
     # JSON specification does not allow integers to be map keys
@@ -80,16 +64,16 @@ defmodule PathexTest do
     assert :error = view(%{}, path)
   end
 
-  test "view: json sigil: long easy" do
-    path = ~P[hey/1]json
+  test "view: json path: long easy" do
+    path = path("hey" / 1, :json)
     assert {:ok, "yay!"} = view(%{"hey" => [1, "yay!"]}, path)
     assert :error = view(%{"hey" => %{1 => "yay!"}}, path)
     assert :error = view(%{"hey" => {1, "yay!"}}, path)
     assert :error = view([{"hey", [1, "yay!"]}], path)
   end
 
-  test "view: json sigil: long hard" do
-    path = ~P[hey/1/1/1/x/y/z]json
+  test "view: json path: long hard" do
+    path = path("hey" / 1 / 1 / 1 / "x" / "y" / "z", :json)
 
     assert {:ok, "yay!"} =
              view(

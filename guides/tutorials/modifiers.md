@@ -1,6 +1,6 @@
 # Modifiers tutorial
 
-Every pathex `path` created with `path/2` or `~P[]` can have modifier specified next to it.
+Every pathex `path` created with `path/2` can have modifier specified as a second argument.
 Modifier defines behaviour of the path in a way of structures it can match inside
 For example, path created with `:map` modifier can only match maps inside them
 
@@ -19,13 +19,6 @@ Modifiers are specified as second argument in `path/2` like
 ```elixir
 path :x / :y, :naive
 path 0 / :x, :json
-```
-
-Or for sigil paths like
-
-```elixir
-~P[:x/:y/1]naive
-~P[x/y/1]json
 ```
 
 ## Naive modifier
@@ -81,10 +74,6 @@ end
 ```
 
 Which extracts maximum efficency from BEAM's pattern-matching
-
-> Note that `:json` path will have its argument without type syntax
-> This means that `~P[x/y/1]` will treat `x` like string, `y` like string
-> and `1` like integer and string
 
 ## Map modifier
 

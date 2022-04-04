@@ -32,70 +32,79 @@ end
 
 ## Usage
 
-1. Import it
+Pathex is really simple and straightforward to use (almost like `Enum`). You don't need to learn any specific language, just create paths with `path` and use verbs with them.
 
-   ```elixir
-   require Pathex
-   import Pathex, only: [path: 1, path: 2, "~>": 2]
-   ```
+### Add it to your module
 
-   > Or you can just `use` Pathex!
-   >
-   > ```elixir
-   > # This will require Pathex and import all operators and path/2 macro
-   > use Pathex
-   > ```
+```elixir
+# This will import path macro and operators and require Pathex
+use Pathex
+```
 
-2. Create path
+Or you can just `import` what's necessary!
 
-   ```elixir
-   path_to_strees = path :user / :private / :addresses / 0 / :street
-   path_in_json = ~P"users/1/street"json
-   ```
+```elixir
+require Pathex
+import Pathex, only: [path: 2, path: 1]
+```
 
-   This creates closure which can get, set and update values in this path
+You can call it module-wise, or just import this in function
 
-3. Use the path!
+### Create path
 
-   ```elixir
-   {:ok, "6th avenue" = street} =
-       %{
-         user: %{
-           id: 1,
-           name: "hissssst",
-           private: %{
-             phone: "123-456-789",
-             addresses: [
-                [city: "City", street: "6th avenue", mail_index: 123456]
-             ]
-           }
-         }
-       }
-       |> Pathex.view(path_to_streets)
-   %{
-     "users" => %{
-       "1" => %{"street" => "6th avenue"}
-     }
-   } = Pathex.force_set!(%{}, path_in_json, street)
-   ```
+```elixir
+path_to_strees = path :user / :private / :addresses / 0 / :street
+path_in_json = path "users" / 1 / "street", :json
+```
+
+This creates closure which can get, set, update and delete values in this path
+
+### Use the path!
+
+```elixir
+{:ok, "6th avenue" = street} =
+    %{
+      user: %{
+        id: 1,
+        name: "hissssst",
+        private: %{
+          phone: "123-456-789",
+          addresses: [
+             [city: "City", street: "6th avenue", mail_index: 123456]
+          ]
+        }
+      }
+    }
+    |> Pathex.view(path_to_streets)
+%{
+  "users" => %{
+    1 => %{"street" => "6th avenue"}
+  }
+} = Pathex.force_set!(%{}, path_in_json, street)
+```
 
 ## Features
+
+Pathex is not the only library for functional lenses. Elixir even has a built-in `Access` system.
 
 ### Speed
 
 Paths are really a set of pattern-matching cases.
-This is done to extract maximum efficency from BEAM's pattern-matching compiler
+This is done to extract maximum efficency from BEAM's pattern-matching compiler. Pathex is proven to be the fastest solution to access data in Elixir, you can check out the benchmarks here: https://github.com/hissssst/pathex_bench
 
 ```elixir
 # Code for viewing variables for path
 path(1 / "y", :map)
 
 # Almost equals to
-case do
-  %{1 => %{"y" => res}} -> {:ok, res}
-  _                     -> :error
+case input do
+  %{1 => %{"y" => res}} ->
+    {:ok, res}
+
+  _ ->
+    :error
 end
-   ```
+```
 
 ### Reusability
 
