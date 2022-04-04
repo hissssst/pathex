@@ -1,16 +1,13 @@
 defmodule Pathex.Lenses.Recur do
   @moduledoc """
-  > see `Pathex.Lenses.Recur.recur/1` documentation
+  > See `Pathex.Lenses.Recur.recur/1` documentation.
   """
 
   @compile {:inline, do_recurl: 3, on_error: 2}
 
-  # defguardp is_coll(x) when is_list(x) or is_tuple(x) or is_map(x)
-
   @doc """
-  **This is not a lens!**
+  This function creates a lens which is a recursive version of `lens`  
 
-  This is a function which makes your lens recursive
   Simple example:
 
       iex> import Pathex; import Pathex.Lenses.Recur
@@ -35,17 +32,17 @@ defmodule Pathex.Lenses.Recur do
 
   1. It performs depth-first traversal  
   For example
-  ```
-      iex> import Pathex
+
+      iex> import Pathex; import Pathex.Lenses.Recur
       iex> xlens = path(:x)
 
       iex> 1 == view!(%{x: %{x: 1}}, xlens)
       iex> %{x: 1} != view!(%{x: %{x: 1}}, xlens)
 
-  2. Self-referencing paths loop  
+  2. Self-referencing paths create loops  
   For example
-  ```
-      iex> import Pathex
+
+      iex> import Pathex; import Pathex.Lenses; import Pathex.Lenses.Recur
       iex> id = matching(_)
 
       iex> Pathex.view(%{}, recur(id))
@@ -59,6 +56,9 @@ defmodule Pathex.Lenses.Recur do
         with :error <- lens.(:update, {s, &recur(lens).(:delete, {&1})}) do
           lens.(:delete, {s})
         end
+
+      :inspect, _ ->
+        "recur(#{lens.(:inspect, [])})"
 
       op, t ->
         lens.(op, update_argtuple(lens, op, t))
@@ -88,6 +88,33 @@ defmodule Pathex.Lenses.Recur do
   defp on_error(:force_update, {term, func, default}) do
     with :error <- func.(term) do
       {:ok, default}
+    end
+  end
+
+  def prerecur(lens) when is_function(lens, 2) do
+    fn
+      :view, {s, f} ->
+        case lens.(:view, {s, f}) do
+          {:ok, res} ->
+            prerecur(lens).(:view, {res, f})
+
+          :error ->
+            f.(s)
+        end
+    end
+  end
+
+  defp pre_update_argtuple(lens, op, {s, f}) do
+    {s, & do_prerecurl(lens, op, {&1, f})}
+  end
+
+  defp do_prerecurl(lens, op, {s, f}) do
+    case lens.(op, {s, f}) do
+      {:ok, res} ->
+        f.(res)
+
+      :error ->
+        f.(s)
     end
   end
 end

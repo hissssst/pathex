@@ -1,8 +1,7 @@
 defmodule Pathex.Operations do
-  @moduledoc """
-  Module for working with modifiers for paths
-  Like :naive, :json, :map
-  """
+  # Module for working with modifiers for paths
+  # Like :naive, :json, :map
+  @moduledoc false
 
   alias Pathex.Builder
 
@@ -12,36 +11,75 @@ defmodule Pathex.Operations do
     MatchableUpdater,
     SimpleDeleter,
     SimpleUpdater,
-    SimpleViewer
+    SimpleViewer,
+    Inspector
   }
 
   @type name :: :view | :force_update | :update | :delete
   @type t :: %{name() => Builder.t()}
 
   @doc """
-  This functions returns map of builders for each
-  specified modifier
+  This function finds the best suitable builders for combination
   """
-  @spec from_mod(Pathex.mod()) :: t()
-  def from_mod(:naive) do
+  @spec builders_for_combination(Pathex.Combination.t()) :: t()
+  def builders_for_combination(combination) do
+    cond do
+      map_compatible?(combination) ->
+        suggest(:map)
+
+      json_compatible?(combination) ->
+        suggest(:json)
+
+      true ->
+        suggest(:naive)
+    end
+  end
+
+  @spec map_compatible?(Pathex.Combination.t()) :: boolean()
+  defp map_compatible?(combination) do
+    Enum.all?(combination, fn path ->
+      Enum.all?(path, &match?({:map, _}, &1))
+    end)
+  end
+
+  @spec json_compatible?(Pathex.Combination.t()) :: boolean()
+  defp json_compatible?(combination) do
+    Enum.all?(combination, fn path ->
+      Enum.all?(path, fn
+        {:list, i} when is_integer(i) and i >= 0 ->
+          true
+
+        {:map, _} ->
+          true
+
+        _ ->
+          false
+      end)
+    end)
+  end
+
+  @spec suggest(Pathex.mod()) :: t()
+  defp suggest(:naive) do
     %{
       delete: SimpleDeleter,
       force_update: ForceUpdater,
       update: SimpleUpdater,
+      inspect: Inspector,
       view: SimpleViewer
     }
   end
 
-  def from_mod(mod) when mod in ~w[json map]a do
+  defp suggest(mod) when mod in ~w[json map]a do
     %{
       delete: SimpleDeleter,
       force_update: ForceUpdater,
       update: MatchableUpdater,
+      inspect: Inspector,
       view: MatchableViewer
     }
   end
 
-  def from_mod(mod) when is_atom(mod) do
+  defp suggest(mod) when is_atom(mod) do
     raise ArgumentError, "Modificator #{mod} is not supported"
   end
 
@@ -50,7 +88,15 @@ defmodule Pathex.Operations do
     Enum.map(combination, &filter_one(mod, &1))
   end
 
-  defp filter_one(:naive, c), do: c
-  defp filter_one(:map, c), do: Keyword.take(c, [:map])
-  defp filter_one(:json, c), do: Keyword.take(c, [:map, :list])
+  defp filter_one(:naive, path), do: path
+  defp filter_one(:map, path), do: Keyword.take(path, [:map])
+
+  defp filter_one(:json, path) do
+    Enum.filter(path, fn
+      {:map, i} when is_integer(i) -> false
+      {:map, _} -> true
+      {:list, i} when is_integer(i) and i >= 0 -> true
+      _ -> false
+    end)
+  end
 end

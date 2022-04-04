@@ -1,16 +1,17 @@
 defmodule Pathex.Builder.Composition.Concat do
-  @moduledoc """
-  Builder for paths concatenation (with `~>`)
-  """
+  # Builder for paths concatenation (with `~>`)
+  @moduledoc false
 
   @behaviour Pathex.Builder.Composition
   alias Pathex.Builder.Code
+  alias Pathex.Builder.Composition
 
   def build(paths) do
     [
       view: build_view(paths),
       update: build_update(paths),
       delete: build_deleter(paths),
+      inspect: Composition.build_inspect(paths, "~>"),
       force_update: build_force_update(paths)
     ]
   end

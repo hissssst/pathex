@@ -12,9 +12,9 @@ and reusable way
 
 Here we will take a look at common tasks in nested data structure manipulation
 
-### Star lens
+### For all values in collection
 
-What if we need to update all values matching matching specific pattern
+What if we need to update all values in the collection matching specific pattern?
 
 This simple task can be solved using Elixir's `Enum` module but is kind of tought
 to be polymorphic and reusable for different patterns or types of collections
@@ -45,10 +45,10 @@ new_users =
   end)
 ```
 
-But using `Pathex.Lenses` this would look like
+But using `Pathex.Lenses.star/0` and `Pathex.Lenses.matching/1` this would look like
 
 ```elixir
-use Pathex
+import Pathex
 import Pathex.Lenses
 
 # `l` in the end stands for `lens`
@@ -63,10 +63,10 @@ accessl = path(:access)
 new_users = Pathex.over!(users, star() ~> adminl ~> accessl, & Enum.uniq(["admin_page" | &1]))
 ```
 
-### Some lens
+### For any value in collection
 
 What if we need to update first value matching specific pattern
-(in our example it will be `{:hello, _}`) and we need to
+(in our example it will be `{:option, _}`) and we need to
 return `{:ok, updated_collection}` if the
 first value was updated and `:error` if not
 
@@ -76,44 +76,42 @@ which would be as simple as saying `Update first value in collection, which matc
 With `Enum` this would look really terrible.
 I couldn't come up with polymorphic solution which would fit less than 20 lines of code
 
-But with `Pathex.Lenses` this would be as simple as
+But with `Pathex.Lenses.some/0` and `Pathex.Lenses.matching/1` this would be as simple as
 
 ```elixir
 use Pathex; import Pathex.Lenses
-def update_first_hello(collection, update_func) do
-  hellol = matching({:hello, _})
-  Pathex.over(collection, some() ~> hellol, update_func)
+def update_first_option(collection, update_func) do
+  Pathex.over(collection, some() ~> matching({:option, _}), update_func)
 end
 ```
 
-### Matching lens
+### For any value in nested structure
 
-Conditional lens, which returns the value if the value itself matches the given pattern
+Alright, we have a nested structure with various types inside and we need to find any value in any map
+for which the special condition occurs and change it
 
+Think of an HTML-like structure without attributes like
 ```elixir
-use Pathex
-import Pathex.Lenses
-
-adminl = matching(%{role: :admin})
-
-user1 = %User{role: :user, name: "Mr Dog"}
-:error = Pathex.view(user1, adminl)
-
-user2 = %User{role: :admin, name: "Mr Dog"}
-{:ok, ^user2} = Pathex.view(user2, adminl)
+{:html, [
+  {:head, [...]},
+  {:body, [...]}
+  ]}
 ```
 
-Most useful lens in combination with `start` and `some`
+And we need to update just one `label` with string which ends with `"Please click subscribe button"`
+
+In Elixir we'd need to write a recursive function, which would untrivially update tuples and lists
+
+Using `Pathex.Lenses.Recur.recur/1`, `Pathex.Lenses.some/0` and `Pathex.Lenses.filtering/1` it's very simple
 
 ```elixir
-use Pathex
-import Pathex.Lenses
+use Pathex; import Pathex.Lenses; import Pathex.Lenses.Recur
 
-@spec change_roles([User.t()]) :: :ok
-def change_roles(users) do
-  adminsl = star() ~> matching(%{role: :admin})
-  Pathex.at(users, adminsl, &send_email/1)
+path_to_subscribe =
+  recur(some())
+  ~> matching({:label, _}) # To find a label
+  ~> path(1)               # To get to value of a label
+  ~> filtering(& String.ends_with?(&1, "Please click subscribe button")
 
-  :ok
-end
+Pathex.set(document, path_to_subscribe, "Do not subscribe, hehe")
 ```

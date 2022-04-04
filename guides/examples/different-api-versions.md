@@ -60,7 +60,7 @@ And `/api/v2/users` should respond:
 }
 ```
 
-But your inner user representation looks like this:
+But your `%User{}` representation looks like this:
 
 ```elixir
 %User{

@@ -175,7 +175,7 @@ defmodule Pathex.LensesTest do
     end
   end
 
-  describe "conditional lenses" do
+  describe "conditional lenses (aka prisms)" do
     test "deletion is not working for conditional lenses" do
       m = Lenses.matching(_)
       f = Lenses.filtering(fn _ -> true end)
@@ -217,6 +217,18 @@ defmodule Pathex.LensesTest do
       for anything <- anythings do
         assert {:ok, anything} === view(anything, ml3)
       end
+    end
+
+    test "matching with variable" do
+      f = fn x ->
+        Lenses.matching({^x, _})
+      end
+
+      okl = f.(:ok)
+      assert {:ok, _} = view({:ok, 1}, okl)
+      assert :error == view({:x, 1}, okl)
+      assert :error == view(:ok, okl)
+      assert :error == view(1, okl)
     end
 
     test "filtering" do

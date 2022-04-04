@@ -1,8 +1,7 @@
 defmodule Pathex.Lenses.All do
-  @moduledoc """
-  Private module for `all()` lens
-  > see `Pathex.Lenses.all/0` documentation
-  """
+  # Private module for `all()` lens
+  # > see `Pathex.Lenses.all/0` documentation
+  @moduledoc false
 
   # Helpers
 
@@ -163,6 +162,9 @@ defmodule Pathex.Lenses.All do
 
       :delete, {map} when is_map(map) ->
         {:ok, %{}}
+
+      :inspect, _ ->
+        "all()"
 
       op, _ when op in ~w[view update force_update]a ->
         :error

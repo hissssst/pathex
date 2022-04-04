@@ -10,7 +10,7 @@ to hack into `Pathex`
 ## Basic
 
 * Create: As described in [README](README.md) and `Pathex` simple paths can be
-created with `Pathex.path/2` and `Pathex.sigil_P/2` macros
+created with `Pathex.path/2` macro
 
 * Use: This paths then can be called using macro-helpers from `Pathex` like
 `Pathex.view/2` or `Pathex.force_set/3`
@@ -43,7 +43,7 @@ path_closure =
 * Path-closure must return `{:ok, any()} | :error` for every valid operation call
 and raise if non-exsisting operation is called
 
-* Path-closures created by `Pathex.path/2` or `Pathex.sigil_P/2` are totally pure
+* Path-closures created by `Pathex.path/2` are totally pure
 functions with no side effects
 
 * Function passed as second element in tuple must return

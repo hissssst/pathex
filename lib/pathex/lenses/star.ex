@@ -1,7 +1,6 @@
 defmodule Pathex.Lenses.Star do
-  @moduledoc """
-  Private module for `star()` lens
-  """
+  # Private module for `star()` lens
+  @moduledoc false
 
   # Helpers
 
@@ -165,6 +164,9 @@ defmodule Pathex.Lenses.Star do
 
       :delete, {map} when is_map(map) ->
         {:ok, %{}}
+
+      :inspect, _ ->
+        "star()"
 
       op, _ when op in ~w[delete view update force_update]a ->
         :error

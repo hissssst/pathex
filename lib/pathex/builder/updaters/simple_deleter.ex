@@ -1,7 +1,6 @@
 defmodule Pathex.Builder.SimpleDeleter do
-  @moduledoc """
-  #TODO
-  """
+  # Generates deleter for naive paths
+  @moduledoc false
 
   import Pathex.Common, only: [list_match: 2, pin: 1, is_var: 1]
 
@@ -106,103 +105,103 @@ defmodule Pathex.Builder.SimpleDeleter do
     end
   end
 
-  # Setters
-
-  # For valiable and non variable
-
-  def create_setter({:map, key}, tail) do
-    pinned = pin(key)
-
-    quote do
-      %{unquote(pinned) => value} = map ->
-        {popped, new_value} = value |> unquote(tail)
-        {popped, %{map | unquote(key) => new_value}}
-    end
-  end
-
-  # Non variable
-
-  def create_setter({:list, index}, tail) when is_integer(index) do
-    x = {:x, [], Elixir}
-    match = list_match(index, x)
-
-    quote do
-      unquote(match) = list ->
-        {popped, new_value} = unquote(x) |> unquote(tail)
-        {popped, List.replace_at(list, unquote(index), new_value)}
-    end
-  end
-
-  def create_setter({:tuple, index}, tail) when is_integer(index) do
-    quote do
-      t when is_tuple(t) and tuple_size(t) > unquote(index) ->
-        {popped, val} =
-          elem(t, unquote(index))
-          |> unquote(tail)
-
-        {popped, put_elem(t, unquote(index), val)}
-    end
-  end
-
-  def create_setter({:keyword, key}, tail) when is_atom(key) do
-    quote do
-      [{_, _} | _] = keyword ->
-        case Keyword.fetch(keyword, unquote(key)) do
-          {:ok, value} ->
-            {popped, new_value} = value |> unquote(tail)
-            {popped, Keyword.put(keyword, unquote(key), new_value)}
-
-          :error ->
-            throw(:path_not_found)
-        end
-    end
-  end
-
-  # Variable
-
-  def create_setter({:list, index}, tail) when is_var(index) do
-    quote do
-      l when is_list(l) and is_integer(unquote(index)) ->
-        if abs(unquote(index)) > length(l) do
-          throw(:path_not_found)
-        else
-          {popped, new_value} = :lists.nth(unquote(index) + 1, l) |> unquote(tail)
-          {popped, List.replace_at(l, unquote(index), new_value)}
-        end
-    end
-  end
-
-  def create_setter({:tuple, index}, tail) when is_var(index) do
-    quote do
-      t
-      when is_tuple(t) and is_integer(unquote(index)) and
-             unquote(index) >= 0 and
-             tuple_size(t) > unquote(index) ->
-        {popped, val} =
-          elem(t, unquote(index))
-          |> unquote(tail)
-
-        {popped, put_elem(t, unquote(index), val)}
-    end
-  end
-
-  def create_setter({:keyword, key}, tail) when is_var(key) do
-    quote do
-      [{_, _} | _] = keyword when is_atom(unquote(key)) ->
-        case Keyword.fetch(keyword, unquote(key)) do
-          {:ok, value} ->
-            {popped, new_value} = value |> unquote(tail)
-            {popped, Keyword.put(keyword, unquote(key), new_value)}
-
-          :error ->
-            throw(:path_not_found)
-        end
-    end
-  end
-
   def fallback do
     quote do
       _ -> throw(:path_not_found)
     end
   end
+
+  # Setters
+
+  # For valiable and non variable
+
+  # def create_setter({:map, key}, tail) do
+  #   pinned = pin(key)
+
+  #   quote do
+  #     %{unquote(pinned) => value} = map ->
+  #       {popped, new_value} = value |> unquote(tail)
+  #       {popped, %{map | unquote(key) => new_value}}
+  #   end
+  # end
+
+  # # Non variable
+
+  # def create_setter({:list, index}, tail) when is_integer(index) do
+  #   x = {:x, [], Elixir}
+  #   match = list_match(index, x)
+
+  #   quote do
+  #     unquote(match) = list ->
+  #       {popped, new_value} = unquote(x) |> unquote(tail)
+  #       {popped, List.replace_at(list, unquote(index), new_value)}
+  #   end
+  # end
+
+  # def create_setter({:tuple, index}, tail) when is_integer(index) do
+  #   quote do
+  #     t when is_tuple(t) and tuple_size(t) > unquote(index) ->
+  #       {popped, val} =
+  #         elem(t, unquote(index))
+  #         |> unquote(tail)
+
+  #       {popped, put_elem(t, unquote(index), val)}
+  #   end
+  # end
+
+  # def create_setter({:keyword, key}, tail) when is_atom(key) do
+  #   quote do
+  #     [{_, _} | _] = keyword ->
+  #       case Keyword.fetch(keyword, unquote(key)) do
+  #         {:ok, value} ->
+  #           {popped, new_value} = value |> unquote(tail)
+  #           {popped, Keyword.put(keyword, unquote(key), new_value)}
+
+  #         :error ->
+  #           throw(:path_not_found)
+  #       end
+  #   end
+  # end
+
+  # # Variable
+
+  # def create_setter({:list, index}, tail) when is_var(index) do
+  #   quote do
+  #     l when is_list(l) and is_integer(unquote(index)) ->
+  #       if abs(unquote(index)) > length(l) do
+  #         throw(:path_not_found)
+  #       else
+  #         {popped, new_value} = :lists.nth(unquote(index) + 1, l) |> unquote(tail)
+  #         {popped, List.replace_at(l, unquote(index), new_value)}
+  #       end
+  #   end
+  # end
+
+  # def create_setter({:tuple, index}, tail) when is_var(index) do
+  #   quote do
+  #     t
+  #     when is_tuple(t) and is_integer(unquote(index)) and
+  #            unquote(index) >= 0 and
+  #            tuple_size(t) > unquote(index) ->
+  #       {popped, val} =
+  #         elem(t, unquote(index))
+  #         |> unquote(tail)
+
+  #       {popped, put_elem(t, unquote(index), val)}
+  #   end
+  # end
+
+  # def create_setter({:keyword, key}, tail) when is_var(key) do
+  #   quote do
+  #     [{_, _} | _] = keyword when is_atom(unquote(key)) ->
+  #       case Keyword.fetch(keyword, unquote(key)) do
+  #         {:ok, value} ->
+  #           {popped, new_value} = value |> unquote(tail)
+  #           {popped, Keyword.put(keyword, unquote(key), new_value)}
+
+  #         :error ->
+  #           throw(:path_not_found)
+  #       end
+  #   end
+  # end
 end

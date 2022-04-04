@@ -1,7 +1,6 @@
 defmodule Pathex.Builder do
-  @moduledoc """
-  Module for building combinations into path-closures
-  """
+  # Module for building combinations into path-closures
+  @moduledoc false
 
   alias Pathex.Builder.Code
   alias Pathex.Builder.Composition
@@ -43,7 +42,7 @@ defmodule Pathex.Builder do
   def build(combination, operations) do
     operations
     |> Enum.map(fn {key, builder} ->
-      {key, apply(builder, :build, [combination])}
+      {key, builder.build(combination)}
     end)
     |> Code.multiple_to_fn()
   end

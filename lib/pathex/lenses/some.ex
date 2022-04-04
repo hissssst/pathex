@@ -1,8 +1,7 @@
 defmodule Pathex.Lenses.Some do
-  @moduledoc """
-  Private module for `some()` lens
-  > see `Pathex.Lenses.some/0` documentation
-  """
+  # Private module for `some()` lens
+  # > see `Pathex.Lenses.some/0` documentation
+  @moduledoc false
 
   def some do
     fn
@@ -189,6 +188,9 @@ defmodule Pathex.Lenses.Some do
 
       :delete, {[_ | tail]} ->
         {:ok, tail}
+
+      :inspect, _ ->
+        "some()"
 
       op, _ when op in ~w[delete view update force_update]a ->
         :error

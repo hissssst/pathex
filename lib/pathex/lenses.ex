@@ -42,9 +42,12 @@ defmodule Pathex.Lenses do
   Example:
       iex> require Pathex; import Pathex
       iex> alll = Pathex.Lenses.all()
-      iex> [%{x: 1}, [x: 2]] = Pathex.over!([%{x: 0}, [x: 1]], alll ~> path(:x), fn x -> x + 1 end)
-      iex> [1, 2, 3] = Pathex.view!(%{x: 1, y: 2, z: 3}, alll) |> Enum.sort()
-      iex> {:ok, [x: 2, y: 2]} = Pathex.set([x: 1, y: 0], alll, 2)
+      iex> Pathex.over!([%{x: 0}, [x: 1]], alll ~> path(:x), fn x -> x + 1 end)
+      [%{x: 1}, [x: 2]]
+      iex> Pathex.view!(%{x: 1, y: 2, z: 3}, alll) |> Enum.sort()
+      [1, 2, 3]
+      iex> Pathex.set([x: 1, y: 0], alll, 2)
+      {:ok, [x: 2, y: 2]}
   """
   @doc export: true
   @spec all() :: Pathex.t()
@@ -57,14 +60,17 @@ defmodule Pathex.Lenses do
   Example:
       iex> require Pathex; import Pathex
       iex> starl = Pathex.Lenses.star()
-      iex> [1, 2] = Pathex.view!(%{x: [1], y: [2], z: 3}, starl ~> path(0)) |> Enum.sort()
-      iex> %{x: %{y: 1}, z: [3]} = Pathex.set!(%{x: %{y: 0}, z: [3]}, starl ~> path(:y, :map), 1)
-      iex> {:ok, [1, 2, 3]} = Pathex.view([x: 1, y: 2, z: 3], starl)
+      iex> Pathex.view!(%{x: [1], y: [2], z: 3}, starl ~> path(0)) |> Enum.sort()
+      [1, 2]
+      iex> Pathex.set!(%{x: %{y: 0}, z: [3]}, starl ~> path(:y, :map), 1)
+      %{x: %{y: 1}, z: [3]}
+      iex> Pathex.view([x: 1, y: 2, z: 3], starl)
+      {:ok, [1, 2, 3]}
 
   > Note:  
   > It returns :error when no data was found or changed
 
-  Think of this function as `filter`. It is particulary useful for filtering  
+  Think of this function as `filter_map`. It is particulary useful for filtering  
   and selecting needed values with custom functions or `matching/1` macro
 
   Example:
@@ -75,7 +81,8 @@ defmodule Pathex.Lenses do
       iex> # For example we want to select all tuples with first element greater than 2
       iex> #
       iex> greater_than_2 = Pathex.Lenses.matching({x, _} when x > 2)
-      iex> {:ok, [{3, 6}, {4, 10}]} = Pathex.view(structure, starl ~> greater_than_2)
+      iex> Pathex.view(structure, starl ~> greater_than_2)
+      {:ok, [{3, 6}, {4, 10}]}
   """
   @doc export: true
   @spec star() :: Pathex.t()
@@ -88,9 +95,12 @@ defmodule Pathex.Lenses do
   Example:
       iex> require Pathex; import Pathex
       iex> somel = Pathex.Lenses.some()
-      iex> 11 = Pathex.view!([x: [11], y: [22], z: 33], somel ~> path(0))
-      iex> [x: %{y: 1}, z: %{y: 0}] = Pathex.set!([x: %{y: 0}, z: %{y: 0}], somel ~> path(:y, :map), 1)
-      iex> {:ok, 1} = Pathex.view([x: 1, y: 2, z: 3], somel)
+      iex> Pathex.view!([x: [11], y: [22], z: 33], somel ~> path(0))
+      11
+      iex> Pathex.set!([x: %{y: 0}, z: %{y: 0}], somel ~> path(:y, :map), 1)
+      [x: %{y: 1}, z: %{y: 0}]
+      iex> Pathex.view([x: 1, y: 2, z: 3], somel)
+      {:ok, 1}
 
   > Note:  
   > Force update fails for empty structures
@@ -142,21 +152,4 @@ defmodule Pathex.Lenses do
   """
   @doc export: true
   def filtering(predicate), do: Filtering.filtering(predicate)
-
-  @deprecated """
-  Use `matching({:ok, _}) ~> path(1)` macro instead.  
-  Will be removed in future releases.
-  """
-  @doc export: true
-  def either(head) do
-    import Pathex, only: [path: 1, ~>: 2]
-    matching({^head, _}) ~> path(1)
-  end
-
-  @deprecated """
-  Use `matching(_)` instead.  
-  Will be removed in future releases.
-  """
-  @doc export: true
-  def id, do: matching(_)
 end
