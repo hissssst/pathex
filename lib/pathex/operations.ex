@@ -15,7 +15,7 @@ defmodule Pathex.Operations do
     Inspector
   }
 
-  @type name :: :view | :force_update | :update | :delete
+  @type name :: :view | :force_update | :update | :delete | :inspect
   @type t :: %{name() => Builder.t()}
 
   @doc """

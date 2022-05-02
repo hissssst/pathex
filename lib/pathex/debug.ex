@@ -4,10 +4,10 @@ defmodule Pathex.Debug do
   and performs the same way `matching(_)` does
   """
 
-  def debug(prefix \\ "") do
+  def debug(prefix \\ {:_, [], nil}) do
     fn
       :inspect, _ ->
-        "debug(#{prefix})"
+        {:debug, [], [prefix]}
 
       :delete, {input} ->
         IO.puts "#{prefix} Called delete on #{inspect input, pretty: true}"

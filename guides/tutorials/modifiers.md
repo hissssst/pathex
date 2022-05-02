@@ -1,8 +1,9 @@
 # Modifiers tutorial
 
-Every pathex `path` created with `path/2` can have modifier specified as a second argument.
-Modifier defines behaviour of the path in a way of structures it can match inside
-For example, path created with `:map` modifier can only match maps inside them
+Every pathex `path` created with `Pathex.path/2` can have modifier specified as a second argument.
+Modifier defines behaviour of the path in a way of structures it can match inside.
+For example, path created with `:map` modifier can only match maps inside them.
+Modifiers can be specified only in form of an atom, variables are not accepted.
 
 ## Usage
 
@@ -26,8 +27,9 @@ path 0 / :x, :json
 This modifier matches lists, tuples, keyword and maps
 It generates matches for every structure like
 
+For example `path(:x, :naive)` generates something like
+
 ```elixir
-# For `path :x`
 case input do
   %{x: value} ->
      ...
@@ -79,7 +81,7 @@ Which extracts maximum efficency from BEAM's pattern-matching
 
 This modifier matches only maps and therefore is the fastest modifier avaliable
 
-For example `path 1 / :x / "y", :json` will generate closure with
+For example `path 1 / :x / "y", :map` will generate closure with
 
 ```elixir
 case input do

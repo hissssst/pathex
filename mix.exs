@@ -1,7 +1,7 @@
 defmodule Pathex.MixProject do
   use Mix.Project
 
-  @version "1.3.0"
+  @version "2.0.0"
 
   def project do
     [
@@ -68,7 +68,6 @@ defmodule Pathex.MixProject do
   defp groups_for_extras do
     [
       Tutorials: ~r/guides\/tutorials\/.*/  ,
-      "Usage examples": ~r/guides\/examples\/.*/  ,
     ]
   end
 
@@ -78,6 +77,7 @@ defmodule Pathex.MixProject do
         Pathex,
         Pathex.Lenses,
         Pathex.Lenses.Recur,
+        Pathex.Combinator,
         Pathex.Debug
       ],
       "Code generation": [

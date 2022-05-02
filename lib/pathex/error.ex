@@ -17,17 +17,35 @@ defmodule Pathex.Error do
 
   @impl true
   def blame(%{message: message, path: path, structure: structure} = error, stacktrace) do
-    inspected = path.(:inspect, []) |> :erlang.iolist_to_binary()
+    inspected_path =
+      path.(:inspect, [])
+      |> Macro.to_string()
+      |> maybe_format()
+      |> IO.iodata_to_binary()
+      |> String.replace("\n", "\n               ")
+
+    inspected_structure =
+      structure
+      |> inspect(pretty: true)
+      |> maybe_format()
+      |> IO.iodata_to_binary()
+      |> String.replace("\n", "\n               ")
 
     message = """
 
       #{IO.ANSI.white()}#{message}
 
-        Path:      #{IO.ANSI.cyan()}#{inspected}#{IO.ANSI.white()}
+        Path:      #{IO.ANSI.cyan()}#{inspected_path}#{IO.ANSI.white()}
 
-        Structure: #{IO.ANSI.cyan()}#{inspect(structure, pretty: true)}#{IO.ANSI.reset()}
+        Structure: #{IO.ANSI.cyan()}#{inspected_structure}#{IO.ANSI.reset()}
     """
 
     {%{error | message: message}, stacktrace}
+  end
+
+  defp maybe_format(string) do
+    Code.format_string!(string, line_length: 80)
+  rescue
+    _ -> string
   end
 end

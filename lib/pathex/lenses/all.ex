@@ -154,17 +154,41 @@ defmodule Pathex.Lenses.All do
         end)
         |> wrap_ok()
 
-      :delete, {tuple} when is_tuple(tuple) ->
-        {:ok, {}}
+      :delete, {tuple, func} when is_tuple(tuple) ->
+        tuple
+        |> Tuple.to_list()
+        |> Enum.all?(& :delete_me == func.(&1))
+        |> case do
+          true -> {:ok, {}}
+          false -> :error
+        end
 
-      :delete, {list} when is_list(list) ->
-        {:ok, []}
+      :delete, {[{a, _} | _] = keyword, func} when is_atom(a) ->
+        keyword
+        |> Enum.all?(fn {_, v} -> :delete_me == func.(v) end)
+        |> case do
+          true -> {:ok, []}
+          false -> :error
+        end
 
-      :delete, {map} when is_map(map) ->
-        {:ok, %{}}
+      :delete, {list, func} when is_list(list) ->
+        list
+        |> Enum.all?(& :delete_me == func.(&1))
+        |> case do
+          true -> {:ok, []}
+          false -> :error
+        end
+
+      :delete, {map, func} when is_map(map) ->
+        map
+        |> Enum.all?(fn {_, v} -> :delete_me == func.(v) end)
+        |> case do
+          true -> {:ok, %{}}
+          false -> :error
+        end
 
       :inspect, _ ->
-        "all()"
+        {:all, [], []}
 
       op, _ when op in ~w[view update force_update]a ->
         :error

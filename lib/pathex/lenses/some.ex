@@ -46,52 +46,26 @@ defmodule Pathex.Lenses.Some do
           {:ok, Map.put(map, k, v)}
         end
 
-      # TODO: optimize through reduce and prepend
-      :update, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        found =
-          Enum.find_value(kwd, :error, fn {k, v} ->
-            case func.(v) do
-              {:ok, v} -> {k, v}
-              :error -> false
-            end
-          end)
-
-        with {k, v} <- found do
-          {:ok, Keyword.put(kwd, k, v)}
-        end
-
-      :update, {l, func} when is_list(l) ->
-        Enum.reduce(l, {:error, []}, fn
-          v, {:error, acc} ->
-            case func.(v) do
-              {:ok, v} -> {:ok, [v | acc]}
-              :error -> {:error, [v | acc]}
-            end
-
-          v, {:ok, acc} ->
-            {:ok, [v | acc]}
-        end)
-        |> case do
-          {:error, _} -> :error
-          {:ok, list} -> {:ok, :lists.reverse(list)}
-        end
-
-      :update, {t, func} when is_tuple(t) ->
-        t
-        |> Tuple.to_list()
-        |> Enum.reduce_while(1, fn v, index ->
-          case func.(v) do
-            {:ok, v} -> {:halt, {index, v}}
-            :error -> {:cont, index + 1}
-          end
-        end)
-        |> case do
-          {index, v} ->
-            {:ok, :erlang.setelement(index, t, v)}
-
-          _ ->
+      :update, {[{a, _} | _] = keyword, func} when is_atom(a) ->
+        case keyword_update(keyword, func) do
+          :error ->
             :error
+
+          updated_keyword ->
+            {:ok, updated_keyword}
         end
+
+      :update, {list, func} when is_list(list) ->
+        case list_update(list, func) do
+          :error ->
+            :error
+
+          updated_list ->
+            {:ok, updated_list}
+        end
+
+      :update, {tuple, func} when is_tuple(tuple) ->
+        tuple_update(tuple, func, 1, tuple_size(tuple))
 
       :force_update, {%{} = map, func, default} ->
         map
@@ -172,28 +146,127 @@ defmodule Pathex.Lenses.Some do
             {:ok, :erlang.setelement(0, t, default)}
         end
 
-      :delete, {%{} = map} ->
-        :maps.iterator(map)
-        |> :maps.next()
+      :delete, {%{} = map, func} ->
+        map
+        |> Enum.find_value(:error, fn {k, v} ->
+          case func.(v) do
+            {:ok, v} -> {:ok, k, v}
+            :delete_me -> {:delete_me, k}
+            :error -> false
+          end
+        end)
         |> case do
-          :none ->
-            :error
+          {:delete_me, k} ->
+            {:ok, Map.delete(map, k)}
 
-          {key, _value, _iter} ->
-            {:ok, Map.delete(map, key)}
+          {:ok, k, v} ->
+            {:ok, Map.put(map, k, v)}
+
+          :error ->
+            :error
         end
 
-      :delete, {t} when is_tuple(t) and tuple_size(t) > 0 ->
-        {:ok, :erlang.delete_element(1, t)}
+      :delete, {tuple, func} when is_tuple(tuple) and tuple_size(tuple) > 0 ->
+        tuple_delete(tuple, func, 1, tuple_size(tuple))
 
-      :delete, {[_ | tail]} ->
-        {:ok, tail}
+      :delete, {[{a, _} | _] = keyword, func} when is_atom(a) ->
+        case keyword_delete(keyword, func) do
+          :error ->
+            :error
+
+          updated_keyword ->
+            {:ok, updated_keyword}
+        end
+
+      :delete, {list, func} when is_list(list) ->
+        case list_delete(list, func) do
+          :error ->
+            :error
+
+          updated_list ->
+            {:ok, updated_list}
+        end
 
       :inspect, _ ->
-        "some()"
+        {:some, [], []}
 
       op, _ when op in ~w[delete view update force_update]a ->
         :error
+    end
+  end
+
+  defp keyword_update([], _), do: :error
+  defp keyword_update([{key, value} | tail], func) do
+    case func.(value) do
+      {:ok, new_value} ->
+        [{key, new_value} | tail]
+
+      :error ->
+        [{key, value} | keyword_update(tail, func)]
+    end
+  end
+
+  defp list_update([], _), do: :error
+  defp list_update([value | tail], func) do
+    case func.(value) do
+      {:ok, new_value} ->
+        [new_value | tail]
+
+      :error ->
+        [value | list_update(tail, func)]
+    end
+  end
+
+  defp tuple_update(_, _, iterator, tuple_size) when iterator > tuple_size, do: :error
+  defp tuple_update(tuple, func, iterator, tuple_size) do
+    case func.(:erlang.element(iterator, tuple)) do
+      {:ok, new_value} ->
+        {:ok, :erlang.setelement(iterator, tuple, new_value)}
+
+      :error ->
+        tuple_update(tuple, func, iterator + 1, tuple_size)
+    end
+  end
+
+  defp tuple_delete(_, _, iterator, tuple_size) when iterator > tuple_size, do: :error
+  defp tuple_delete(tuple, func, iterator, tuple_size) do
+    case func.(:erlang.element(iterator, tuple)) do
+      {:ok, new_value} ->
+        {:ok, :erlang.setelement(iterator, tuple, new_value)}
+
+      :delete_me ->
+        {:ok, :erlang.delete_element(iterator, tuple)}
+
+      :error ->
+        tuple_delete(tuple, func, iterator + 1, tuple_size)
+    end
+  end
+
+  defp keyword_delete([], _), do: :error
+  defp keyword_delete([{key, value} | tail], func) do
+    case func.(value) do
+      {:ok, new_value} ->
+        [{key, new_value} | tail]
+
+      :delete_me ->
+        tail
+
+      :error ->
+        [{key, value} | keyword_delete(tail, func)]
+    end
+  end
+
+  defp list_delete([], _), do: :error
+  defp list_delete([value | tail], func) do
+    case func.(value) do
+      {:ok, new_value} ->
+        [new_value | tail]
+
+      :delete_me ->
+        tail
+
+      :error ->
+        [value | list_delete(tail, func)]
     end
   end
 end

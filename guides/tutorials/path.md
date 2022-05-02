@@ -1,50 +1,64 @@
 # Path
 
-This page describes what a `Pathex.t()` is and how to create and use one
-
 > Note:  
-> This is documentation about inner Pathex API and subject to change  
-> You shouldn't read this unless you are interested in `Pathex` internals or want
-to hack into `Pathex`
+> This is a documentation about internak Pathex API and it is subject to change  
+> You no need to read this unless you are interested in `Pathex` internals, want to hack `Pathex` or want to create your own `Pathex` compatible lens
 
-## Basic
+This page describes what a `Pathex.t()` is and how to create and use one.
+Most of the time you might want to use `Pathex.path/2` and `Pathex.Lenses` to create paths.
+If you find their functionality limited and unapplicable for your use case, you can create you own Pathex-compatible closure. This doc describes how to do this.
 
-* Create: As described in [README](README.md) and `Pathex` simple paths can be
-created with `Pathex.path/2` macro
+## Path-closure
 
-* Use: This paths then can be called using macro-helpers from `Pathex` like
-`Pathex.view/2` or `Pathex.force_set/3`
+Path-closure is specified in `Pathex.t()`, and it's a closure of two arguments:
 
-* Prebuilt: some non-trivial prebuilt lenses are avaliable in `Pathex.Lenses` module
+* Operation name. It is an atom, one of `:view`, `:update`, `:force_update`, `:delete`, `:inpsect`
+* Operation arguments. It is a tuple which size depends on an operation
 
-## Internal representation
+Which
 
-Every path-closure is a closure of two arguments:
-* Operation name (atom)
-* Operation arguments, tuple which size depends on an operation
-
-Currently every path-closure has 3 operations:
+Currently every path-closure has 5 operations:
 ```elixir
 path_closure =
   fn
-    # Operation which gets value from structure and retuns `function.(value)`
-    :view,         {structure, function} -> ...
+    # Operation which gets value from structure and return `function.(value)`
+    :view,         {structure, hook_function} -> ...
 
     # Operation which returns new structure with updated value
-    :update,       {structure, function} -> ...
+    :update,       {structure, hook_function} -> ...
 
     # Operation which returns new structure with updated value, or default set
-    :force_update, {structure, function, default} -> ...
+    :force_update, {structure, hook_function, default} -> ...
+
+    # Operation which returns new structure with deleted value.
+    :delete,       {structure, delete_function} -> ...
+
+    # Inspects the path. Retuns Elixir's AST. This is used only for error-logging and debuging
+    :inspect,      _ -> ...
   end
 ```
 
-### Path-closure requirements
+Here `structure` is the structure which is viewed or updated by this path and `hook_function` or `delete_function` is a hook function described in the next section. If the value in the structure defined by the path is not present, path-closure **must** return `:error`. If it's present, path-closure must return whatever is returned by `hook_function(value)`
 
-* Path-closure must return `{:ok, any()} | :error` for every valid operation call
-and raise if non-exsisting operation is called
+## Hook function
 
-* Path-closures created by `Pathex.path/2` are totally pure
-functions with no side effects
+You can see that for every operation except `inspect` accepts some function as a second argument. This function is called a hook function and it **must be called** on the value from the `structure` defined by the path (if the value is present). Hook function is required to 
 
-* Function passed as second element in tuple must return
-`{:ok, term()} | :error` or throw `:path_not_found`
+### Return types
+
+Here `function` returns `{:ok, result} | :error`  
+And `delete_function` returns `{:ok, result} | :error | :delete_me`
+
+* `{:ok, result}` returns updated value for update/force_update/delete operations and value to be returned for `view`
+* `:error` in case function call has not succeeded
+* `:delete_me` is returned by function **only** for `:delete` operation clause. It means that the value upon which the hook function was called must be deleted. For all other clauses, this must be treated as an invalid hook function and error **must** be raised
+
+## Qualities
+
+Special requirements are described here
+
+* Path-closure **must not** raise or throw if it's called with correct operation and argument tuple
+
+* Path-closure **must** be indempotent. This means that path-closure must return the same result for the same inputs every time it's called.
+
+* Path-closure **should** not produce any side-effects. Thought it actually can produce side-effects, you shouldn't count on them.

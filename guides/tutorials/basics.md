@@ -71,18 +71,6 @@ As usual
 * Macro without `!` always return `{:ok, result}` or `:error`
 * Macro with `!` return `result` or raise `Pathex.Error`
 
-### Cheatsheet
-
-| Map             | Pathex                  |
-|:----------------|------------------------:|
-| `Map.fetch/2`   | `Pathex.view/2`         |
-| `Map.get/3`     | `Pathex.get/3`          |
-| `Map.update!/3` | `Pathex.over/3`         |
-| `Map.update/4`  | `Pathex.force_update/4` |
-| `Map.put/3`     | `Pathex.force_set/3`    |
-| `Map.replace/3` | `Pathex.set/3`          |
-| `Map.delete/2`  | `Pathex.delete/2`       |
-
 ## Compose paths
 
 Path-closures can be composed together to create new path-closure,

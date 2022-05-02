@@ -47,22 +47,23 @@ defmodule Pathex.DeletionTest do
     assert :error == delete([x: %{z: 2}], path(:y / :z))
   end
 
-  test "Compostition works as intended" do
-    assert {:ok, %{x: %{}}} == delete(%{x: %{y: 1}}, path(:x) ~> path(:y))
-    assert {:ok, [x: %{}]} == delete([x: %{y: 1}], path(:x) ~> path(:y))
-    assert {:ok, %{x: []}} == delete(%{x: [y: 1]}, path(:x) ~> path(:y))
+  describe "Composition" do
+    test "concat" do
+      assert {:ok, %{x: %{}}} == delete(%{x: %{y: 1}}, path(:x) ~> path(:y))
+      assert {:ok, [x: %{}]} == delete([x: %{y: 1}], path(:x) ~> path(:y))
+      assert {:ok, %{x: []}} == delete(%{x: [y: 1]}, path(:x) ~> path(:y))
 
-    assert {:ok, %{x: %{x: 2}, y: 3}} ==
-             delete(%{x: %{y: %{x: 1}, x: 2}, y: 3}, path(:x) ~> path(:y))
+      assert {:ok, %{x: %{x: 2}, y: 3}} ==
+        delete(%{x: %{y: %{x: 1}, x: 2}, y: 3}, path(:x) ~> path(:y))
 
-    assert :error = delete(%{x: 1}, path(:x) ~> path(:y))
-    assert :error = delete(%{x: %{x: 1}}, path(:x) ~> path(:y))
-    assert :error = delete(%{x: [x: 1]}, path(:x) ~> path(:y))
-    assert :error = delete(%{y: %{x: 1}}, path(:x) ~> path(:y))
-  end
+      assert :error = delete(%{x: 1}, path(:x) ~> path(:y))
+      assert :error = delete(%{x: %{x: 1}}, path(:x) ~> path(:y))
+      assert :error = delete(%{x: [x: 1]}, path(:x) ~> path(:y))
+      assert :error = delete(%{y: %{x: 1}}, path(:x) ~> path(:y))
+    end
 
-  test "recur deletion works as intended" do
-    import Pathex.Lenses.Recur
-    assert {:ok, %{x: %{x: %{x: %{}}}}} = delete(%{x: %{x: %{x: %{x: 1}}}}, recur(path(:x)))
+    test "and" do
+      assert {:ok, %{x: %{}, y: %{}}} == delete(%{x: %{y: 1}, y: %{x: 2}}, path(:x / :y) &&& path(:y / :x))
+    end
   end
 end

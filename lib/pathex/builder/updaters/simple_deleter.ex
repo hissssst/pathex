@@ -9,13 +9,29 @@ defmodule Pathex.Builder.SimpleDeleter do
   @behaviour Pathex.Builder
 
   @structure_variable {:x, [], Elixir}
+  @function_variable {:function, [], Elixir}
 
   def build(combination) do
     [last | tail] = Enum.reverse(combination)
 
     tail
     |> Enum.reduce(initial(last), &reduce_into/2)
-    |> Setter.wrap_to_code([@structure_variable])
+    |> Setter.wrap_to_code([@structure_variable, @function_variable])
+  end
+
+  def handle(variable, update, delete) do
+    quote do
+      case  do
+        {:ok, unquote(variable)} ->
+          unquote(update)
+
+        :delete_me ->
+          unquote(delete)
+
+        :error ->
+          throw :path_not_found
+      end
+    end
   end
 
   defp reduce_into(path_items, acc) do
@@ -25,7 +41,7 @@ defmodule Pathex.Builder.SimpleDeleter do
 
   defp initial(last_path) do
     last_path
-    |> Enum.flat_map(&create_deleter(&1))
+    |> Enum.flat_map(& create_deleter(&1))
     |> Kernel.++(fallback())
     |> Common.to_case()
   end
@@ -33,23 +49,40 @@ defmodule Pathex.Builder.SimpleDeleter do
   # For valiable and non variable
 
   defp create_deleter({:map, key}) do
-    pinned = pin(key)
-
     quote do
-      %{unquote(pinned) => value} = map ->
-        Map.delete(map, unquote(key))
+      %{unquote(pin key) => value} = map ->
+        case unquote(@function_variable).(value) do
+          {:ok, new_value} ->
+            %{map | unquote(key) => new_value}
+
+          :delete_me ->
+            Map.delete(map, unquote(key))
+
+          :error ->
+            throw :path_not_found
+        end
     end
   end
 
   # Non variable
 
   defp create_deleter({:list, index}) when is_integer(index) do
-    x = {:_, [], Elixir}
+    x = {:x, [], Elixir}
     match = list_match(index, x)
+    indexplusone = index + 1
 
     quote do
       unquote(match) = list ->
-        List.delete_at(list, unquote(index))
+        case unquote(@function_variable).(:lists.nth(unquote(indexplusone), list)) do
+          {:ok, new_value} ->
+            List.replace_at(list, unquote(index), new_value)
+
+          :delete_me ->
+            List.delete_at(list, unquote(index))
+
+          :error ->
+            throw :path_not_found
+        end
     end
   end
 
@@ -57,18 +90,26 @@ defmodule Pathex.Builder.SimpleDeleter do
     indexplusone = index + 1
 
     quote do
-      t when is_tuple(t) and tuple_size(t) > unquote(index) ->
-        :erlang.delete_element(unquote(indexplusone), t)
+      tuple when is_tuple(tuple) and tuple_size(tuple) > unquote(index) ->
+        case unquote(@function_variable).(:erlang.element(unquote(indexplusone), tuple)) do
+          {:ok, new_value} ->
+            :erlang.setelement(unquote(indexplusone), tuple, new_value)
+
+          :delete_me ->
+            :erlang.delete_element(unquote(indexplusone), tuple)
+
+          :error ->
+            throw :path_not_found
+        end
     end
   end
 
   defp create_deleter({:keyword, key}) when is_atom(key) do
+    keyword = {:keyword, [], nil}
+    body = keyword_body(keyword, key)
     quote do
-      [{_, _} | _] = keyword ->
-        case Keyword.fetch(keyword, unquote(key)) do
-          {:ok, value} -> Keyword.delete(keyword, unquote(key))
-          :error -> throw(:path_not_found)
-        end
+      [{_, _} | _] = unquote(keyword) ->
+        unquote(body)
     end
   end
 
@@ -80,7 +121,16 @@ defmodule Pathex.Builder.SimpleDeleter do
         if abs(unquote(index)) > length(list) do
           throw(:path_not_found)
         else
-          List.delete_at(list, unquote(index))
+          case unquote(@function_variable).(Enum.at(list, unquote(index))) do
+            {:ok, new_value} ->
+              List.replace_at(list, unquote(index), new_value)
+
+            :delete_me ->
+              List.delete_at(list, unquote(index))
+
+            :error ->
+              throw :path_not_found
+          end
         end
     end
   end
@@ -91,24 +141,57 @@ defmodule Pathex.Builder.SimpleDeleter do
       when is_tuple(tuple) and is_integer(unquote(index)) and
              unquote(index) >= 0 and
              tuple_size(tuple) > unquote(index) ->
-        :erlang.delete_element(unquote(index) + 1, tuple)
-    end
-  end
+        index = unquote(index) + 1
+        case unquote(@function_variable).(:erlang.element(index, tuple)) do
+          {:ok, new_value} ->
+            :erlang.setelement(index, tuple, new_value)
 
-  defp create_deleter({:keyword, key}) when is_var(key) do
-    quote do
-      [{_, _} | _] = keyword when is_atom(unquote(key)) ->
-        case Keyword.fetch(keyword, unquote(key)) do
-          {:ok, value} -> Keyword.delete(keyword, unquote(key))
-          :error -> throw(:path_not_found)
+          :delete_me ->
+            :erlang.delete_element(index, tuple)
+
+          :error ->
+            throw :path_not_found
         end
     end
   end
 
-  def fallback do
+  defp create_deleter({:keyword, key}) when is_var(key) do
+    keyword = {:keyword, [], nil}
+    body = keyword_body(keyword, key)
+    quote do
+      [{_, _} | _] = unquote(keyword) when is_atom(unquote(key)) ->
+        unquote(body)
+    end
+  end
+
+  defp fallback do
     quote do
       _ -> throw(:path_not_found)
     end
+  end
+
+  defp keyword_body(keyword, key) do
+    quote do
+      unquote(__MODULE__).keyword_update(unquote(keyword), unquote(key), unquote(@function_variable))
+    end
+  end
+
+  def keyword_update(keyword, key, func)
+  def keyword_update([], _, _), do: throw(:path_not_found)
+  def keyword_update([{key, value} | tail], key, func) do
+    case func.(value) do
+      {:ok, new_value} ->
+        [{key, new_value} | tail]
+
+      :error ->
+        throw(:path_not_found)
+
+      :delete_me ->
+        tail
+    end
+  end
+  def keyword_update([item | tail], key, func) do
+    [item | keyword_update(tail, key, func)]
   end
 
   # Setters
