@@ -29,7 +29,7 @@ defmodule Pathex.InspectionTest do
 
   describe "Lens" do
     import Pathex.Lenses
-    import Pathex.Lenses.Recur
+    import Pathex.Combinator
 
     test "zero-arity lenses" do
       assert "all()" == Pathex.inspect(all())
@@ -41,13 +41,21 @@ defmodule Pathex.InspectionTest do
     test "non-zero arity lenses" do
       assert "matching(_)" == Pathex.inspect(matching(_))
       assert "filtering(true)" == Pathex.inspect(filtering(true))
-      assert "recur(path(1))" == Pathex.inspect(recur(path(1)))
+    end
+
+    test "matching pin unescaping" do
+      x = 1
+      assert "matching(1)" == Pathex.inspect(matching(^x))
+    end
+
+    test "combinator" do
+      assert "combine(fn recursive -> path(:x) ~> recursive end)" ==
+        Pathex.inspect(combine(fn recursive -> path(:x) ~> recursive end))
     end
   end
 
   describe "Composition" do
     import Pathex.Lenses
-    import Pathex.Lenses.Recur
 
     test "~>" do
       assert "all() ~> path(1)" == Pathex.inspect(all() ~> path(1))

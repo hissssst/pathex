@@ -29,6 +29,19 @@ defmodule Pathex.QuotedParser do
   def parse_composition(other, _symbol), do: [other]
 
   @spec detect_quoted(Macro.t()) :: Pathex.Combination.t()
+  defp detect_quoted({:"::", _, [value, types]}) do
+    value
+    |> detect_quoted()
+    |> Keyword.take(List.wrap types)
+    |> case do
+      [] ->
+        raise ArgumentError, "You can't annotate #{Macro.to_string value} with type #{inspect types}"
+
+      pairs ->
+        pairs
+    end
+  end
+
   defp detect_quoted(var) when is_var(var) do
     [map: var, keyword: var, list: var, tuple: var]
   end

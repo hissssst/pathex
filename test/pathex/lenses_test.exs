@@ -154,27 +154,6 @@ defmodule Pathex.LensesTest do
     end
   end
 
-  describe "recur" do
-    test "with some" do
-      px = path(:x)
-      some = Lenses.some()
-
-      sx = some ~> px
-
-      # Checking order of comptutations
-      xl1 = px ||| some ~> px
-      xl2 = px ||| sx
-
-      s = %{a: 1, y: %{x: 2, y: 3}}
-
-      assert {:ok, 2} == view(s, xl2)
-      assert {:ok, 2} == view(s, xl1)
-
-      assert {:ok, %{a: 1, y: %{x: 4, y: 3}}} == set(s, xl1, 4)
-      assert {:ok, %{a: 1, y: %{x: 4, y: 3}}} == set(s, xl2, 4)
-    end
-  end
-
   describe "conditional lenses (aka prisms)" do
     test "deletion is not working for conditional lenses" do
       m = Lenses.matching(_)

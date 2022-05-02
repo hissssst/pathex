@@ -1,7 +1,7 @@
 defmodule PathexTest do
   use ExUnit.Case
 
-  doctest Pathex
+  doctest Pathex, import: true
 
   require Pathex
   import Pathex

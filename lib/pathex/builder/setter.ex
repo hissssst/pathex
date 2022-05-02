@@ -27,26 +27,24 @@ defmodule Pathex.Builder.Setter do
   end
 
   def create_setter({:tuple, index}, tail) when is_integer(index) do
+    indexplusone = index + 1
     quote do
       t when is_tuple(t) and tuple_size(t) > unquote(index) ->
         val =
-          elem(t, unquote(index))
+          unquote(indexplusone)
+          |> :erlang.element(t)
           |> unquote(tail)
 
-        put_elem(t, unquote(index), val)
+        :erlang.setelement(unquote(indexplusone), t, val)
     end
   end
 
   def create_setter({:keyword, key}, tail) when is_atom(key) do
     quote do
-      [{_, _} | _] = keyword ->
-        if Keyword.has_key?(keyword, unquote(key)) do
-          Keyword.update!(keyword, unquote(key), fn val ->
-            val |> unquote(tail)
-          end)
-        else
-          throw(:path_not_found)
-        end
+      [{a, _} | _] = keyword when is_atom(a) ->
+        unquote(__MODULE__).keyword_update(keyword, unquote(key), fn x ->
+          x |> unquote(tail)
+        end)
     end
   end
 
@@ -69,24 +67,22 @@ defmodule Pathex.Builder.Setter do
       when is_tuple(t) and is_integer(unquote(index)) and
              unquote(index) >= 0 and
              tuple_size(t) > unquote(index) ->
+        indexplusone = unquote(index) + 1
         val =
-          elem(t, unquote(index))
+          indexplusone
+          |> :erlang.element(t)
           |> unquote(tail)
 
-        put_elem(t, unquote(index), val)
+        :erlang.setelement(indexplusone, t, val)
     end
   end
 
   def create_setter({:keyword, key}, tail) when is_var(key) do
     quote do
-      [{_, _} | _] = keyword when is_atom(unquote(key)) ->
-        if Keyword.has_key?(keyword, unquote(key)) do
-          Keyword.update!(keyword, unquote(key), fn val ->
-            val |> unquote(tail)
-          end)
-        else
-          throw(:path_not_found)
-        end
+      [{a, _} | _] = keyword when is_atom(unquote(key)) and is_atom(a) ->
+        unquote(__MODULE__).keyword_update(keyword, unquote(key), fn x ->
+          x |> unquote(tail)
+        end)
     end
   end
 
@@ -108,4 +104,24 @@ defmodule Pathex.Builder.Setter do
 
     %Pathex.Builder.Code{code: code, vars: args}
   end
+
+  def keyword_update(keyword, key, func)
+  def keyword_update([], _, _), do: throw(:path_not_found)
+  def keyword_update([{key, value} | tail], key, func) do
+    new_value = func.(value)
+    [{key, new_value} | tail]
+  end
+  def keyword_update([item | tail], key, func) do
+    [item | keyword_update(tail, key, func)]
+  end
+
+  # def keyword_update(keyword, key, func, head_acc \\ [])
+  # def keyword_update([], _, _, _), do: throw(:path_not_found)
+  # def keyword_update([{key, value} | tail], key, func, head_acc) do
+  #   new_value = func.(value)
+  #   :lists.reverse(head_acc) ++ [{key, new_value} | tail]
+  # end
+  # def keyword_update([item | tail], key, func, head_acc) do
+  #   keyword_update(tail, key, func, [item | head_acc])
+  # end
 end

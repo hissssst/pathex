@@ -38,9 +38,9 @@ defmodule Pathex do
   """
   @type inner_func :: (any() -> {:ok, any()} | :error)
 
+  @type inspect_args :: any()
   @type update_args :: {pathex_compatible_structure(), inner_func()}
   @type force_update_args :: {pathex_compatible_structure(), inner_func(), any()}
-  @type delete_args :: {pathex_compatible_structure()}
 
   @typedoc "This depends on the modifier"
   @type pathex_compatible_structure :: map() | list() | Keyword.t() | tuple()
@@ -48,16 +48,28 @@ defmodule Pathex do
   @typedoc "Value returned by non-bang path call"
   @type result :: {:ok, any()} | :error
 
+  @typedoc "Value returned by a valid path-closure call"
+  @type internal_result :: {:ok, any()} | :error | :delete_me
+
   @typedoc "Also known as [path-closure](path.md)"
-  @type t :: (Operations.name(), force_update_args() | update_args() | delete_args() -> result())
+  @type t :: (op_name(), force_update_args() | update_args() | inspect_args() -> result())
 
   @typedoc "More about [modifiers](modifiers.md)"
   @type mod :: :map | :json | :naive
 
+  @typep op_name :: Operations.name()
+
   @doc """
   Easy and convinient way to add pathex to your module.
-  ```elixir
 
+  You can specify modifier
+  ```elixir
+  use Pathex, default_mod: :json
+  ```
+
+  Or just use it with default `:naive` modifier
+  ```elixir
+  use Pathex
   ```
   """
   defmacro __using__(opts) do
@@ -87,16 +99,14 @@ defmodule Pathex do
   and returns modified structure. Works like `Map.update!/3` but doesn't raise.
 
   Example:
-      iex> import Pathex
-      iex> x = 1
+      iex> index = 1
       iex> inc = fn x -> x + 1 end
-      iex> {:ok, [0, %{x: 9}]} = over [0, %{x: 8}], path(x / :x), inc
+      iex> {:ok, [0, %{x: 9}]} = over [0, %{x: 8}], path(index / :x), inc
       iex> p = path "hey" / 0
       iex> {:ok, %{"hey" => [2, [2]]}} = over %{"hey" => [1, [2]]}, p, inc
 
   > Note:
   > Exceptions from passed function left unhandled
-      iex> import Pathex
       iex> over(%{1 => "x"}, path(1), fn x -> x + 1 end)
       ** (ArithmeticError) bad argument in arithmetic expression
   """
@@ -110,7 +120,6 @@ defmodule Pathex do
   Works like `Map.update!/3`.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> inc = fn x -> x + 1 end
       iex> [0, %{x: 9}] = over! [0, %{x: 8}], path(x / :x), inc
@@ -125,10 +134,9 @@ defmodule Pathex do
   end
 
   @doc """
-  Sets `value` under `path` in `structure. Think of it like `Map.put/3`.
+  Sets `value` under `path` in `structure`. Think of it like `Map.put/3`.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> {:ok, [0, %{x: 123}]} = set [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
@@ -143,7 +151,6 @@ defmodule Pathex do
   Sets the `value` under `path` in `struct`. Think of it like `Map.put/3`.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> [0, %{x: 123}] = set! [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
@@ -163,7 +170,6 @@ defmodule Pathex do
   when structure is unknown.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> {:ok, [0, %{x: 123}]} = force_set [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
@@ -172,7 +178,6 @@ defmodule Pathex do
   If the item in path doesn't have the right type, it returns `:error`.
 
   Example:
-      iex> import Pathex
       iex> p = path "hey" / "you"
       iex> :error = force_set %{"hey" => {1, 2}}, p, "value"
   """
@@ -193,7 +198,6 @@ defmodule Pathex do
   when structure is unknown.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> [0, %{x: 123}] = force_set! [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
@@ -202,7 +206,6 @@ defmodule Pathex do
   If the item in path doesn't have the right type, it raises.
 
   Example:
-      iex> import Pathex
       iex> p = path "hey" / "you"
       iex> force_set! %{"hey" => {1, 2}}, p, "value"
       ** (Pathex.Error) Type mismatch in structure
@@ -225,7 +228,6 @@ defmodule Pathex do
   when structure is unknown and inserts default value.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> {:ok, [0, %{x: {:xxx, 8}}]} = force_over([0, %{x: 8}], path(x / :x), & {:xxx, &1}, 123)
       iex> p = path "hey" / 0
@@ -234,7 +236,6 @@ defmodule Pathex do
   If the item in path doesn't have the right type, it returns `:error`.
 
   Example:
-      iex> import Pathex
       iex> p = path "hey" / "you"
       iex> :error = force_over %{"hey" => {1, 2}}, p, fn x -> x end, "value"
   """
@@ -250,7 +251,6 @@ defmodule Pathex do
   when structure is unknown and inserts default value.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> [0, %{x: {:xxx, 8}}] = force_over!([0, %{x: 8}], path(x / :x), & {:xxx, &1}, 123)
       iex> p = path "hey" / 0
@@ -259,7 +259,6 @@ defmodule Pathex do
   If the item in path doesn't have the right type, it raises.
 
   Example:
-      iex> import Pathex
       iex> p = path "hey" / "you"
       iex> force_over! %{"hey" => {1, 2}}, p, fn x -> x end, "value"
       ** (Pathex.Error) Type mismatch in structure
@@ -275,7 +274,6 @@ defmodule Pathex do
   Applies `func` under `path` in `struct` and returns result of this `func`.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> {:ok, 9} = at [0, %{x: 8}], path(x / :x), fn x -> x + 1 end
       iex> p = path "hey" / 0
@@ -291,7 +289,6 @@ defmodule Pathex do
   Raises if path is not found.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> 9 = at! [0, %{x: 8}], path(x / :x), fn x -> x + 1 end
       iex> p = path "hey" / 0
@@ -308,7 +305,6 @@ defmodule Pathex do
   Gets the value under `path` in `struct`.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> {:ok, 8} = view [0, %{x: 8}], path(x / :x)
       iex> p = path "hey" / 0
@@ -323,7 +319,6 @@ defmodule Pathex do
   Gets the value under `path` in `struct`. Raises if `path` not found.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> 8 = view! [0, %{x: 8}], path(x / :x)
       iex> p = path "hey" / 0
@@ -340,7 +335,6 @@ defmodule Pathex do
   Gets the value under `path` in `struct` or returns `default` when `path` is not present.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> 8 = get([0, %{x: 8}], path(x / :x))
       iex> p = path "hey" / "you"
@@ -364,7 +358,6 @@ defmodule Pathex do
   Gets the value under `path` in `struct` or returns default value if not found.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> true = exists?([0, %{x: 8}], path(x / :x))
       iex> p = path "hey" / "you"
@@ -386,42 +379,50 @@ defmodule Pathex do
   Deletes value under `path` in `struct`.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> {:ok, [0, %{}]} = delete([0, %{x: 8}], path(x / :x))
       iex> :error = delete([0, %{x: 8}], path(1 / :y))
   """
   @doc export: true
   defmacro delete(struct, path) do
-    gen(path, :delete, [struct], __CALLER__)
+    path
+    |> gen(:delete, [struct, quote(do: fn _ -> :delete_me end)], __CALLER__)
+    |> wrap_delete_me()
   end
 
   @doc """
   Deletes value under `path` in `struct` or raises if value is not found.
 
   Example:
-      iex> import Pathex
       iex> x = 1
       iex> [0, %{}] = delete!([0, %{x: 8}], path(x / :x))
   """
   @doc export: true
   defmacro delete!(struct, path) do
     path
-    |> gen(:delete, [struct], __CALLER__)
+    |> gen(:delete, [struct, quote(do: fn _ -> :delete_me end)], __CALLER__)
+    |> wrap_delete_me()
     |> bang(struct, path)
+  end
+
+  defp wrap_delete_me(call) do
+    quote do
+      with :delete_me <- unquote(call) do
+        :error
+      end
+    end
   end
 
   @doc """
   Macro which gets value in the structure and deletes it
 
   Example:
-      iex> import Pathex
       iex> {:ok, {1, [2, 3]}} = pop([1, 2, 3], path(0))
   """
   @doc export: true
   defmacro pop(struct, path) do
     view = gen(path, :view, [struct, quote(do: fn x -> {:ok, x} end)], __CALLER__)
-    delete = gen(path, :delete, [struct], __CALLER__)
+    delete = gen(path, :delete, [struct, quote(do: fn _ -> :delete_me end)], __CALLER__)
 
     quote do
       with(
@@ -437,7 +438,6 @@ defmodule Pathex do
   Gets value under `path` in `struct` and then deletes it.
 
   Example:
-      iex> import Pathex
       iex> {1, [2, 3]} = pop!([1, 2, 3], path(0))
   """
   @doc export: true
@@ -449,7 +449,8 @@ defmodule Pathex do
 
     delete =
       path
-      |> gen(:delete, [struct], __CALLER__)
+      |> gen(:delete, [struct, quote(do: fn _ -> :delete_me end)], __CALLER__)
+      |> wrap_delete_me()
       |> bang(struct, path)
 
     quote do
@@ -464,7 +465,6 @@ defmodule Pathex do
   elements separated from each other with `/`. See 
 
   For example:
-      iex> import Pathex
       iex> x = 1
       iex> mypath = path 1 / :atom / "string" / {"tuple?"} / x
       iex> structure = [0, [atom: %{"string" => %{{"tuple?"} => %{1 => 2}}}]]
@@ -478,7 +478,6 @@ defmodule Pathex do
 
   > Note:  
   > `-1` allows data to be prepended to the list
-      iex> import Pathex
       iex> x = -1
       iex> p1 = path(-1)
       iex> p2 = path(x)
@@ -505,7 +504,6 @@ defmodule Pathex do
   it applies `b` to `something`
 
   Example:
-      iex> import Pathex
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> composed_path = p1 ~> p2
@@ -518,7 +516,6 @@ defmodule Pathex do
   The same as `Pathex.~>/2` for those who do not like operators
 
   Example:
-      iex> import Pathex
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> composed_path = concat(p1, p2)
@@ -540,7 +537,6 @@ defmodule Pathex do
   apply `b` and if `b` returns **exactly the same** as `a` does, the `a &&& b` returns `{:ok, something}`
 
   Example:
-      iex> import Pathex
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> ap = p1 &&& p2
@@ -563,7 +559,6 @@ defmodule Pathex do
   apply `b`
 
   Example:
-      iex> import Pathex
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> op = p1 ||| p2
@@ -588,7 +583,6 @@ defmodule Pathex do
   The only difference is that for viewing alongside returns list of variables
 
   Example:
-      iex> import Pathex
       iex> pa = alongside [path(:x), path(:y)]
       iex> {:ok, [1, 2]} = view(%{x: 1, y: 2}, pa)
       iex> {:ok, %{x: 3, y: 3}} = set(%{x: 1, y: 2}, pa, 3)
@@ -597,56 +591,24 @@ defmodule Pathex do
   """
   @doc export: true
   defmacro alongside(list) do
-    quote generated: true, bind_quoted: [list: list] do
-      fn
-        :delete, {input_struct} ->
-          Enum.reduce_while(list, {:ok, input_struct}, fn path, {_, res} ->
-            case path.(:delete, {res}) do
-              {:ok, res} -> {:cont, {:ok, res}}
-              :error -> {:halt, :error}
-            end
-          end)
-
-        :inspect, _ ->
-          inner = Enum.map_join(list, ", ", & &1.(:inspect, []))
-          "alongside([#{inner}])"
-
-        :view, {input_struct, func} ->
-          list
-          |> Enum.reverse()
-          |> Enum.reduce_while({:ok, []}, fn path, {_, res} ->
-            case path.(:view, {input_struct, func}) do
-              {:ok, v} -> {:cont, {:ok, [v | res]}}
-              :error -> {:halt, :error}
-            end
-          end)
-
-        :update, {input_struct, func} ->
-          Enum.reduce_while(list, {:ok, input_struct}, fn path, {_, res} ->
-            case path.(:update, {res, func}) do
-              {:ok, res} -> {:cont, {:ok, res}}
-              :error -> {:halt, :error}
-            end
-          end)
-
-        :force_update, {input_struct, func, default} ->
-          Enum.reduce_while(list, {:ok, input_struct}, fn path, {_, res} ->
-            case path.(:force_update, {res, func, default}) do
-              {:ok, res} -> {:cont, {:ok, res}}
-              :error -> {:halt, :error}
-            end
-          end)
-      end
-    end
+    list
+    |> Builder.build_composition(:alongside, __CALLER__)
     |> Common.set_generated()
   end
 
   @doc """
   Inspect the given path-closure and returns string which corresponds to given path-closure
+
+  Example:
+      iex> index = 1
+      iex> p = path(:x) ~> path(:y / index) &&& path(-1)
+      iex> Pathex.inspect(p)
+      "path(:x) ~> path(:y / 1) &&& path(-1)"
   """
-  @spec inspect(Pathex.t()) :: String.t()
+  @spec inspect(Pathex.t()) :: iodata()
   def inspect(path_closure) when is_function(path_closure, 2) do
     path_closure.(:inspect, [])
+    |> Macro.to_string()
   end
 
   # Helpers

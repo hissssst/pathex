@@ -5,13 +5,15 @@ defmodule Pathex.Builder do
   alias Pathex.Builder.Code
   alias Pathex.Builder.Composition
   alias Pathex.Operations
+  import Pathex.Common, only: [is_var: 1]
 
   @type t :: module()
 
   @composition_builders %{
     &&&: Composition.And,
     |||: Composition.Or,
-    ~>: Composition.Concat
+    ~>: Composition.Concat,
+    alongside: Composition.Alongside
   }
 
   # Behaviour
@@ -84,9 +86,9 @@ defmodule Pathex.Builder do
 
   # Returns bindings for variables which works like
   # quote's bind_quoted
-  @spec bind_items(vars :: [Macro.t()], env :: Macro.Env.t(), context :: atom()) ::
-          {binds :: [Macro.t()], vars :: [Macro.t()]}
-  defp bind_items(items, env, context) do
+  @spec bind_items(items :: [Macro.t()] | Macro.t(), env :: Macro.Env.t(), context :: atom()) ::
+          {binds :: [Macro.t()], vars :: [Macro.t()] | Macro.t()}
+  defp bind_items([_ | _] = items, env, context) do
     {binds, vars, _} =
       Enum.reduce(items, {[], [], 0}, fn item, {binds, vars, idx} ->
         var = {:"variable_#{idx}", [], context}
@@ -96,5 +98,13 @@ defmodule Pathex.Builder do
       end)
 
     {Enum.reverse(binds), Enum.reverse(vars)}
+  end
+
+  defp bind_items(item, env, context) when is_var(item) do
+    item = Macro.expand(item, env)
+    variable = Macro.var(:item, context)
+
+    bind = quote(do: unquote(variable) = unquote(item))
+    {[bind], variable}
   end
 end

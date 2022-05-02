@@ -10,38 +10,49 @@ defmodule Pathex.Builder.Composition.Concat do
     [
       view: build_view(paths),
       update: build_update(paths),
-      delete: build_deleter(paths),
-      inspect: Composition.build_inspect(paths, "~>"),
+      delete: build_delete(paths),
+      inspect: Composition.build_inspect(paths, :"~>"),
       force_update: build_force_update(paths)
     ]
   end
 
   # Deleter
 
-  defp build_deleter(paths) do
+  defp build_delete([head | tail]) do
     structure = {:x, [], Elixir}
-
-    paths
-    |> do_build_deleter(structure)
-    |> Code.new([structure])
-  end
-
-  defp do_build_deleter([head], structure) do
-    quote do
-      unquote(head).(:delete, {unquote(structure)})
-    end
-  end
-
-  defp do_build_deleter([head | tail], structure) do
+    func = {:func, [], Elixir}
     inner_arg = {:x, [], Elixir}
-    deleter = do_build_deleter(tail, inner_arg)
+
+    inner = do_build_delete(tail, inner_arg, func)
 
     quote do
       unquote(head).(
-        :update,
+        :delete,
         {unquote(structure),
          fn unquote(inner_arg) ->
-           unquote(deleter)
+           unquote(inner)
+         end}
+      )
+    end
+    |> Code.new([structure, func])
+  end
+
+  defp do_build_delete([item], arg, func) do
+    quote do
+      unquote(item).(:delete, {unquote(arg), unquote(func)})
+    end
+  end
+
+  defp do_build_delete([head | tail], arg, func) do
+    inner_arg = {:x, [], Elixir}
+    inner = do_build_update(tail, inner_arg, func)
+
+    quote do
+      unquote(head).(
+        :delete,
+        {unquote(arg),
+         fn unquote(inner_arg) ->
+           unquote(inner)
          end}
       )
     end

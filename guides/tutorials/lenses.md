@@ -1,18 +1,8 @@
 # Lenses tutorial
 
-This guide will show you how to create powerful lenses using `Pathex.Lenses` module
+This guide will show you how to create powerful lenses using `Pathex.Lenses` module. Here we will take a look at common tasks in nested data structure manipulation which can be solved using `Pathex.Lenses`.
 
-## Why
-
-`Pathex.Lenses` module provides functions and macro for creating lenses which can
-work with collections, do pattern-matching and solve common problems in an elegant
-and reusable way
-
-## Common tasks
-
-Here we will take a look at common tasks in nested data structure manipulation
-
-### For all values in collection
+## For all values in collection
 
 What if we need to update all values in the collection matching specific pattern?
 
@@ -63,7 +53,7 @@ accessl = path(:access)
 new_users = Pathex.over!(users, star() ~> adminl ~> accessl, & Enum.uniq(["admin_page" | &1]))
 ```
 
-### For any value in collection
+## For any value in collection
 
 What if we need to update first value matching specific pattern
 (in our example it will be `{:option, _}`) and we need to
@@ -85,33 +75,81 @@ def update_first_option(collection, update_func) do
 end
 ```
 
-### For any value in nested structure
+## For any value in nested structure
 
 Alright, we have a nested structure with various types inside and we need to find any value in any map
 for which the special condition occurs and change it
 
 Think of an HTML-like structure without attributes like
 ```elixir
-{:html, [
-  {:head, [...]},
-  {:body, [...]}
+{"html", [
+  {"head", [...]},
+  {"body", [...]}
   ]}
 ```
 
-And we need to update just one `label` with string which ends with `"Please click subscribe button"`
+And we need to update __just one__ `label` with string which ends with `"Please click subscribe button"`
 
 In Elixir we'd need to write a recursive function, which would untrivially update tuples and lists
 
-Using `Pathex.Lenses.Recur.recur/1`, `Pathex.Lenses.some/0` and `Pathex.Lenses.filtering/1` it's very simple
+Using `Pathex.Combinator.combine/1`, `Pathex.Lenses.some/0` and `Pathex.Lenses.filtering/1` it's very simple
 
 ```elixir
 use Pathex; import Pathex.Lenses; import Pathex.Lenses.Recur
 
 path_to_subscribe =
-  recur(some())
-  ~> matching({:label, _}) # To find a label
+  combine(fn recursive -> some() ~> (recursive() ||| matching()) end)
+  ~> matching({"label", _}) # To find a label
   ~> path(1)               # To get to value of a label
   ~> filtering(& String.ends_with?(&1, "Please click subscribe button")
 
 Pathex.set(document, path_to_subscribe, "Do not subscribe, hehe")
+```
+
+## Recurring
+
+Sometimes you may want to create a recurring lens. We have a `Pathex.Combinator.combine/1` which can help you. It is a fixed point combinator for paths, what may sound too smart, but this is a function which makes your lens be able to compose with itself.
+
+Consider this representation of an HTML
+```
+{"html", [], [
+  {"body", [], ...}
+  {"html", [], ...}]}
+```
+
+And we want to update a node which has `id=big-image`. It would be nice to have a lens which would do something like
+```elixir
+path(2) ~> some()
+  ~> path(2) ~> some()
+    ~> path(2) ~> some()`
+```
+Until it finds the tag we're looking for.
+
+Meet the `Pathex.Combinator.combine/1`. Using this higher order function we can represent lens combining with itself.
+The lens above can be specified with this code.
+```elixir
+combine(fn recursive ->
+  path(2) ~> some() ~> recursive
+end)
+```
+
+And we also need to find a specific id, so let's combine this lens with `matching(_)`
+```elixir
+path_to_id =
+  combine(fn recursive ->
+    path(2) ~> some ~> recursive
+  end)
+  ~> matching({_, [{"id", "big-image"}], _})
+```
+
+However, it has a drawback -- this recursive lens will never succeed, because we didn't specify the exit. Let's fix it
+```elixir
+path_to_big_image =
+  combine(fn recursive ->
+    path(2) ~> some ~> (recursive ||| matching(_))
+  end)
+  ~> matching({_, [{"id", "big-image"}], _})
+
+{"div", [{"id", "big-image"}], [
+  {"img", [{"src", "/image.png"}], ""}]} = Pathex.view!(html, path_to_big_image)
 ```

@@ -85,25 +85,64 @@ defmodule Pathex.Lenses.Any do
       :force_update, {[], _, default} ->
         {:ok, [default]}
 
-      :delete, {%{} = map} ->
+      :delete, {%{} = map, func} ->
         :maps.iterator(map)
         |> :maps.next()
         |> case do
           :none ->
             :error
 
-          {key, _value, _iter} ->
-            {:ok, Map.delete(map, key)}
+          {key, value, _iter} ->
+            case func.(value) do
+              :delete_me ->
+                {:ok, Map.delete(map, key)}
+
+              {:ok, new_value} ->
+                {:ok, %{map | key => new_value}}
+
+              :error ->
+                :error
+            end
         end
 
-      :delete, {t} when is_tuple(t) and tuple_size(t) > 0 ->
-        {:ok, :erlang.delete_element(1, t)}
+      :delete, {t, func} when is_tuple(t) and tuple_size(t) > 0 ->
+        case func.(:erlang.element(1, t)) do
+          :delete_me ->
+            {:ok, :erlang.delete_element(1, t)}
 
-      :delete, {[_ | tail]} ->
-        {:ok, tail}
+          {:ok, new_value} ->
+            {:ok, :erlang.setelement(1, t, new_value)}
+
+          :error ->
+            :error
+        end
+
+      :delete, {[{a, value} | tail], func} when is_atom(a) ->
+        case func.(value) do
+          :delete_me ->
+            {:ok, tail}
+
+          {:ok, new_value} ->
+            {:ok, [{a, new_value} | tail]}
+
+          :error ->
+            :error
+        end
+
+      :delete, {[value | tail], func} ->
+        case func.(value) do
+          :delete_me ->
+            {:ok, tail}
+
+          {:ok, new_value} ->
+            {:ok, [new_value | tail]}
+
+          :error ->
+            :error
+        end
 
       :inspect, _ ->
-        "any()"
+        {:any, [], []}
 
       op, _ when op in ~w[delete view update force_update]a ->
         :error
