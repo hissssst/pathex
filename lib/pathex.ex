@@ -39,20 +39,25 @@ defmodule Pathex do
   @type inner_func :: (any() -> {:ok, any()} | :error)
 
   @type inspect_args :: any()
-  @type update_args :: {pathex_compatible_structure(), inner_func()}
-  @type force_update_args :: {pathex_compatible_structure(), inner_func(), any()}
+  @type update_args(inner) :: {inner, inner_func()}
+  @type force_update_args(inner) :: {inner, inner_func(), any()}
 
   @typedoc "This depends on the modifier"
   @type pathex_compatible_structure :: map() | list() | Keyword.t() | tuple()
 
   @typedoc "Value returned by non-bang path call"
-  @type result :: {:ok, any()} | :error
+  @type result(inner) :: {:ok, inner} | :error
 
   @typedoc "Value returned by a valid path-closure call"
   @type internal_result :: {:ok, any()} | :error | :delete_me
 
   @typedoc "Also known as [path-closure](path.md)"
-  @type t :: (op_name(), force_update_args() | update_args() | inspect_args() -> result())
+  @type t :: t(pathex_compatible_structure(), any())
+
+  @typedoc "Also known as [path-closure](path.md)"
+  @type t(input, value) ::
+          (op_name(), force_update_args(input) | update_args(input) | inspect_args() ->
+             result(value | input))
 
   @typedoc "More about [modifiers](modifiers.md)"
   @type mod :: :map | :json | :naive
@@ -84,7 +89,6 @@ defmodule Pathex do
         quote do
           require Pathex
           import Pathex, only: [path: 1, path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
-
 
           @pathex_default_mod unquote(mod)
         end

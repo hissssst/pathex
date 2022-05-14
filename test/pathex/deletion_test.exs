@@ -54,7 +54,7 @@ defmodule Pathex.DeletionTest do
       assert {:ok, %{x: []}} == delete(%{x: [y: 1]}, path(:x) ~> path(:y))
 
       assert {:ok, %{x: %{x: 2}, y: 3}} ==
-        delete(%{x: %{y: %{x: 1}, x: 2}, y: 3}, path(:x) ~> path(:y))
+               delete(%{x: %{y: %{x: 1}, x: 2}, y: 3}, path(:x) ~> path(:y))
 
       assert :error = delete(%{x: 1}, path(:x) ~> path(:y))
       assert :error = delete(%{x: %{x: 1}}, path(:x) ~> path(:y))
@@ -63,7 +63,8 @@ defmodule Pathex.DeletionTest do
     end
 
     test "and" do
-      assert {:ok, %{x: %{}, y: %{}}} == delete(%{x: %{y: 1}, y: %{x: 2}}, path(:x / :y) &&& path(:y / :x))
+      assert {:ok, %{x: %{}, y: %{}}} ==
+               delete(%{x: %{y: 1}, y: %{x: 2}}, path(:x / :y) &&& path(:y / :x))
     end
   end
 end

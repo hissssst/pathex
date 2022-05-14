@@ -16,10 +16,12 @@ defmodule Pathex.CombinatorTest do
 
   test "inspection" do
     x = 1
-    rec = combine(fn rec ->
-      y = 2
-      path(:x / x / y) ~> rec ~> path(:z)
-    end)
+
+    rec =
+      combine(fn rec ->
+        y = 2
+        path(:x / x / y) ~> rec ~> path(:z)
+      end)
 
     result =
       quote do
@@ -34,33 +36,42 @@ defmodule Pathex.CombinatorTest do
 
   test "from doc" do
     document =
-      {"html", [
-        {"head", []},
-        {"body", [
-          {"div", [
-            {"label", "well"},
-            {"label", "Hey, please click subscribe button"},
+      {"html",
+       [
+         {"head", []},
+         {"body",
+          [
+            {"div",
+             [
+               {"label", "well"},
+               {"label", "Hey, please click subscribe button"}
+             ]}
           ]}
-        ]}
-      ]}
+       ]}
 
     path_to_subscribe =
       combine(fn recursive -> some() ~> (recursive ||| matching(_)) end)
-      ~> matching({"label", _}) # To find a label
-      ~> path(1)                # To get to value of a label
-      ~> filtering(& String.ends_with?(&1, "please click subscribe button"))
+      # To find a label
+      ~> matching({"label", _})
+      # To get to value of a label
+      ~> path(1)
+      ~> filtering(&String.ends_with?(&1, "please click subscribe button"))
 
     assert {:ok, new_document} = Pathex.set(document, path_to_subscribe, "Do not subscribe, hehe")
+
     assert new_document ==
-      {"html", [
-        {"head", []},
-        {"body", [
-          {"div", [
-            {"label", "well"},
-            {"label", "Do not subscribe, hehe"},
-          ]}
-        ]}
-      ]}
+             {"html",
+              [
+                {"head", []},
+                {"body",
+                 [
+                   {"div",
+                    [
+                      {"label", "well"},
+                      {"label", "Do not subscribe, hehe"}
+                    ]}
+                 ]}
+              ]}
   end
 
   test "leaves" do
@@ -74,14 +85,12 @@ defmodule Pathex.CombinatorTest do
   def postwalking(iterlens, predicate) do
     combine(fn recursive ->
       predicate
-      ~> (
-        alongside([
-          iterlens ~> recursive,
-          matching(_)
-        ])
-        ||| matching(_)
-      )
-      ||| (iterlens ~> recursive)
+      ~> (alongside([
+            iterlens ~> recursive,
+            matching(_)
+          ]) |||
+            matching(_)) |||
+        iterlens ~> recursive
     end)
   end
 
@@ -90,34 +99,43 @@ defmodule Pathex.CombinatorTest do
 
     Process.put(:x, 0)
 
-    assert [1, 2, 3, 4, [[[
-      %{
-        x: 1,
-        map: %{}
-      }
-    ]]]] =
-      Pathex.over!([1, 2, 3, 4, [[[%{x: 1}]]]], walking, fn map ->
-        x = Process.get(:x)
-        if x < 3 do
-          Process.put(:x, x + 1)
-          Map.put(map, :map, %{})
-        else
-          map
-        end
-      end)
+    assert [
+             1,
+             2,
+             3,
+             4,
+             [
+               [
+                 [
+                   %{
+                     x: 1,
+                     map: %{}
+                   }
+                 ]
+               ]
+             ]
+           ] =
+             Pathex.over!([1, 2, 3, 4, [[[%{x: 1}]]]], walking, fn map ->
+               x = Process.get(:x)
+
+               if x < 3 do
+                 Process.put(:x, x + 1)
+                 Map.put(map, :map, %{})
+               else
+                 map
+               end
+             end)
   end
 
   def prewalking(iterlens, predicate) do
     combine(fn recursive ->
       predicate
-      ~> (
-        alongside([
-          matching(_),
-          iterlens ~> recursive
-        ])
-        ||| matching(_)
-      )
-      ||| (iterlens ~> recursive)
+      ~> (alongside([
+            matching(_),
+            iterlens ~> recursive
+          ]) |||
+            matching(_)) |||
+        iterlens ~> recursive
     end)
   end
 
@@ -126,21 +144,31 @@ defmodule Pathex.CombinatorTest do
 
     Process.put(:x, 0)
 
-    assert [1, 2, 3, 4, [[[
-      %{
-        x: 1,
-        map: %{map: %{map: %{}}}
-      }
-    ]]]] =
-      Pathex.over!([1, 2, 3, 4, [[[%{x: 1}]]]], walking, fn map ->
-        x = Process.get(:x)
-        if x < 3 do
-          Process.put(:x, x + 1)
-          Map.put(map, :map, %{})
-        else
-          map
-        end
-      end)
-  end
+    assert [
+             1,
+             2,
+             3,
+             4,
+             [
+               [
+                 [
+                   %{
+                     x: 1,
+                     map: %{map: %{map: %{}}}
+                   }
+                 ]
+               ]
+             ]
+           ] =
+             Pathex.over!([1, 2, 3, 4, [[[%{x: 1}]]]], walking, fn map ->
+               x = Process.get(:x)
 
+               if x < 3 do
+                 Process.put(:x, x + 1)
+                 Map.put(map, :map, %{})
+               else
+                 map
+               end
+             end)
+  end
 end

@@ -23,7 +23,8 @@ defmodule Pathex.Lenses.Matching do
   def matching_func({:when, _, [pattern, condition]} = ast) do
     quote do
       fn
-        op, {unquote(pattern) = x, func} when op in ~w[update view delete]a and unquote(condition) ->
+        op, {unquote(pattern) = x, func}
+        when op in ~w[update view delete]a and unquote(condition) ->
           func.(x)
 
         :force_update, {unquote(pattern) = x, func, default} when unquote(condition) ->
@@ -33,7 +34,7 @@ defmodule Pathex.Lenses.Matching do
           default
 
         :inspect, _ ->
-          {:matching, [], [unquote unescape_pins escape ast]}
+          {:matching, [], [unquote(unescape_pins(escape(ast)))]}
 
         op, _ when op in ~w[delete view update force_update]a ->
           :error
@@ -54,7 +55,7 @@ defmodule Pathex.Lenses.Matching do
           default
 
         :inspect, _ ->
-          {:matching, [], [unquote unescape_pins escape pattern]}
+          {:matching, [], [unquote(unescape_pins(escape(pattern)))]}
 
         op, _ when op in ~w[delete view update force_update]a ->
           :error

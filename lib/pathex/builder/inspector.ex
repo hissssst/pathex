@@ -17,8 +17,9 @@ defmodule Pathex.Builder.Inspector do
     |> Code.new([])
   end
 
-  defp unescape({:"{}", _meta, [name, meta, context]}) when is_atom(name) and is_atom(context) do
+  defp unescape({:{}, _meta, [name, meta, context]}) when is_atom(name) and is_atom(context) do
     {name, meta, context}
   end
+
   defp unescape(other), do: other
 end

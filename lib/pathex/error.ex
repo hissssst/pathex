@@ -9,11 +9,11 @@ defmodule Pathex.Error do
   defexception [:message, :op, :path, :structure]
 
   @type t :: %__MODULE__{
-    message: String.t(),
-    op: atom(),
-    path: Pathex.t(),
-    structure: Pathex.pathex_compatible_structure()
-  }
+          message: String.t(),
+          op: atom(),
+          path: Pathex.t(),
+          structure: Pathex.pathex_compatible_structure()
+        }
 
   @impl true
   def blame(%{message: message, path: path, structure: structure} = error, stacktrace) do

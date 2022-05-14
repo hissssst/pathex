@@ -28,15 +28,18 @@ defmodule Pathex.Builder.Composition do
     quote(do: unquote(path).(:inspect, []))
   end
 
-  defp unescape({:{}, _,
-    [
-      {:{}, _, [:., _, [{:{}, _, [name, meta, context]}]]},
-      _,
-      [:inspect, _]
-    ]}
-  ) when is_atom(name) and is_atom(context) do
+  defp unescape(
+         {:{}, _,
+          [
+            {:{}, _, [:., _, [{:{}, _, [name, meta, context]}]]},
+            _,
+            [:inspect, _]
+          ]}
+       )
+       when is_atom(name) and is_atom(context) do
     var = {name, meta, context}
     quote(do: unquote(var).(:inspect, []))
   end
+
   defp unescape(other), do: other
 end

@@ -50,7 +50,7 @@ defmodule Pathex.InspectionTest do
 
     test "combinator" do
       assert "combine(fn recursive -> path(:x) ~> recursive end)" ==
-        Pathex.inspect(combine(fn recursive -> path(:x) ~> recursive end))
+               Pathex.inspect(combine(fn recursive -> path(:x) ~> recursive end))
     end
   end
 
@@ -83,6 +83,5 @@ defmodule Pathex.InspectionTest do
 
       assert "all() ||| star() ||| some()" == Pathex.inspect(all() ||| star() ||| some())
     end
-
   end
 end
