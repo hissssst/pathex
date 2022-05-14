@@ -74,7 +74,8 @@ It's not harder to use than `Map` or `Enum`! Check out the [cheatsheet](https://
 Pathex also provides more information about errors than any other tool.
 
 ```elixir
-iex(1)> Pathex.view! %{}, path(:users) ~> all() ~> path(:personal / :email)
+iex(1)> field = :email
+iex(2)> Pathex.view!(%{}, path(:users) ~> all() ~> path(:personal / field))
 ** (Pathex.Error)
   Couldn't find element
 
