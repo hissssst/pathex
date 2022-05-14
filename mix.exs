@@ -67,7 +67,7 @@ defmodule Pathex.MixProject do
 
   defp groups_for_extras do
     [
-      Tutorials: ~r/guides\/tutorials\/.*/  ,
+      Tutorials: ~r/guides\/tutorials\/.*/
     ]
   end
 

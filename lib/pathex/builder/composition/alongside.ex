@@ -35,7 +35,8 @@ defmodule Pathex.Builder.Composition.Alongside do
   defp build_inspect(list) do
     list = Enum.map(list, &quote(do: unquote(&1).(:inspect, [])))
 
-    {:{}, [], [:alongside, [], [list]]} # Manually escaping the alongside
+    # Manually escaping the alongside
+    {:{}, [], [:alongside, [], [list]]}
     |> Code.new([])
   end
 

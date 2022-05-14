@@ -158,6 +158,7 @@ defmodule Pathex.Lenses.Star do
 
   defp list_update([], _, false, _), do: :error
   defp list_update([], _, _true, head_acc), do: {:ok, :lists.reverse(head_acc)}
+
   defp list_update([head | tail], func, called?, head_acc) do
     case func.(head) do
       {:ok, new_value} ->
@@ -171,6 +172,7 @@ defmodule Pathex.Lenses.Star do
   # defp tuple_update(list, func, iterator, tuple_size, called? \\ false)
   defp tuple_update(_, _, iterator, tuple_size, false) when iterator > tuple_size, do: :error
   defp tuple_update(t, _, iterator, tuple_size, _true) when iterator > tuple_size, do: t
+
   defp tuple_update(tuple, func, iterator, tuple_size, called?) do
     case func.(:erlang.element(iterator, tuple)) do
       {:ok, new_value} ->
@@ -186,6 +188,7 @@ defmodule Pathex.Lenses.Star do
   # defp keyword_update(keyword, func, called? \\ false, head_acc \\ [])
   defp keyword_update([], _, false, _), do: :error
   defp keyword_update([], _, _true, head_acc), do: {:ok, :lists.reverse(head_acc)}
+
   defp keyword_update([{key, value} = head | tail], func, called?, head_acc) do
     case func.(value) do
       {:ok, new_value} ->
@@ -199,6 +202,7 @@ defmodule Pathex.Lenses.Star do
   # defp list_delete(list, func, called? \\ false, head_acc \\ [])
   defp list_delete([], _, false, _), do: :error
   defp list_delete([], _, _true, head_acc), do: {:ok, :lists.reverse(head_acc)}
+
   defp list_delete([head | tail], func, called?, head_acc) do
     case func.(head) do
       {:ok, new_value} ->
@@ -215,6 +219,7 @@ defmodule Pathex.Lenses.Star do
   # defp tuple_delete(list, func, iterator, tuple_size, called? \\ false)
   defp tuple_delete(_, _, iterator, tuple_size, false) when iterator > tuple_size, do: :error
   defp tuple_delete(t, _, iterator, tuple_size, _true) when iterator > tuple_size, do: t
+
   defp tuple_delete(tuple, func, iterator, tuple_size, called?) do
     case func.(:erlang.element(iterator, tuple)) do
       {:ok, new_value} ->
@@ -235,6 +240,7 @@ defmodule Pathex.Lenses.Star do
   # defp keyword_delete(keyword, func, called? \\ false, head_acc \\ [])
   defp keyword_delete([], _, false, _), do: :error
   defp keyword_delete([], _, _true, head_acc), do: {:ok, :lists.reverse(head_acc)}
+
   defp keyword_delete([{key, value} = head | tail], func, called?, head_acc) do
     case func.(value) do
       {:ok, new_value} ->

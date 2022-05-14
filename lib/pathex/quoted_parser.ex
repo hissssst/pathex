@@ -32,10 +32,11 @@ defmodule Pathex.QuotedParser do
   defp detect_quoted({:"::", _, [value, types]}) do
     value
     |> detect_quoted()
-    |> Keyword.take(List.wrap types)
+    |> Keyword.take(List.wrap(types))
     |> case do
       [] ->
-        raise ArgumentError, "You can't annotate #{Macro.to_string value} with type #{inspect types}"
+        raise ArgumentError,
+              "You can't annotate #{Macro.to_string(value)} with type #{inspect(types)}"
 
       pairs ->
         pairs

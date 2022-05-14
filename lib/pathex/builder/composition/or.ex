@@ -11,7 +11,7 @@ defmodule Pathex.Builder.Composition.Or do
       delete: build_delete(items),
       force_update: build_force_update(items),
       update: build_update(items),
-      inspect: Composition.build_inspect(items, :"|||"),
+      inspect: Composition.build_inspect(items, :|||),
       view: build_view(items)
     ]
   end

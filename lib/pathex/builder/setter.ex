@@ -28,6 +28,7 @@ defmodule Pathex.Builder.Setter do
 
   def create_setter({:tuple, index}, tail) when is_integer(index) do
     indexplusone = index + 1
+
     quote do
       t when is_tuple(t) and tuple_size(t) > unquote(index) ->
         val =
@@ -68,6 +69,7 @@ defmodule Pathex.Builder.Setter do
              unquote(index) >= 0 and
              tuple_size(t) > unquote(index) ->
         indexplusone = unquote(index) + 1
+
         val =
           indexplusone
           |> :erlang.element(t)
@@ -107,10 +109,12 @@ defmodule Pathex.Builder.Setter do
 
   def keyword_update(keyword, key, func)
   def keyword_update([], _, _), do: throw(:path_not_found)
+
   def keyword_update([{key, value} | tail], key, func) do
     new_value = func.(value)
     [{key, new_value} | tail]
   end
+
   def keyword_update([item | tail], key, func) do
     [item | keyword_update(tail, key, func)]
   end

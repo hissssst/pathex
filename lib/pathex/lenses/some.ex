@@ -196,6 +196,7 @@ defmodule Pathex.Lenses.Some do
   end
 
   defp keyword_update([], _), do: :error
+
   defp keyword_update([{key, value} | tail], func) do
     case func.(value) do
       {:ok, new_value} ->
@@ -207,6 +208,7 @@ defmodule Pathex.Lenses.Some do
   end
 
   defp list_update([], _), do: :error
+
   defp list_update([value | tail], func) do
     case func.(value) do
       {:ok, new_value} ->
@@ -218,6 +220,7 @@ defmodule Pathex.Lenses.Some do
   end
 
   defp tuple_update(_, _, iterator, tuple_size) when iterator > tuple_size, do: :error
+
   defp tuple_update(tuple, func, iterator, tuple_size) do
     case func.(:erlang.element(iterator, tuple)) do
       {:ok, new_value} ->
@@ -229,6 +232,7 @@ defmodule Pathex.Lenses.Some do
   end
 
   defp tuple_delete(_, _, iterator, tuple_size) when iterator > tuple_size, do: :error
+
   defp tuple_delete(tuple, func, iterator, tuple_size) do
     case func.(:erlang.element(iterator, tuple)) do
       {:ok, new_value} ->
@@ -243,6 +247,7 @@ defmodule Pathex.Lenses.Some do
   end
 
   defp keyword_delete([], _), do: :error
+
   defp keyword_delete([{key, value} | tail], func) do
     case func.(value) do
       {:ok, new_value} ->
@@ -257,6 +262,7 @@ defmodule Pathex.Lenses.Some do
   end
 
   defp list_delete([], _), do: :error
+
   defp list_delete([value | tail], func) do
     case func.(value) do
       {:ok, new_value} ->

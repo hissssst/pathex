@@ -1,10 +1,5 @@
 # Changelog
 
-> Yeah, it starts from 1.0.0
-> I can describe previous versions if anybody needs this. Just open an issue! :)
-
----
-
 ## 2.0
 
 **Breaking**
@@ -13,15 +8,17 @@
 * Removed sigils
 * Removed deprecated lens `id`
 * Removed deprecated lens `either`
+* Removed `recur` function
 
 **Non-breaking**
 
+* `compose` function for recursive lens
 * `delete` method for all paths, lenses and higher order functions
 * `inspect` method for all paths, lenses and higher order functions
 * Matchable updater for lists and maps
 * Builders are selected for combination (not for mod as they used to)
-
----
+* Reworked documentation
+* Annotated paths
 
 ## 1.3.0
 
@@ -42,8 +39,6 @@ None! __(See deprecated in Non-breaking)__
 * Removed some dead code
 * Moved lenses code to separate modules
 
----
-
 ## 1.2.0
 
 **Breaking**
@@ -54,8 +49,6 @@ None!
 
 * `star` lens
 * `all` lens
-
----
 
 ## 1.1.0
 
@@ -68,8 +61,6 @@ None!
 * `|||` operator
 * stack-optimized version of `~>` operator
 * stack-optimized version of `|||` operator
-
----
 
 ## 1.0.0
 
@@ -87,3 +78,6 @@ and added a special argument with default value in it
 * `id` lens
 * `either` lens
 * `any` lens
+
+> Yeah, it starts from 1.0.0
+> I can describe previous versions if anybody needs this. Just open an issue! :)

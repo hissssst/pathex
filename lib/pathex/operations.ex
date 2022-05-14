@@ -7,12 +7,12 @@ defmodule Pathex.Operations do
 
   alias Builder.{
     ForceUpdater,
-    MatchableViewer,
+    Inspector,
     MatchableUpdater,
+    MatchableViewer,
     SimpleDeleter,
     SimpleUpdater,
-    SimpleViewer,
-    Inspector
+    SimpleViewer
   }
 
   @type name :: :view | :force_update | :update | :delete | :inspect

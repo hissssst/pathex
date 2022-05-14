@@ -11,7 +11,7 @@ defmodule Pathex.Builder.Composition.Concat do
       view: build_view(paths),
       update: build_update(paths),
       delete: build_delete(paths),
-      inspect: Composition.build_inspect(paths, :"~>"),
+      inspect: Composition.build_inspect(paths, :~>),
       force_update: build_force_update(paths)
     ]
   end

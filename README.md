@@ -1,6 +1,6 @@
 # Pathex
 
-Speed or composability? Chose both!
+Speed or composability? Choose both!
 
 ### What is Pathex?
 
@@ -25,16 +25,9 @@ Pathex is really simple and straightforward to use (almost like `Enum`). You don
 use Pathex
 ```
 
-Or you can just `import` what's necessary!
+> Or just `import Pathex`
 
-```elixir
-require Pathex
-import Pathex, only: [path: 2, path: 1]
-```
-
-You can call it module-wise, or just import this in function
-
-### Create path
+### Create the path
 
 ```elixir
 path_to_strees = path :user / :private / :addresses / 0 / :street
@@ -43,7 +36,7 @@ path_in_json = path "users" / 1 / "street", :json
 
 This creates closure which can get, set, update and delete values in this path
 
-### Use the path!
+### Use the path
 
 ```elixir
 {:ok, "6th avenue" = street} =
@@ -60,6 +53,7 @@ This creates closure which can get, set, update and delete values in this path
       }
     }
     |> Pathex.view(path_to_streets)
+
 %{
   "users" => %{
     1 => %{"street" => "6th avenue"}
@@ -69,15 +63,15 @@ This creates closure which can get, set, update and delete values in this path
 
 ## Features
 
-Pathex has a lot of different features and can even compete with code written by hand in efficency.
-It significantly reduces the time to write a code which manipulates nested structure, while
+Pathex has a lot of different features and can even compete with code written by hand in terms of efficency.
+Pathex significantly reduces the time to write a code which manipulates nested structure, while
 providing efficency and composability. No more functions like `get_users`, `set_users`, `update_users`! No more XPaths, JSONPaths, CSS Selectors!
 
 ### Easy to use
 
 It's not harder to use than `Map` or `Enum`! Check out the [cheatsheet](https://hexdocs.pm/pathex/cheatsheet.html) for common tasks.
 
-Pathex is very descriptive about anything you write
+Pathex also provides more information about errors than any other tool.
 
 ```elixir
 iex(1)> Pathex.view! %{}, path(:users) ~> all() ~> path(:personal / :email)
@@ -91,8 +85,8 @@ iex(1)> Pathex.view! %{}, path(:users) ~> all() ~> path(:personal / :email)
 
 ### Fast
 
-Paths are really a set of pattern-matching cases.
-This is done to extract maximum efficency from BEAM's pattern-matching compiler. Pathex is proven to be the fastest solution to access data in Elixir, you can check out the benchmarks here: https://github.com/hissssst/pathex_bench
+Paths are just a set of pattern-matching cases.
+This is done to extract maximum efficency from BEAM's pattern-matching compiler.
 
 ```elixir
 # Code for viewing variables for path
@@ -110,8 +104,9 @@ end
 
 ### Reusable
 
-Paths can be created and used or composed later with rich set of composition functions.  
-And one path can be used to update, get, set, delete a value in the structure!
+One path can be used to update, get, set, delete a value in the structure!
+And paths can be composed together.
+This composition is very efficent, there's no need to concat lists like `Access` does.
 
 ```elixir
 # User structure
@@ -143,7 +138,7 @@ import Pathex.Lenses
   |> Pathex.view!(all() ~> username)
 ```
 
-And many more other examples. `Pathex` can be used to manipulate different nested data structure. From `GenServer` state to HTML or Elixir's AST!
+Pathex can be used to manipulate different nested data structure. From `GenServer` state to HTML or Elixir's AST!
 
 ### Extensible
 

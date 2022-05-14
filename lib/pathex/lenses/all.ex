@@ -157,7 +157,7 @@ defmodule Pathex.Lenses.All do
       :delete, {tuple, func} when is_tuple(tuple) ->
         tuple
         |> Tuple.to_list()
-        |> Enum.all?(& :delete_me == func.(&1))
+        |> Enum.all?(&(:delete_me == func.(&1)))
         |> case do
           true -> {:ok, {}}
           false -> :error
@@ -173,7 +173,7 @@ defmodule Pathex.Lenses.All do
 
       :delete, {list, func} when is_list(list) ->
         list
-        |> Enum.all?(& :delete_me == func.(&1))
+        |> Enum.all?(&(:delete_me == func.(&1)))
         |> case do
           true -> {:ok, []}
           false -> :error

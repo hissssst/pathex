@@ -37,10 +37,12 @@ defmodule Pathex.Combinator do
   """
   @spec combine((Pathex.t() -> Pathex.t()), pos_integer() | :infinity) :: Pathex.t()
   def combine(path_func, max_depth \\ :infinity)
+
   def combine(path_func, :infinity) do
     fn
       :inspect, _ ->
         inner = path_func.(inner_rec(path_func)).(:inspect, [])
+
         quote do
           combine(fn recursive -> unquote(inner) end)
         end
@@ -49,10 +51,12 @@ defmodule Pathex.Combinator do
         path_func.(inner_rec(path_func)).(op, argtuple)
     end
   end
+
   def combine(path_func, max_depth) when is_integer(max_depth) and max_depth > 0 do
     fn
       :inspect, _ ->
         inner = path_func.(inner_rec(path_func, 1, max_depth)).(:inspect, [])
+
         quote do
           combine(fn recursive -> unquote(inner) end)
         end
@@ -71,6 +75,7 @@ defmodule Pathex.Combinator do
         path_func.(inner_rec(path_func, depth, max_depth)).(op, argtuple)
     end
   end
+
   defp inner_rec(_, _, _) do
     fn _, _ -> :error end
   end

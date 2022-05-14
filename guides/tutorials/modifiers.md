@@ -93,6 +93,10 @@ case input do
 end
 ```
 
+## Annotations
+
+Usually a key passed to `path` can match to one or more types. For example, key `:x` can be a key in `Map` like `%{x: 1}` and a key in `Keyword` like `[x: 1]`. To make key match only certain type it can be annotated to the exact type using this syntax `path(:x :: :map)`. Available annotations are `:map`, `:keyword`, `:list` and `:tuple`.
+
 ## When? How? & Why?
 
 You should use modifiers when you need to specify type of inner structures to match
