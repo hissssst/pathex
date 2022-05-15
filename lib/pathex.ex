@@ -36,28 +36,25 @@ defmodule Pathex do
   @typedoc """
   Function which is passed to path-closure as second element in args tuple
   """
-  @type inner_func :: (any() -> {:ok, any()} | :error)
+  @type inner_func(output) :: (any() -> result(output))
 
   @type inspect_args :: any()
-  @type update_args(inner) :: {inner, inner_func()}
-  @type force_update_args(inner) :: {inner, inner_func(), any()}
+  @type update_args(input, output) :: {input, inner_func(output)}
+  @type force_update_args(input, output) :: {input, inner_func(output), any()}
 
   @typedoc "This depends on the modifier"
   @type pathex_compatible_structure :: map() | list() | Keyword.t() | tuple()
 
   @typedoc "Value returned by non-bang path call"
-  @type result(inner) :: {:ok, inner} | :error
-
-  @typedoc "Value returned by a valid path-closure call"
-  @type internal_result :: {:ok, any()} | :error | :delete_me
+  @type result(inner) :: {:ok, inner} | :error | :delete_me
 
   @typedoc "Also known as [path-closure](path.md)"
   @type t :: t(pathex_compatible_structure(), any())
 
   @typedoc "Also known as [path-closure](path.md)"
-  @type t(input, value) ::
-          (op_name(), force_update_args(input) | update_args(input) | inspect_args() ->
-             result(value | input))
+  @type t(input, output) ::
+          (op_name(), force_update_args(input, output) | update_args(input, output) | inspect_args() ->
+             result(output | input))
 
   @typedoc "More about [modifiers](modifiers.md)"
   @type mod :: :map | :json | :naive

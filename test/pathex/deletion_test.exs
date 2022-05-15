@@ -1,12 +1,6 @@
 defmodule Pathex.DeletionTest do
   use ExUnit.Case
-  use Pathex
-
-  defmacrop delete(s, p) do
-    quote do
-      Pathex.delete(unquote(s), unquote(p))
-    end
-  end
+  import Pathex
 
   test "simple paths delete stuff" do
     assert {:ok, %{}} == delete(%{x: 1}, path(:x))
@@ -65,6 +59,18 @@ defmodule Pathex.DeletionTest do
     test "and" do
       assert {:ok, %{x: %{}, y: %{}}} ==
                delete(%{x: %{y: 1}, y: %{x: 2}}, path(:x / :y) &&& path(:y / :x))
+    end
+  end
+
+  describe "Delete me" do
+    import Pathex.Lenses
+    test "star ~> matching" do
+      data =
+        1..1000
+        |> Enum.shuffle()
+
+      assert {:ok, list} = Pathex.delete(data, star() ~> matching(x when x > 500))
+      assert length(list) == 500
     end
   end
 end
