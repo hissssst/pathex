@@ -1,8 +1,8 @@
 # Path
 
 > Note:  
-> This is a documentation about internak Pathex API and it is subject to change  
-> You no need to read this unless you are interested in `Pathex` internals, want to hack `Pathex` or want to create your own `Pathex` compatible lens
+> This is a documentation about internal Pathex API and it is subject to change  
+> You do not need to read this unless you are interested in `Pathex` internals, want to hack `Pathex` or want to create your own `Pathex` compatible lens
 
 This page describes what a `Pathex.t()` is and how to create and use one.
 Most of the time you might want to use `Pathex.path/2` and `Pathex.Lenses` to create paths.
@@ -14,8 +14,6 @@ Path-closure is specified in `Pathex.t()`, and it's a closure of two arguments:
 
 * Operation name. It is an atom, one of `:view`, `:update`, `:force_update`, `:delete`, `:inpsect`
 * Operation arguments. It is a tuple which size depends on an operation
-
-Which
 
 Currently every path-closure has 5 operations:
 ```elixir
