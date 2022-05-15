@@ -30,7 +30,7 @@ use Pathex
 ### Create the path
 
 ```elixir
-path_to_strees = path :user / :private / :addresses / 0 / :street
+path_to_streets = path :user / :private / :addresses / 0 / :street
 path_in_json = path "users" / 1 / "street", :json
 ```
 
