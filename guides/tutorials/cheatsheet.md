@@ -36,7 +36,7 @@ structure
 
 Can be rewritten to
 ```
-Pathex.view(strucutre, path(:x / :y / :z / 10 / 1 / :z / :y / :x))
+Pathex.view(structure, path(:x / :y / :z / 10 / 1 / :z / :y / :x))
 ```
 
 ## Lenses
