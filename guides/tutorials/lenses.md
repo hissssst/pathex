@@ -6,7 +6,7 @@ This guide will show you how to create powerful lenses using `Pathex.Lenses` mod
 
 What if we need to update all values in the collection matching specific pattern?
 
-This simple task can be solved using Elixir's `Enum` module but is kind of tought
+This simple task can be solved using Elixir's `Enum` module but it is quite tough
 to be polymorphic and reusable for different patterns or types of collections
 
 Let's say we have a list of users with roles and we want to add access to admin
@@ -64,7 +64,7 @@ This task can be also done using `Enum`, but what if we can write the solution
 which would be as simple as saying `Update first value in collection, which matches the pattern`?
 
 With `Enum` this would look really terrible.
-I couldn't come up with polymorphic solution which would fit less than 20 lines of code
+I couldn't come up with a polymorphic solution that would fit in less than 20 lines of code
 
 But with `Pathex.Lenses.some/0` and `Pathex.Lenses.matching/1` this would be as simple as
 
@@ -77,7 +77,7 @@ end
 
 ## For any value in nested structure
 
-Alright, we have a nested structure with various types inside and we need to find any value in any map
+Allright, we have a nested structure with various types inside and we need to find any value in any map
 for which the special condition occurs and change it
 
 Think of an HTML-like structure without attributes like
