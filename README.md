@@ -63,9 +63,9 @@ This creates closure which can get, set, update and delete values in this path
 
 ## Features
 
-Pathex has a lot of different features and can even compete with code written by hand in terms of efficency.
+Pathex has a lot of different features and can even compete with code written by hand in terms of efficiency.
 Pathex significantly reduces the time to write a code which manipulates nested structure, while
-providing efficency and composability. No more functions like `get_users`, `set_users`, `update_users`! No more XPaths, JSONPaths, CSS Selectors!
+providing efficiency and composability. No more functions like `get_users`, `set_users`, `update_users`! No more XPaths, JSONPaths, CSS Selectors!
 
 ### Easy to use
 
@@ -87,7 +87,7 @@ iex(2)> Pathex.view!(%{}, path(:users) ~> all() ~> path(:personal / field))
 ### Fast
 
 Paths are just a set of pattern-matching cases.
-This is done to extract maximum efficency from BEAM's pattern-matching compiler.
+This is done to extract maximum efficiency from BEAM's pattern-matching compiler.
 
 ```elixir
 # Code for viewing variables for path
@@ -107,7 +107,7 @@ end
 
 One path can be used to update, get, set, delete a value in the structure!
 And paths can be composed together.
-This composition is very efficent, there's no need to concat lists like `Access` does.
+This composition is very efficient, there's no need to concat lists like `Access` does.
 
 ```elixir
 # User structure

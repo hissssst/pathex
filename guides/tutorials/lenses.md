@@ -6,7 +6,7 @@ This guide will show you how to create powerful lenses using `Pathex.Lenses` mod
 
 What if we need to update all values in the collection matching specific pattern?
 
-This simple task can be solved using Elixir's `Enum` module but is kind of tought
+This simple task can be solved using Elixir's `Enum` module but is kind of tough
 to be polymorphic and reusable for different patterns or types of collections
 
 Let's say we have a list of users with roles and we want to add access to admin

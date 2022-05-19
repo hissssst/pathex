@@ -32,7 +32,7 @@ defmodule Pathex.Combinator do
 
   # And this is without limit
   unlimited = combine(fn rec -> path(:x) ~> rec end)
-  Pathex.force_set(%{x: 1}, unlimited, 123) # Inifinite loop
+  Pathex.force_set(%{x: 1}, unlimited, 123) # Infinite loop
   ```
   """
   @spec combine((Pathex.t() -> Pathex.t()), pos_integer() | :infinity) :: Pathex.t()
