@@ -139,5 +139,5 @@ path(1 / x / :y)
 path(1) ~> path(x) ~> path(:y)
 ```
 
-Because paths concatenation alctually creates a path which calls all operands internally
+Because paths concatenation actually creates a path which calls all operands internally
 which increases the call stack and makes concatenated path handle errors by hand
