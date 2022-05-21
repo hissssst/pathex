@@ -76,7 +76,7 @@ end
 
 You can change the `star()` lens to whatever lens you prefer.
 For example, for parsed HTML documents you can use `star() ~> path(2)` to
-not traverse attribures. And if you want to find one leaf, you can use `some()`
+not traverse attributes. And if you want to find one leaf, you can use `some()`
 
 ## Walk structure
 

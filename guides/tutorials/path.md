@@ -31,7 +31,7 @@ path_closure =
     # Operation which returns new structure with deleted value.
     :delete,       {structure, delete_function} -> ...
 
-    # Inspects the path. Retuns Elixir's AST. This is used only for error-logging and debuging
+    # Inspects the path. Returns Elixir's AST. This is used only for error-logging and debugging
     :inspect,      _ -> ...
   end
 ```
@@ -57,6 +57,6 @@ Special requirements are described here
 
 * Path-closure **must not** raise or throw if it's called with correct operation and argument tuple
 
-* Path-closure **must** be indempotent. This means that path-closure must return the same result for the same inputs every time it's called.
+* Path-closure **must** be idempotent. This means that path-closure must return the same result for the same inputs every time it's called.
 
 * Path-closure **should** not produce any side-effects. Thought it actually can produce side-effects, you shouldn't count on them.

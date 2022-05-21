@@ -70,7 +70,7 @@ defmodule Pathex.Lenses do
   > Note:  
   > It returns :error when no data was found or changed
 
-  Think of this function as `filter_map`. It is particulary useful for filtering  
+  Think of this function as `filter_map`. It is particularly useful for filtering  
   and selecting needed values with custom functions or `matching/1` macro
 
   Example:

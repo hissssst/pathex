@@ -62,7 +62,7 @@ defmodule Pathex do
   @typep op_name :: Operations.name()
 
   @doc """
-  Easy and convinient way to add pathex to your module.
+  Easy and convenient way to add pathex to your module.
 
   You can specify modifier
   ```elixir
@@ -500,7 +500,7 @@ defmodule Pathex do
   end
 
   @doc """
-  Creates composition of two paths similar to concating them together.  
+  Creates composition of two paths similar to concatenating them together.  
   This means that `a ~> b` path-closure applies `a` and only if it returns `{:ok, something}`
   it applies `b` to `something`
 

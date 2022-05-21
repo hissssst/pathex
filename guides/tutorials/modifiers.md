@@ -7,7 +7,7 @@ Modifiers can be specified only in form of an atom, variables are not accepted.
 
 ## Usage
 
-Currently only three modifiers are avaliable:
+Currently only three modifiers are available:
 
 * `:json` which matches lists and maps
 * `:naive` which matches lists, tuples, keywords and maps
@@ -58,7 +58,7 @@ This modifier specifies paths which macth lists (for integer keys only) and maps
 > ```
 
 But passed integers are exanded into list matching
-this makes it very efficent to view data from the structure
+this makes it very efficient to view data from the structure
 
 For example `path 1 / :x, :json` generates closure with
 
@@ -75,11 +75,11 @@ case input do
 end
 ```
 
-Which extracts maximum efficency from BEAM's pattern-matching
+Which extracts maximum efficiency from BEAM's pattern-matching
 
 ## Map modifier
 
-This modifier matches only maps and therefore is the fastest modifier avaliable
+This modifier matches only maps and therefore is the fastest modifier available
 
 For example `path 1 / :x / "y", :map` will generate closure with
 
