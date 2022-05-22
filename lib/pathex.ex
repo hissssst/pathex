@@ -489,14 +489,13 @@ defmodule Pathex do
   defmacro path(quoted, mod \\ nil) do
     mod = get_mod(mod, __CALLER__)
 
-    combination =
-      quoted
-      |> QuotedParser.parse(__CALLER__, mod)
-      |> assert_combination_length(__CALLER__)
+    {binds, combination} = QuotedParser.parse(quoted, __CALLER__, mod)
 
     combination
+    |> assert_combination_length(__CALLER__)
     |> Builder.build(Operations.builders_for_combination(combination))
     |> Common.set_generated()
+    |> prepend_binds(binds)
   end
 
   @doc """
@@ -680,13 +679,15 @@ defmodule Pathex do
 
   # Builds only one clause of a path
   defp build_only(path, opname, caller, mod) do
-    combination =
+    {binds, combination} =
       path
       |> fetch_args(caller)
       |> QuotedParser.parse(caller, mod)
 
     %{^opname => builder} = Operations.builders_for_combination(combination)
-    Builder.build_only(combination, builder)
+    combination
+    |> Builder.build_only(builder)
+    |> prepend_binds(binds)
   end
 
   defp fetch_args(path, caller) do
@@ -729,5 +730,13 @@ defmodule Pathex do
     end
 
     combination
+  end
+
+  defp prepend_binds(combination, binds) do
+    Enum.each(binds, fn b -> b |> Macro.to_string() |> IO.puts() end)
+    quote do
+      unquote_splicing(binds)
+      unquote(combination)
+    end
   end
 end

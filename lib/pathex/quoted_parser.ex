@@ -7,11 +7,16 @@ defmodule Pathex.QuotedParser do
 
   @spec parse(Macro.t(), Macro.Env.t(), Pathex.mod()) :: Pathex.Combination.t()
   def parse(quoted, env, mod) do
-    quoted
-    |> parse_composition(:/)
-    |> Enum.map(&Macro.expand(&1, env))
-    |> Enum.map(&detect_quoted/1)
-    |> Operations.filter_combination(mod)
+    {binds, combination} =
+      quoted
+      |> parse_composition(:/)
+      |> Enum.map(&Macro.expand(&1, env))
+      |> Enum.map(&detect_quoted/1)
+      |> Enum.unzip()
+
+    binds = Enum.reject(binds, &is_nil/1)
+		combination = Operations.filter_combination(combination, mod)
+    {binds, combination}
   end
 
   @doc """
@@ -28,34 +33,80 @@ defmodule Pathex.QuotedParser do
 
   def parse_composition(other, _symbol), do: [other]
 
-  @spec detect_quoted(Macro.t()) :: Pathex.Combination.t()
+  @spec detect_quoted(Macro.t()) :: {Macro.t() | nil, Pathex.Combination.path()}
   defp detect_quoted({:"::", _, [value, types]}) do
-    value
-    |> detect_quoted()
-    |> Keyword.take(List.wrap(types))
-    |> case do
-      [] ->
-        raise ArgumentError,
-              "You can't annotate #{Macro.to_string(value)} with type #{inspect(types)}"
+    {bind, variants} = detect_quoted(value)
 
-      pairs ->
-        pairs
-    end
+		variants =
+      variants
+      |> Keyword.take(List.wrap(types))
+      |> case do
+        [] ->
+          raise ArgumentError,
+                "You can't annotate #{Macro.to_string(value)} with type #{inspect(types)}"
+
+        pairs ->
+          pairs
+      end
+
+   	{bind, variants}
   end
 
   defp detect_quoted(var) when is_var(var) do
-    [map: var, keyword: var, list: var, tuple: var]
+    {nil, [map: var, keyword: var, list: var, tuple: var]}
   end
 
   defp detect_quoted(key) when is_atom(key) do
-    [map: key, keyword: key]
+    {nil, [map: key, keyword: key]}
   end
 
   defp detect_quoted(key) when is_integer(key) do
-    [map: key, list: key, tuple: key]
+    {nil, [map: key, list: key, tuple: key]}
   end
 
   defp detect_quoted(other) do
-    [map: other]
+    if Macro.quoted_literal?(other) do
+      {nil, [map: other]}
+    else
+      var = {:variable, [], :"pathex_context_#{:erlang.unique_integer([:positive])}"}
+      bind = quote(do: unquote(var) = unquote(other))
+      {bind, detect_type(other, var)}
+    end
+  end
+
+	# Note that only special forms are here because we can't make any assumptions about
+	# operators and stuff, because they can be overloaded with import Kernel, except: ...
+	@map_builtins ~w[%{} {} <<>> fn quote __ENV__ __STACKTRACE__ __DIR__ __CALLER__ &]a
+  defp detect_type({builtin, _, args}, var) when builtin in @map_builtins do
+    if Macro.special_form?(builtin, length(args)) do
+    	[map: var]
+    else
+      [map: var, keyword: var, list: var, tuple: var]
+    end
+  end
+
+	@atom_builtins ~w[__MODULE__ require]a
+  defp detect_type({builtin, _, args}, var) when builtin in @atom_builtins do
+    if Macro.special_form?(builtin, length(args)) do
+    	[map: var, keyword: var]
+    else
+      [map: var, keyword: var, list: var, tuple: var]
+    end
+  end
+
+  defp detect_type({:"^", _, _}, _) do
+    raise ArgumentError, "You can't use pin (^) in paths"
+  end
+
+  defp detect_type({_, _}, var) do
+  	[map: var]
+  end
+
+  defp detect_type(l, var) when is_list(l) do
+  	[map: var]
+  end
+
+  defp detect_type(_, var) do
+    [map: var, keyword: var, list: var, tuple: var]
   end
 end

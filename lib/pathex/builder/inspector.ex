@@ -8,7 +8,9 @@ defmodule Pathex.Builder.Inspector do
   def build(combination) do
     slashed =
       combination
-      |> Enum.map(fn [{_type, key} | _others] -> key end)
+      |> Enum.map(fn [{_type, key} | _others] ->
+        key
+      end)
       |> Enum.reduce(fn r, l -> quote(do: unquote(l) / unquote(r)) end)
 
     quote(do: path(unquote(slashed)))
