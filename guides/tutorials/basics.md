@@ -20,11 +20,6 @@ p = path :x / :y
 
 This path specifies a way to get (or set, or delete or whatever) value `1` from `%{x: %{y: 1}}`
 
-Paths created with `Pathex.path/2` can have atoms, strings, integers, variables
-and anything else what can be used in **pattern-matching** as their arguments.
-This means that passing function calls straight into `Pathex.path/2` is not allowed and will result in a
-compilation error
-
 > Note:
 > You **don't** have to capture used variables
 >
