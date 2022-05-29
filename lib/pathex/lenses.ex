@@ -112,8 +112,7 @@ defmodule Pathex.Lenses do
   def some, do: Some.some()
 
   @doc """
-  This macro creates path-closure which works like `id/0` but
-  successes only for matching data.
+  This macro creates path-closure which successes only when input matches the `pattern`.
 
   This function is useful when composed with `star/0` and `some/0`
 
@@ -129,13 +128,12 @@ defmodule Pathex.Lenses do
       iex> {:ok, [{1, 5}, {4, 3}]} = Pathex.view(dots2d, star() ~> higher_than_2)
   """
   @doc export: true
-  defmacro matching(condition) do
-    Matching.matching_func(condition)
+  defmacro matching(pattern) do
+    Matching.matching_func(pattern)
   end
 
   @doc """
-  This macro creates path-closure which works like `id/0` but
-  successes only for matching data.
+  This macro creates path-closure successes only when `predicate` returns truthy value.
 
   This function is useful when composed with `star/0` and `some/0`
 

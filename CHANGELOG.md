@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.1
+
+**Breaking**
+
+* Updating and viewing keywords with `star` and `some` lenses now doesn't raise when using against non-proper keyword
+
+**Non-breaking**
+
+* Concatenated paths now can force_over for not only map keys
+* Fixed debug lens
+* Added ability to pass calls and arbitary structures into `path` macro
+* Unrolled some clauses for `star` and `some` for extra efficiency
+
 ## 2.0
 
 **Breaking**

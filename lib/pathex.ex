@@ -415,7 +415,8 @@ defmodule Pathex do
   end
 
   @doc """
-  Macro which gets value in the structure and deletes it
+  Macro which gets value in the structure and deletes it.
+  Note that current implementation of this function performs double lookup.
 
   Example:
       iex> {:ok, {1, [2, 3]}} = pop([1, 2, 3], path(0))
@@ -437,6 +438,7 @@ defmodule Pathex do
 
   @doc """
   Gets value under `path` in `struct` and then deletes it.
+  Note that current implementation of this function performs double lookup.
 
   Example:
       iex> {1, [2, 3]} = pop!([1, 2, 3], path(0))
@@ -733,7 +735,6 @@ defmodule Pathex do
   end
 
   defp prepend_binds(combination, binds) do
-    Enum.each(binds, fn b -> b |> Macro.to_string() |> IO.puts() end)
     quote do
       unquote_splicing(binds)
       unquote(combination)

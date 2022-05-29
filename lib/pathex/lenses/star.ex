@@ -17,6 +17,15 @@ defmodule Pathex.Lenses.Star do
     quote(do: {:ok, unquote(code)})
   end
 
+  defmacrop either_empty(code) do
+    quote do
+      case unquote(code) do
+        [] -> :error
+        other -> {:ok, other}
+      end
+    end
+  end
+
   # Lens
 
   @spec star() :: Pathex.t()
@@ -24,56 +33,23 @@ defmodule Pathex.Lenses.Star do
     fn
       :view, {%{} = map, func} ->
         map
-        |> Enum.reduce({:error, []}, fn {_key, value}, {status, acc} ->
-          extend_if_ok(status, func, value, acc)
-        end)
-        |> case do
-          {:error, _} -> :error
-          {:ok, res} -> {:ok, res}
-        end
+        |> :maps.iterator()
+        |> map_view(func)
+        |> either_empty()
 
       :view, {tuple, func} when is_tuple(tuple) and tuple_size(tuple) > 0 ->
-        tuple
-        |> Tuple.to_list()
-        |> Enum.reduce({:error, []}, fn value, {status, acc} ->
-          extend_if_ok(status, func, value, acc)
-        end)
-        |> case do
-          {:error, _} -> :error
-          {:ok, res} -> {:ok, :lists.reverse(res)}
-        end
+        either_empty tuple_view(tuple, 1, tuple_size(tuple), func)
 
       :view, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        kwd
-        |> Enum.reduce({:error, []}, fn {_key, value}, {status, acc} ->
-          extend_if_ok(status, func, value, acc)
-        end)
-        |> case do
-          {:error, _} -> :error
-          {:ok, res} -> {:ok, :lists.reverse(res)}
-        end
+        either_empty keyword_view(kwd, func)
 
       :view, {list, func} when is_list(list) ->
-        list
-        |> Enum.reduce({:error, []}, fn value, {status, acc} ->
-          extend_if_ok(status, func, value, acc)
-        end)
-        |> case do
-          {:error, _} -> :error
-          {:ok, res} -> {:ok, :lists.reverse(res)}
-        end
+        either_empty list_view(list, func)
 
       :update, {%{} = map, func} ->
-        Enum.reduce(map, {:error, %{}}, fn {key, value}, {status, acc} ->
-          case func.(value) do
-            {:ok, new_value} -> {:ok, Map.put(acc, key, new_value)}
-            :error -> {status, Map.put(acc, key, value)}
-          end
-        end)
-        |> case do
-          {:error, _} -> :error
-          {:ok, map} -> {:ok, map}
-        end
+        map
+        |> :maps.iterator()
+        |> map_update(func, false, %{})
 
       :update, {tuple, func} when is_tuple(tuple) and tuple_size(tuple) > 0 ->
         tuple_update(tuple, func, 1, tuple_size(tuple), false)
@@ -130,17 +106,9 @@ defmodule Pathex.Lenses.Star do
         tuple_delete(tuple, func, 1, tuple_size(tuple), false)
 
       :delete, {map, func} when is_map(map) ->
-        Enum.reduce(map, {:error, %{}}, fn {key, value}, {status, acc} ->
-          case func.(value) do
-            {:ok, new_value} -> {:ok, Map.put(acc, key, new_value)}
-            :delete_me -> {:ok, acc}
-            :error -> {status, Map.put(acc, key, value)}
-          end
-        end)
-        |> case do
-          {:error, _} -> :error
-          {:ok, map} -> {:ok, map}
-        end
+        map
+        |> :maps.iterator()
+        |> map_delete(func, false, %{})
 
       :delete, {[{a, _} | _] = keyword, func} when is_atom(a) ->
         keyword_delete(keyword, func, false, [])
@@ -153,6 +121,61 @@ defmodule Pathex.Lenses.Star do
 
       op, _ when op in ~w[delete view update force_update]a ->
         :error
+    end
+  end
+
+  defp map_view(iterator, func) do
+    case :maps.next(iterator) do
+      :none -> []
+      {_key, value, iterator} ->
+        case func.(value) do
+          {:ok, res} -> [res | map_view(iterator, func)]
+          :error -> map_view(iterator, func)
+        end
+    end
+  end
+
+  defp tuple_view(_tuple, i, length, _func) when i > length, do: []
+  defp tuple_view(tuple, i, length, func) do
+    i
+    |> :erlang.element(tuple)
+    |> func.()
+    |> case do
+      {:ok, res} -> [res | tuple_view(tuple, i + 1, length, func)]
+      :error -> tuple_view(tuple, i + 1, length, func)
+    end
+  end
+
+  defp keyword_view([{a, v} | tail], func) when is_atom(a) do
+    case func.(v) do
+      {:ok, res} -> [res | keyword_view(tail, func)]
+      :error -> keyword_view(tail, func)
+    end
+  end
+  defp keyword_view([_ | tail], func), do: keyword_view(tail, func)
+  defp keyword_view([], _func), do: []
+
+  defp list_view([head | tail], func) do
+    case func.(head) do
+      {:ok, res} -> [res | list_view(tail, func)]
+      :error -> list_view(tail, func)
+    end
+  end
+  defp list_view([], _func), do: []
+
+  defp map_update(iterator, func, status, acc) do
+    case :maps.next(iterator) do
+      :none ->
+        case status do
+          true -> {:ok, acc}
+          false -> :error
+        end
+
+      {key, value, iterator} ->
+        case func.(value) do
+          {:ok, res} -> map_update(iterator, func, true, Map.put(acc, key, res))
+          :error -> map_update(iterator, func, status, Map.put(acc, key, value))
+        end
     end
   end
 
@@ -189,13 +212,33 @@ defmodule Pathex.Lenses.Star do
   defp keyword_update([], _, false, _), do: :error
   defp keyword_update([], _, _true, head_acc), do: {:ok, :lists.reverse(head_acc)}
 
-  defp keyword_update([{key, value} = head | tail], func, called?, head_acc) do
+  defp keyword_update([{key, value} = head | tail], func, called?, head_acc) when is_atom(key) do
     case func.(value) do
       {:ok, new_value} ->
         keyword_update(tail, func, true, [{key, new_value} | head_acc])
 
       :error ->
         keyword_update(tail, func, called?, [head | head_acc])
+    end
+  end
+  defp keyword_update([head | tail], func, called?, head_acc) do
+    keyword_update(tail, func, called?, [head | head_acc])
+  end
+  
+  defp map_delete(iterator, func, status, acc) do
+    case :maps.next(iterator) do
+      :none ->
+        case status do
+          true -> {:ok, acc}
+          false -> :error
+        end
+
+      {key, value, iterator} ->
+        case func.(value) do
+          :delete_me -> map_delete(iterator, func, true, acc)
+          {:ok, res} -> map_delete(iterator, func, true, Map.put(acc, key, res))
+          :error -> map_delete(iterator, func, status, Map.put(acc, key, value))
+        end
     end
   end
 

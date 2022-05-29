@@ -4,21 +4,28 @@ defmodule Pathex.Debug do
   and performs the same way `matching(_)` does
   """
 
-  def debug(prefix \\ {:_, [], nil}) do
+  def debug(prefix \\ "") do
+    spaced =
+      if (prefix == "" or String.ends_with?(prefix, " ")) do
+        prefix
+      else
+        prefix <> " "
+      end
+
     fn
       :inspect, _ ->
         {:debug, [], [prefix]}
 
       :delete, {input} ->
-        IO.puts("#{prefix} Called delete on #{inspect(input, pretty: true)}")
+        IO.puts("#{spaced}Called delete on #{inspect(input, pretty: true)}")
         :error
 
       :force_update, {input, fun, _default} ->
-        IO.puts("#{prefix} Called force_update on #{inspect(input, pretty: true)}")
+        IO.puts("#{spaced}Called force_update on #{inspect(input, pretty: true)}")
         fun.(input)
 
       op, {input, fun} ->
-        IO.puts("#{prefix} Called #{op} on #{inspect(input, pretty: true)}")
+        IO.puts("#{spaced}Called #{op} on #{inspect(input, pretty: true)}")
         fun.(input)
     end
   end

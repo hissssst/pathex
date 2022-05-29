@@ -64,7 +64,7 @@ This task can be also done using `Enum`, but what if we can write the solution
 which would be as simple as saying `Update first value in collection, which matches the pattern`?
 
 With `Enum` this would look really terrible.
-I couldn't come up with a polymorphic solution that would fit in less than 20 lines of code
+I couldn't come up with a polymorphic solution that would fit in less than 20 lines of code.
 
 But with `Pathex.Lenses.some/0` and `Pathex.Lenses.matching/1` this would be as simple as
 

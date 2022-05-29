@@ -1,8 +1,11 @@
 # Cheatsheet
 
+This documentation page is intended to provide some common use cases of `Pathex`.
+
 ## Operations
 
-For single-key operations `Pathex` is slightly slower than `Map` or `Keyword`
+This section describes actions which can be used with path-closures.
+Note that for single-key operations `Pathex` is slightly slower than `Map` or `Keyword`
 
 | Map             | Pathex                |
 |:----------------|----------------------:|
@@ -16,7 +19,8 @@ For single-key operations `Pathex` is slightly slower than `Map` or `Keyword`
 
 ## Nested
 
-`Pathex` is 2 to 4 times faster than `Access`
+This section describes how `Pathex` can be used instead of `Access` for accessing nested data structures.
+Note that `Pathex` is 2 to 4 times faster than `Access`
 
 | Access                             | Pathex                                      |
 |:-----------------------------------|--------------------------------------------:|
@@ -39,13 +43,14 @@ Can be rewritten to
 Pathex.view(structure, path(:x / :y / :z / 10 / 1 / :z / :y / :x))
 ```
 
-## Lenses
+## Enumerables and lenses
 
 | Enum                | Pathex                 |
 |:--------------------|-----------------------:|
 | `Enum.find/2`       | `Pathex.Lenses.some/0` |
 | `Enum.map/2`        | `Pathex.Lenses.all/0`  |
 | `Enum.filter_map/3` | `Pathex.Lenses.star/0` |
+| `Enum.at/2`         | `path()`               |
 
 [More examples in Lenses tutorial](lenses.md)
 
@@ -80,7 +85,8 @@ not traverse attributes. And if you want to find one leaf, you can use `some()`
 
 ## Walk structure
 
-If you want to walk the whole structure, not only leaves, but the structure and it's substructures too, you can use this function
+If you want to walk the whole structure, not only leaves, but the structure and
+it's substructures too, you can use this function
 
 ```elixir
 use Pathex; import Pathex.Combinator; import Pathex.Lenses

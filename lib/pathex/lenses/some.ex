@@ -6,45 +6,23 @@ defmodule Pathex.Lenses.Some do
   def some do
     fn
       :view, {%{} = map, func} ->
-        Enum.find_value(map, :error, fn {_k, v} ->
-          with :error <- func.(v) do
-            false
-          end
-        end)
+        map
+        |> :maps.iterator()
+        |> map_view(func)
 
       :view, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        Enum.find_value(kwd, :error, fn {_k, v} ->
-          with :error <- func.(v) do
-            false
-          end
-        end)
+        keyword_view(kwd, func)
 
       :view, {l, func} when is_list(l) ->
-        Enum.find_value(l, :error, fn v ->
-          with :error <- func.(v) do
-            false
-          end
-        end)
+        list_view(l, func)
 
       :view, {t, func} when is_tuple(t) ->
-        Enum.find_value(Tuple.to_list(t), :error, fn v ->
-          with :error <- func.(v) do
-            false
-          end
-        end)
+        tuple_view(t, 1, tuple_size(t), func)
 
       :update, {%{} = map, func} ->
-        found =
-          Enum.find_value(map, :error, fn {k, v} ->
-            case func.(v) do
-              {:ok, v} -> {k, v}
-              :error -> false
-            end
-          end)
-
-        with {k, v} <- found do
-          {:ok, Map.put(map, k, v)}
-        end
+        map
+        |> :maps.iterator()
+        |> map_update(func, map)
 
       :update, {[{a, _} | _] = keyword, func} when is_atom(a) ->
         case keyword_update(keyword, func) do
@@ -143,7 +121,7 @@ defmodule Pathex.Lenses.Some do
             {:ok, :erlang.setelement(index, t, v)}
 
           _ ->
-            {:ok, :erlang.setelement(0, t, default)}
+            {:ok, :erlang.setelement(1, t, default)}
         end
 
       :delete, {%{} = map, func} ->
@@ -195,9 +173,52 @@ defmodule Pathex.Lenses.Some do
     end
   end
 
-  defp keyword_update([], _), do: :error
+  defp map_view(iterator, func) do
+    case :maps.next(iterator) do
+      :none -> :error
+      {_key, value, iterator} ->
+        case func.(value) do
+          {:ok, res} -> {:ok, res}
+          :error -> map_view(iterator, func)
+        end
+    end
+  end
 
-  defp keyword_update([{key, value} | tail], func) do
+  defp keyword_view([{a, value} | tail], func) when is_atom(a) do
+    with :error <- func.(value) do
+      keyword_view(tail, func)
+    end
+  end
+  defp keyword_view([_ | tail], func), do: keyword_view(tail, func)
+  defp keyword_view([], _func), do: :error
+
+  defp list_view([value | tail], func) do
+    with :error <- func.(value) do
+      list_view(tail, func)
+    end
+  end
+  defp list_view([], _func), do: :error
+
+  defp tuple_view(_tuple, i, size, _func) when i > size, do: :error
+  defp tuple_view(tuple, i, size, func) do
+    with :error <- func.(:erlang.element(i, tuple)) do
+      tuple_view(tuple, i + 1, size, func)
+    end
+  end
+
+  defp map_update(iterator, func, map) do
+    case :maps.next(iterator) do
+      :none -> :error
+      {key, value, iterator} ->
+        case func.(value) do
+          {:ok, res} -> {:ok, Map.put(map, key, res)}
+          :error -> map_update(iterator, func, map)
+        end
+    end
+  end
+
+  defp keyword_update([], _), do: :error
+  defp keyword_update([{key, value} | tail], func) when is_atom(key) do
     case func.(value) do
       {:ok, new_value} ->
         [{key, new_value} | tail]
@@ -205,6 +226,9 @@ defmodule Pathex.Lenses.Some do
       :error ->
         [{key, value} | keyword_update(tail, func)]
     end
+  end
+  defp keyword_update([head | tail], func) do
+    [head | keyword_update(tail, func)]
   end
 
   defp list_update([], _), do: :error
