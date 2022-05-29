@@ -51,26 +51,26 @@ defmodule Pathex.Lenses.All do
     fn
       :view, {%{} = map, func} ->
         Enum.reduce_while(map, {:ok, []}, fn {_key, value}, {_, acc} ->
-          func |> cont(value, acc)
+          cont(func, value, acc)
         end)
 
       :view, {t, func} when is_tuple(t) and tuple_size(t) > 0 ->
         t
         |> Tuple.to_list()
         |> Enum.reduce_while({:ok, []}, fn value, {_, acc} ->
-          func |> cont(value, acc)
+          cont(func, value, acc)
         end)
         |> reverse_if_ok()
 
       :view, {[{a, _} | _] = kwd, func} when is_atom(a) ->
         Enum.reduce_while(kwd, {:ok, []}, fn {_key, value}, {_, acc} ->
-          func |> cont(value, acc)
+          cont(func, value, acc)
         end)
         |> reverse_if_ok()
 
       :view, {l, func} when is_list(l) ->
         Enum.reduce_while(l, {:ok, []}, fn value, {_, acc} ->
-          func |> cont(value, acc)
+          cont(func, value, acc)
         end)
         |> reverse_if_ok()
 
@@ -91,7 +91,7 @@ defmodule Pathex.Lenses.All do
         t
         |> Tuple.to_list()
         |> Enum.reduce_while({:ok, []}, fn value, {_, acc} ->
-          func |> cont(value, acc)
+          cont(func, value, acc)
         end)
         |> at_pattern({:ok, list}) do
           {:ok, list |> :lists.reverse() |> List.to_tuple()}

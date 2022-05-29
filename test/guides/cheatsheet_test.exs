@@ -10,7 +10,7 @@ defmodule Pathex.CheatsheetTest do
         star() ~> (recursive ||| matching(_))
       end)
 
-    assert {:ok, [2, 1, [:dot, 1234]]} =
+    assert {:ok, [[1234, :dot], 1, 2]} =
              %{
                x: 1,
                y: 2,

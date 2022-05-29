@@ -143,7 +143,7 @@ Pathex can be used to manipulate different nested data structure. From `GenServe
 
 ### Extensible
 
-Pathex is built around simple primitive called `path-closure`, which a simple closure with clearly defined specification.  Anything complying with `Pathex.t()` spec can be used within `Pathex`.
+Pathex is built around simple primitive called `path-closure`, which is a simple closure with clearly defined specification. Anything complying with `Pathex.t()` spec can be used within `Pathex`.
 
 
 ## Installation

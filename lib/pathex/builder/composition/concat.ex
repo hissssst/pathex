@@ -105,7 +105,13 @@ defmodule Pathex.Builder.Composition.Concat do
 
   defp to_with_item(item, ret, func, value) do
     quote do
-      {:ok, unquote(ret)} <- unquote(item).(:force_update, {%{}, unquote(func), unquote(value)})
+      {:ok, unquote(ret)} <-
+        with(
+          :error <- unquote(item).(:force_update, {%{}, unquote(func), unquote(value)}),
+          :error <- unquote(item).(:force_update, {[], unquote(func), unquote(value)})
+        ) do
+          unquote(item).(:force_update, {{}, unquote(func), unquote(value)})
+        end
     end
   end
 
