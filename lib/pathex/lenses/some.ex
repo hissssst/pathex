@@ -175,7 +175,9 @@ defmodule Pathex.Lenses.Some do
 
   defp map_view(iterator, func) do
     case :maps.next(iterator) do
-      :none -> :error
+      :none ->
+        :error
+
       {_key, value, iterator} ->
         case func.(value) do
           {:ok, res} -> {:ok, res}
@@ -189,6 +191,7 @@ defmodule Pathex.Lenses.Some do
       keyword_view(tail, func)
     end
   end
+
   defp keyword_view([_ | tail], func), do: keyword_view(tail, func)
   defp keyword_view([], _func), do: :error
 
@@ -197,9 +200,11 @@ defmodule Pathex.Lenses.Some do
       list_view(tail, func)
     end
   end
+
   defp list_view([], _func), do: :error
 
   defp tuple_view(_tuple, i, size, _func) when i > size, do: :error
+
   defp tuple_view(tuple, i, size, func) do
     with :error <- func.(:erlang.element(i, tuple)) do
       tuple_view(tuple, i + 1, size, func)
@@ -208,7 +213,9 @@ defmodule Pathex.Lenses.Some do
 
   defp map_update(iterator, func, map) do
     case :maps.next(iterator) do
-      :none -> :error
+      :none ->
+        :error
+
       {key, value, iterator} ->
         case func.(value) do
           {:ok, res} -> {:ok, Map.put(map, key, res)}
@@ -218,6 +225,7 @@ defmodule Pathex.Lenses.Some do
   end
 
   defp keyword_update([], _), do: :error
+
   defp keyword_update([{key, value} | tail], func) when is_atom(key) do
     case func.(value) do
       {:ok, new_value} ->
@@ -227,6 +235,7 @@ defmodule Pathex.Lenses.Some do
         [{key, value} | keyword_update(tail, func)]
     end
   end
+
   defp keyword_update([head | tail], func) do
     [head | keyword_update(tail, func)]
   end

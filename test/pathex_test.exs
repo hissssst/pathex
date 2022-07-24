@@ -218,8 +218,8 @@ defmodule PathexTest do
   end
 
   test "force_set: path: triple non-map composition" do
-    p1 = path(0  :: :tuple)
-    p2 = path(0  :: :list)
+    p1 = path(0 :: :tuple)
+    p2 = path(0 :: :list)
     p3 = path(:x :: :keyword)
     p = p1 ~> p2 ~> p3
 
@@ -228,7 +228,7 @@ defmodule PathexTest do
     assert {:ok, {[[x: 0]]}} = force_set({[[]]}, p, 0)
     assert {:ok, {[[x: 0]]}} = force_set({[[x: 1]]}, p, 0)
   end
- 
+
   test "force set: path: triple self map composition" do
     px = path(:x, :map)
     p = px ~> px ~> px

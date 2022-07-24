@@ -6,7 +6,7 @@ defmodule Pathex.Debug do
 
   def debug(prefix \\ "") do
     spaced =
-      if (prefix == "" or String.ends_with?(prefix, " ")) do
+      if prefix == "" or String.ends_with?(prefix, " ") do
         prefix
       else
         prefix <> " "

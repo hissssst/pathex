@@ -113,8 +113,13 @@ defmodule Pathex.Lenses do
 
   @doc """
   This macro creates path-closure which successes only when input matches the `pattern`.
+  The `pattern` can be just a pattern or a pattern with `when`. You can write this patterns
+  just like you'd write them in `case`
 
   This function is useful when composed with `star/0` and `some/0`
+
+  > Note:  
+  > In terms of functional programming, such conditional lenses are called prisms
 
   Example:
       iex> import Pathex.Lenses; import Pathex
@@ -134,8 +139,13 @@ defmodule Pathex.Lenses do
 
   @doc """
   This macro creates path-closure successes only when `predicate` returns truthy value.
+  `predicate` is a function which takes a structures upon which the path is called and
+  returns a boolean (or any other type which will be treated as boolean).
 
   This function is useful when composed with `star/0` and `some/0`
+
+  > Note:  
+  > In terms of functional programming, such conditional lenses are called prisms
 
   Example:
       iex> import Pathex.Lenses; import Pathex
@@ -149,5 +159,6 @@ defmodule Pathex.Lenses do
       iex> {:ok, [{1, 5}, {4, 3}]} = Pathex.view(dots2d, star() ~> higher_than_2)
   """
   @doc export: true
+  @spec filtering((any() -> boolean())) :: Pathex.t(any(), any())
   def filtering(predicate), do: Filtering.filtering(predicate)
 end

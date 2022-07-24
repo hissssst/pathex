@@ -46,18 +46,19 @@ defmodule AnnotatedPathTest do
 
   describe "Composed" do
     test "all" do
-      p = path(
-        (:x :: :map) /
-        (:y :: :keyword) /
-        (0 :: :tuple) /
-        (0 :: :list)
-      )
+      p =
+        path(
+          (:x :: :map) /
+            (:y :: :keyword) /
+            (0 :: :tuple) /
+            (0 :: :list)
+        )
 
-      assert {:ok, 1} = view %{x: [y: {[1]}]}, p
-      assert :error = view [x: [y: {[1]}]], p
-      assert :error = view %{x: %{y: {[1]}}}, p
-      assert :error = view %{x: [y: [[1]]]}, p
-      assert :error = view %{x: [y: {{1}}]}, p
+      assert {:ok, 1} = view(%{x: [y: {[1]}]}, p)
+      assert :error = view([x: [y: {[1]}]], p)
+      assert :error = view(%{x: %{y: {[1]}}}, p)
+      assert :error = view(%{x: [y: [[1]]]}, p)
+      assert :error = view(%{x: [y: {{1}}]}, p)
     end
   end
 end

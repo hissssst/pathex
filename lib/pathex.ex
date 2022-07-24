@@ -53,7 +53,10 @@ defmodule Pathex do
 
   @typedoc "Also known as [path-closure](path.md)"
   @type t(input, output) ::
-          (op_name(), force_update_args(input, output) | update_args(input, output) | inspect_args() ->
+          (op_name(),
+           force_update_args(input, output)
+           | update_args(input, output)
+           | inspect_args() ->
              result(output | input))
 
   @typedoc "More about [modifiers](modifiers.md)"
@@ -74,6 +77,7 @@ defmodule Pathex do
   use Pathex
   ```
   """
+  @doc export: true
   defmacro __using__(opts) do
     case Keyword.get(opts, :default_mod, :naive) do
       :naive ->
@@ -490,8 +494,13 @@ defmodule Pathex do
   @doc export: true
   defmacro path(quoted, mod \\ nil) do
     mod = get_mod(mod, __CALLER__)
-
     {binds, combination} = QuotedParser.parse(quoted, __CALLER__, mod)
+
+    if Macro.Env.in_match?(__CALLER__) do
+
+    else
+
+    end
 
     combination
     |> assert_combination_length(__CALLER__)
@@ -608,9 +617,9 @@ defmodule Pathex do
       "path(:x) ~> path(:y / 1) &&& path(-1)"
   """
   @spec inspect(Pathex.t()) :: iodata()
+  @doc export: true
   def inspect(path_closure) when is_function(path_closure, 2) do
-    path_closure.(:inspect, [])
-    |> Macro.to_string()
+    Macro.to_string path_closure.(:inspect, [])
   end
 
   # Helpers
@@ -687,6 +696,7 @@ defmodule Pathex do
       |> QuotedParser.parse(caller, mod)
 
     %{^opname => builder} = Operations.builders_for_combination(combination)
+
     combination
     |> Builder.build_only(builder)
     |> prepend_binds(binds)

@@ -109,7 +109,7 @@ defmodule Pathex.Builder.SimpleDeleter do
     body = keyword_body(keyword, key)
 
     quote do
-      [{_, _} | _] = unquote(keyword) ->
+      unquote(keyword) when is_list(unquote(keyword)) ->
         unquote(body)
     end
   end

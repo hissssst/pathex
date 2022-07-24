@@ -15,7 +15,7 @@ defmodule Pathex.QuotedParser do
       |> Enum.unzip()
 
     binds = Enum.reject(binds, &is_nil/1)
-		combination = Operations.filter_combination(combination, mod)
+    combination = Operations.filter_combination(combination, mod)
     {binds, combination}
   end
 
@@ -37,7 +37,7 @@ defmodule Pathex.QuotedParser do
   defp detect_quoted({:"::", _, [value, types]}) do
     {bind, variants} = detect_quoted(value)
 
-		variants =
+    variants =
       variants
       |> Keyword.take(List.wrap(types))
       |> case do
@@ -49,7 +49,7 @@ defmodule Pathex.QuotedParser do
           pairs
       end
 
-   	{bind, variants}
+    {bind, variants}
   end
 
   defp detect_quoted(var) when is_var(var) do
@@ -60,8 +60,12 @@ defmodule Pathex.QuotedParser do
     {nil, [map: key, keyword: key]}
   end
 
-  defp detect_quoted(key) when is_integer(key) do
+  defp detect_quoted(key) when is_integer(key) and key >= 0 do
     {nil, [map: key, list: key, tuple: key]}
+  end
+
+  defp detect_quoted(key) when is_integer(key) and key < 0 do
+    {nil, [map: key, list: key]}
   end
 
   defp detect_quoted(other) do
@@ -74,36 +78,36 @@ defmodule Pathex.QuotedParser do
     end
   end
 
-	# Note that only special forms are here because we can't make any assumptions about
-	# operators and stuff, because they can be overloaded with import Kernel, except: ...
-	@map_builtins ~w[%{} {} <<>> fn quote __ENV__ __STACKTRACE__ __DIR__ __CALLER__ &]a
+  # Note that only special forms are here because we can't make any assumptions about
+  # operators and stuff, because they can be overloaded with import Kernel, except: ...
+  @map_builtins ~w[%{} {} <<>> fn quote __ENV__ __STACKTRACE__ __DIR__ __CALLER__ &]a
   defp detect_type({builtin, _, args}, var) when builtin in @map_builtins do
     if Macro.special_form?(builtin, length(args)) do
-    	[map: var]
+      [map: var]
     else
       [map: var, keyword: var, list: var, tuple: var]
     end
   end
 
-	@atom_builtins ~w[__MODULE__ require]a
+  @atom_builtins ~w[__MODULE__ require]a
   defp detect_type({builtin, _, args}, var) when builtin in @atom_builtins do
     if Macro.special_form?(builtin, length(args)) do
-    	[map: var, keyword: var]
+      [map: var, keyword: var]
     else
       [map: var, keyword: var, list: var, tuple: var]
     end
   end
 
-  defp detect_type({:"^", _, _}, _) do
+  defp detect_type({:^, _, _}, _) do
     raise ArgumentError, "You can't use pin (^) in paths"
   end
 
   defp detect_type({_, _}, var) do
-  	[map: var]
+    [map: var]
   end
 
   defp detect_type(l, var) when is_list(l) do
-  	[map: var]
+    [map: var]
   end
 
   defp detect_type(_, var) do

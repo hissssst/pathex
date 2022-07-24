@@ -1,7 +1,7 @@
 defmodule Pathex.MixProject do
   use Mix.Project
 
-  @version "2.1.0"
+  @version "2.2.0"
 
   def project do
     [
@@ -15,7 +15,7 @@ defmodule Pathex.MixProject do
       name: "Pathex",
       source_url: "https://github.com/hissssst/pathex",
       docs: docs(),
-      # compilers:       [:unused | Mix.compilers()],
+      # compilers: [:unused | Mix.compilers()],
       unused: [{:_, :__using__, :_}, {:_, :__impl__, :_}]
     ]
   end
@@ -78,7 +78,8 @@ defmodule Pathex.MixProject do
         Pathex.Lenses,
         Pathex.Lenses.Recur,
         Pathex.Combinator,
-        Pathex.Debug
+        Pathex.Debug,
+        Pathex.Accessibility,
       ],
       "Code generation": [
         Pathex.Builder,

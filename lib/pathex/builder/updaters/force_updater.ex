@@ -3,6 +3,7 @@ defmodule Pathex.Builder.ForceUpdater do
   @moduledoc false
 
   alias Pathex.Common
+  import Common, only: [is_var: 1]
   import Pathex.Builder.Setter
   @behaviour Pathex.Builder
 
@@ -41,19 +42,29 @@ defmodule Pathex.Builder.ForceUpdater do
     {setfunc, @default_variable}
   end
 
-  defp create_setter({:keyword, key}, tail, {_, _, [{_, acc_items}]}) do
+  defp create_setter({:keyword, key}, tail, {_, _, [{_, acc_items}]}) when is_var(key) do
     quote do
-      [{_, _} | _] = keyword ->
+      keyword when is_list(keyword) and is_atom(unquote(key)) ->
         Keyword.update(keyword, unquote(key), unquote(acc_items), fn val ->
           val |> unquote(tail)
         end)
     end
   end
 
-  defp create_setter({:list, {_, _, _} = index}, tail, {_, _, [{_, acc_items}]}) do
+  defp create_setter({:keyword, key}, tail, {_, _, [{_, acc_items}]}) when is_atom(key) do
+    quote do
+      keyword when is_list(keyword) ->
+        Keyword.update(keyword, unquote(key), unquote(acc_items), fn val ->
+          val |> unquote(tail)
+        end)
+    end
+  end
+
+  defp create_setter({:list, index}, tail, {_, _, [{_, acc_items}]}) when is_var(index) do
     extra_case =
-      quote generated: true do
+      quote do
         l when is_list(l) and is_integer(unquote(index)) and unquote(index) < 0 ->
+          # TODO think if this is the right behaviour
           [unquote(acc_items) | l]
       end
 

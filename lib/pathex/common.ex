@@ -59,37 +59,25 @@ defmodule Pathex.Common do
   """
   @spec set_generated(Macro.t()) :: Macro.t()
   def set_generated(ast) do
-    Macro.prewalk(ast, fn item ->
-      Macro.update_meta(item, &Keyword.put(&1, :generated, true))
+    Macro.prewalk(ast, fn
+      var when is_var(var) ->
+        var
+
+      item ->
+        Macro.update_meta(item, &Keyword.put(&1, :generated, true))
     end)
   end
 
-  # @doc """
-  # Traverses AST and updates all variables in it
-  # """
-  # @spec update_variables(Macro.t(), (Macro.t() -> Macro.t()), context) :: Macro.t()
-  # def update_variables(ast, func, context \\ nil) when is_function(func, 1) do
-  #   Macro.postwalk(ast, fn
-  #     {n, c, ^context} = v when is_atom(n) and is_list(c) ->
-  #       func.(v)
+  def safe_drop_meta(ast) do
+    Macro.prewalk(ast, fn
+      {name, meta, context} = var when is_var(var) ->
+        {name, Keyword.take(meta, [:counter]), context}
 
-  #     other ->
-  #       other
-  #   end)
-  # end
+      {x, _meta, y} ->
+        {x, [], y}
 
-  # @doc """
-  # Traverses AST and detects all variables in it
-  # """
-  # @spec detect_variables(Macro.t(), context()) :: [{atom(), list(), context()}]
-  # def detect_variables(ast, context \\ nil) do
-  #   Macro.prewalk(ast, [], fn
-  #     {name, ctx, ^context} = var, acc when is_atom(name) and is_list(ctx) ->
-  #       {var, [var | acc]}
-
-  #     other, acc ->
-  #       {other, acc}
-  #   end)
-  #   |> elem(1)
-  # end
+      other ->
+        other
+    end)
+  end
 end

@@ -64,6 +64,7 @@ defmodule Pathex.DeletionTest do
 
   describe "Delete me" do
     import Pathex.Lenses
+
     test "star ~> matching" do
       data =
         1..1000

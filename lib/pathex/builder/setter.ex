@@ -53,35 +53,35 @@ defmodule Pathex.Builder.Setter do
 
   def create_setter({:list, index}, tail) when is_var(index) do
     quote do
-      l when is_list(l) and is_integer(unquote(index)) ->
-        if abs(unquote(index)) > length(l) do
+      list when is_list(list) and is_integer(unquote(index)) ->
+        if abs(unquote(index)) > length(list) do
           throw(:path_not_found)
         else
-          List.update_at(l, unquote(index), fn x -> x |> unquote(tail) end)
+          List.update_at(list, unquote(index), fn x -> x |> unquote(tail) end)
         end
     end
   end
 
   def create_setter({:tuple, index}, tail) when is_var(index) do
     quote do
-      t
-      when is_tuple(t) and is_integer(unquote(index)) and
+      tuple
+      when is_tuple(tuple) and is_integer(unquote(index)) and
              unquote(index) >= 0 and
-             tuple_size(t) > unquote(index) ->
+             tuple_size(tuple) > unquote(index) ->
         indexplusone = unquote(index) + 1
 
         val =
           indexplusone
-          |> :erlang.element(t)
+          |> :erlang.element(tuple)
           |> unquote(tail)
 
-        :erlang.setelement(indexplusone, t, val)
+        :erlang.setelement(indexplusone, tuple, val)
     end
   end
 
   def create_setter({:keyword, key}, tail) when is_var(key) do
     quote do
-      [{a, _} | _] = keyword when is_atom(unquote(key)) and is_atom(a) ->
+      keyword when is_list(keyword) and is_atom(unquote(key)) ->
         unquote(__MODULE__).keyword_update(keyword, unquote(key), fn x ->
           x |> unquote(tail)
         end)

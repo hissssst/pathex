@@ -38,13 +38,13 @@ defmodule Pathex.Lenses.Star do
         |> either_empty()
 
       :view, {tuple, func} when is_tuple(tuple) and tuple_size(tuple) > 0 ->
-        either_empty tuple_view(tuple, 1, tuple_size(tuple), func)
+        either_empty(tuple_view(tuple, 1, tuple_size(tuple), func))
 
       :view, {[{a, _} | _] = kwd, func} when is_atom(a) ->
-        either_empty keyword_view(kwd, func)
+        either_empty(keyword_view(kwd, func))
 
       :view, {list, func} when is_list(list) ->
-        either_empty list_view(list, func)
+        either_empty(list_view(list, func))
 
       :update, {%{} = map, func} ->
         map
@@ -126,7 +126,9 @@ defmodule Pathex.Lenses.Star do
 
   defp map_view(iterator, func) do
     case :maps.next(iterator) do
-      :none -> []
+      :none ->
+        []
+
       {_key, value, iterator} ->
         case func.(value) do
           {:ok, res} -> [res | map_view(iterator, func)]
@@ -136,6 +138,7 @@ defmodule Pathex.Lenses.Star do
   end
 
   defp tuple_view(_tuple, i, length, _func) when i > length, do: []
+
   defp tuple_view(tuple, i, length, func) do
     i
     |> :erlang.element(tuple)
@@ -152,6 +155,7 @@ defmodule Pathex.Lenses.Star do
       :error -> keyword_view(tail, func)
     end
   end
+
   defp keyword_view([_ | tail], func), do: keyword_view(tail, func)
   defp keyword_view([], _func), do: []
 
@@ -161,6 +165,7 @@ defmodule Pathex.Lenses.Star do
       :error -> list_view(tail, func)
     end
   end
+
   defp list_view([], _func), do: []
 
   defp map_update(iterator, func, status, acc) do
@@ -221,10 +226,11 @@ defmodule Pathex.Lenses.Star do
         keyword_update(tail, func, called?, [head | head_acc])
     end
   end
+
   defp keyword_update([head | tail], func, called?, head_acc) do
     keyword_update(tail, func, called?, [head | head_acc])
   end
-  
+
   defp map_delete(iterator, func, status, acc) do
     case :maps.next(iterator) do
       :none ->

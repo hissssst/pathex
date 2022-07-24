@@ -4,6 +4,7 @@ defmodule Pathex.Builder.Inspector do
 
   @behaviour Pathex.Builder
   alias Pathex.Builder.Code
+  alias Pathex.Common
 
   def build(combination) do
     slashed =
@@ -14,7 +15,8 @@ defmodule Pathex.Builder.Inspector do
       |> Enum.reduce(fn r, l -> quote(do: unquote(l) / unquote(r)) end)
 
     quote(do: path(unquote(slashed)))
-    |> Macro.escape(prune_metadata: true)
+    |> Common.safe_drop_meta()
+    |> Macro.escape()
     |> Macro.prewalk(&unescape/1)
     |> Code.new([])
   end
