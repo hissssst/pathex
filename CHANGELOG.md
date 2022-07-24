@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.2
+
+**Breaking**
+
+* Changed behaviour of path-closures created with `path` when working with improper `Keyword.t()`
+
+**Non-breaking**
+
+* Improved documentation
+* Removed dead code
+* Added `Pathex.Accessibility` module for creating paths in runtime
+
 ## 2.1
 
 **Breaking**
