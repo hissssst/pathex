@@ -22,6 +22,8 @@ defmodule Pathex.Accessibility do
     end
   end
 
+  @type access :: nonempty_list(term())
+
   @doc """
   Converts path-closure to `Access.t()`
 
@@ -31,6 +33,7 @@ defmodule Pathex.Accessibility do
       iex> 1 = get_in(%{x: %{0 => 1}}, access)
   """
   @doc export: true
+  @spec to_access(Pathex.t()) :: [Access.access_fun(any(), any())]
   def to_access(path_closure) do
     List.wrap fn
       :get, data, next ->
@@ -74,6 +77,7 @@ defmodule Pathex.Accessibility do
       iex> 10 = view!(%{x: [y: 10]}, p)
   """
   @doc export: true
+  @spec from_access(access()) :: Pathex.t()
   def from_access(access) do
     fn
       :view, {data, func} ->
@@ -136,6 +140,7 @@ defmodule Pathex.Accessibility do
   @doc export: true
 
   # Create header with default value for `mod`
+  @spec from_list([any()], Pathex.mod()) :: Pathex.t()
   def from_list(list, mod \\ :naive)
 
   # Generate implementation for non-empty lists with given mod

@@ -4,6 +4,7 @@ defmodule Pathex.Debug do
   and performs the same way `matching(_)` does
   """
 
+  @spec debug(String.t()) :: Pathex.t()
   def debug(prefix \\ "") do
     spaced =
       if prefix == "" or String.ends_with?(prefix, " ") do

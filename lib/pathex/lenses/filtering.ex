@@ -3,6 +3,7 @@ defmodule Pathex.Lenses.Filtering do
   # > see `Pathex.Lenses.filtering/1` documentation
   @moduledoc false
 
+  @spec filtering((any() -> boolean() | any())) :: Pathex.t()
   def filtering(predicate) do
     fn
       op, {structure, func} when op in ~w[update view delete]a ->
@@ -12,7 +13,7 @@ defmodule Pathex.Lenses.Filtering do
         if(predicate.(structure), do: func.(structure), else: default)
 
       :inspect, _ ->
-        {:filtering, [], [predicate]}
+        {:filtering, [], [inspect predicate]}
     end
   end
 end

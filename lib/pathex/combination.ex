@@ -2,13 +2,18 @@ defmodule Pathex.Combination do
   # Module for combination structures
   @moduledoc false
 
-  @typep struct_type :: :map | :keyword | :list | :tuple
+  @type variable :: {atom(), list(), atom()}
+  @type struct_type :: :map | :keyword | :list | :tuple
+  @type pair :: {:map, any()}
+  | {:keyword, atom() | variable()}
+  | {:list, integer() | variable()}
+  | {:tuple, non_neg_integer() | variable()}
 
   @typedoc """
   Plain representation of one path for generating one `case(do:)`
   or one matchable case
   """
-  @type path :: [{struct_type(), any()}]
+  @type path :: [pair()]
 
   @typedoc """
   Representation of one path combination

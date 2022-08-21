@@ -6,6 +6,7 @@ defmodule Pathex.Builder.Composition.Concat do
   alias Pathex.Builder.Code
   alias Pathex.Builder.Composition
 
+  @impl Pathex.Builder.Composition
   def build(paths) do
     [
       view: build_view(paths),

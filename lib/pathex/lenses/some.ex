@@ -3,6 +3,7 @@ defmodule Pathex.Lenses.Some do
   # > see `Pathex.Lenses.some/0` documentation
   @moduledoc false
 
+  @spec some() :: Pathex.t()
   def some do
     fn
       :view, {%{} = map, func} ->

@@ -9,6 +9,7 @@ defmodule Pathex.Builder.MatchableUpdater do
   @structure_variable {:x, [], Elixir}
   @function_variable {:function, [], Elixir}
 
+  @impl Pathex.Builder
   def build(combination) do
     combination
     |> Combination.to_paths()

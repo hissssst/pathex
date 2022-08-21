@@ -6,6 +6,7 @@ defmodule Pathex.Builder.Composition.And do
   alias Pathex.Builder.Code
   alias Pathex.Builder.Composition
 
+  @impl Pathex.Builder.Composition
   def build(items) do
     [
       delete: build_delete(items),

@@ -2,11 +2,14 @@ defmodule Pathex.Builder.Setter do
   # Module with common functions for updaters
   @moduledoc false
 
+  alias Pathex.Builder.Code, as: BuilderCode
+  alias Pathex.Combination
   import Pathex.Common, only: [list_match: 2, pin: 1, is_var: 1]
 
   # Helpers
 
   # Non variable
+  @spec create_setter(Combination.pair(), Macro.t()) :: Macro.t()
   def create_setter({:map, key}, tail) do
     pinned = pin(key)
 
@@ -88,12 +91,14 @@ defmodule Pathex.Builder.Setter do
     end
   end
 
+  @spec fallback() :: Macro.t()
   def fallback do
     quote do
       _ -> throw(:path_not_found)
     end
   end
 
+  @spec wrap_to_code(Macro.t(), [Macro.t()]) :: BuilderCode.t()
   def wrap_to_code(code, [arg1 | _] = args) do
     code =
       quote do
@@ -104,9 +109,10 @@ defmodule Pathex.Builder.Setter do
         end
       end
 
-    %Pathex.Builder.Code{code: code, vars: args}
+    %BuilderCode{code: code, vars: args}
   end
 
+  @spec keyword_update(Keyword.t(), atom(), (any() -> any())) :: Keyword.t()
   def keyword_update(keyword, key, func)
   def keyword_update([], _, _), do: throw(:path_not_found)
 

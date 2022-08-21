@@ -11,6 +11,7 @@ defmodule Pathex.Lenses.Matching do
   import Macro, only: [escape: 1]
 
   # This case is just an optimization for `id/0`-like lens
+  @spec matching_func(Macro.t()) :: Macro.t()
   def matching_func({:_, meta, ctx}) when is_list(meta) and (is_nil(ctx) or is_atom(ctx)) do
     quote do
       fn
@@ -34,7 +35,7 @@ defmodule Pathex.Lenses.Matching do
           default
 
         :inspect, _ ->
-          {:matching, [], [unquote(unescape_pins(escape(ast)))]}
+          {:matching, [], [unquote unescape_pins escape ast]}
 
         op, _ when op in ~w[delete view update force_update]a ->
           :error
@@ -55,7 +56,7 @@ defmodule Pathex.Lenses.Matching do
           default
 
         :inspect, _ ->
-          {:matching, [], [unquote(unescape_pins(escape(pattern)))]}
+          {:matching, [], [unquote unescape_pins escape pattern]}
 
         op, _ when op in ~w[delete view update force_update]a ->
           :error

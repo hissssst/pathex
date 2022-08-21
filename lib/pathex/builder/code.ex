@@ -11,9 +11,10 @@ defmodule Pathex.Builder.Code do
             ] ++ @enforce_keys
 
   @type code_type :: :one_arg_pipe
+  @type variable :: {atom(), list(), atom()}
 
   @type t :: %__MODULE__{
-          vars: [{atom(), list(), atom() | nil}] | [],
+          vars: [variable()],
           code: Macro.t()
         }
 
@@ -66,7 +67,7 @@ defmodule Pathex.Builder.Code do
   Converts quoted code with list of quoted vars to
   piped %Code{} with first arg piping into quoted code
   """
-  @spec new_arg_pipe(Macro.t(), [Macro.t()]) :: t()
+  @spec new_arg_pipe(Macro.t(), [variable()]) :: t()
   def new_arg_pipe(code, [arg1 | _] = args) do
     code = quote(do: unquote(arg1) |> unquote(code))
     %__MODULE__{code: code, vars: args}
@@ -75,7 +76,7 @@ defmodule Pathex.Builder.Code do
   @doc """
   Simply creates new Code structure
   """
-  @spec new(Macro.t(), [Macro.t()]) :: t()
+  @spec new(Macro.t(), [variable()]) :: t()
   def new(code, vars) do
     %__MODULE__{code: code, vars: vars}
   end
@@ -83,6 +84,7 @@ defmodule Pathex.Builder.Code do
   defimpl Inspect do
     import Inspect.Algebra
 
+    @spec inspect(Pathex.Builder.Code.t(), Inspect.Opts.t()) :: Inspect.Algebra.t()
     def inspect(%{vars: vars, code: code}, opts) do
       code =
         code

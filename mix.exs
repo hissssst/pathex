@@ -1,7 +1,7 @@
 defmodule Pathex.MixProject do
   use Mix.Project
 
-  @version "2.2.0"
+  @version "2.3.0"
 
   def project do
     [
@@ -45,9 +45,10 @@ defmodule Pathex.MixProject do
 
   defp deps do
     [
-      {:mix_unused, "~> 0.3.0", only: :dev, runtime: false},
+      {:mix_unused, "~> 0.3", only: :dev, runtime: false},
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.0.0", only: :dev, runtime: false},
+      # {:dialyxir, "~> 1.0", only: :dev, runtime: false},
+      # {:gradient, github: "esl/gradient", only: [:dev], runtime: false},
       {:credo, "~> 1.5", only: :dev, runtime: false}
     ]
   end
@@ -80,6 +81,7 @@ defmodule Pathex.MixProject do
         Pathex.Combinator,
         Pathex.Debug,
         Pathex.Accessibility,
+        Pathex.Short,
       ],
       "Code generation": [
         Pathex.Builder,

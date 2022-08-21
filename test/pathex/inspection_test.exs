@@ -40,7 +40,7 @@ defmodule Pathex.InspectionTest do
 
     test "non-zero arity lenses" do
       assert "matching(_)" == Pathex.inspect(matching(_))
-      assert "filtering(true)" == Pathex.inspect(filtering(true))
+      assert ~S/filtering("true")/ == Pathex.inspect(filtering(true))
     end
 
     test "matching pin unescaping" do

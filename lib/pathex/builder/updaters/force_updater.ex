@@ -14,6 +14,7 @@ defmodule Pathex.Builder.ForceUpdater do
   @doc """
   Returns three argument code structure
   """
+  @impl Pathex.Builder
   def build(combination) do
     combination
     |> Enum.reverse()

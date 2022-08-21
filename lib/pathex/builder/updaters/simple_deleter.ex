@@ -11,27 +11,13 @@ defmodule Pathex.Builder.SimpleDeleter do
   @structure_variable {:x, [], Elixir}
   @function_variable {:function, [], Elixir}
 
+  @impl Pathex.Builder
   def build(combination) do
     [last | tail] = Enum.reverse(combination)
 
     tail
     |> Enum.reduce(initial(last), &reduce_into/2)
     |> Setter.wrap_to_code([@structure_variable, @function_variable])
-  end
-
-  def handle(variable, update, delete) do
-    quote do
-      case do
-        {:ok, unquote(variable)} ->
-          unquote(update)
-
-        :delete_me ->
-          unquote(delete)
-
-        :error ->
-          throw(:path_not_found)
-      end
-    end
   end
 
   defp reduce_into(path_items, acc) do
@@ -183,6 +169,7 @@ defmodule Pathex.Builder.SimpleDeleter do
     end
   end
 
+  @spec keyword_update(Keyword.t(), atom(), (any() -> any())) :: Keyword.t()
   def keyword_update(keyword, key, func)
   def keyword_update([], _, _), do: throw(:path_not_found)
 

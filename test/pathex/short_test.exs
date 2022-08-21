@@ -1,68 +1,70 @@
-defmodule Pathex.UsingTest do
+defmodule Pathex.ShortTest do
+
   use ExUnit.Case
+  doctest Pathex.Short, import: true
 
   defmodule JsonUsed do
-    use Pathex, default_mod: :json
+    use Pathex.Short, default_mod: :json
 
     def p do
-      path(:x / 0)
+      :x / 0
     end
 
     def inlined_ok do
-      Pathex.view(%{x: [1]}, path(:x / 0))
+      Pathex.view(%{x: [1]}, :x / 0)
     end
 
     def inlined_error do
-      Pathex.view(%{x: {1}}, path(:x / 0))
+      Pathex.view(%{x: {1}}, :x / 0)
     end
   end
 
   defmodule EmptyUsed do
-    use Pathex
+    use Pathex.Short
 
     def p do
-      path(:x / 0)
+      :x / 0
     end
   end
 
   defmodule NaiveUsed do
-    use Pathex
+    use Pathex.Short
 
     def p do
-      path(:x / 0)
+      :x / 0
     end
   end
 
   defmodule MapUsed do
-    use Pathex, default_mod: :map
+    use Pathex.Short, default_mod: :map
 
     def inlined do
       [
-        Pathex.view(%{x: %{y: 1}}, path(:x / :y)),
-        Pathex.view([x: %{y: 1}], path(:x / :y)),
-        Pathex.view(%{x: [y: 1]}, path(:x / :y))
+        Pathex.view(%{x: %{y: 1}}, :x / :y),
+        Pathex.view([x: %{y: 1}], :x / :y),
+        Pathex.view(%{x: [y: 1]}, :x / :y)
       ]
     end
   end
 
   defmodule InDef do
     def map do
-      use Pathex, default_mod: :map
+      use Pathex.Short, default_mod: :map
 
       [
-        Pathex.view(%{x: %{y: 1}}, path(:x / :y)),
-        Pathex.view([x: %{y: 1}], path(:x / :y)),
-        Pathex.view(%{x: [y: 1]}, path(:x / :y))
+        Pathex.view(%{x: %{y: 1}}, :x / :y),
+        Pathex.view([x: %{y: 1}], :x / :y),
+        Pathex.view(%{x: [y: 1]}, :x / :y)
       ]
     end
 
     def naive do
-      use Pathex, default_mod: :naive
+      use Pathex.Short, default_mod: :naive
 
       [
-        Pathex.view(%{x: %{y: 1}}, path(:x / :y)),
-        Pathex.view([x: %{y: 1}], path(:x / :y)),
-        Pathex.view(%{x: [y: 1]}, path(:x / :y))
+        Pathex.view(%{x: %{y: 1}}, :x / :y),
+        Pathex.view([x: %{y: 1}], :x / :y),
+        Pathex.view(%{x: [y: 1]}, :x / :y)
       ]
     end
   end

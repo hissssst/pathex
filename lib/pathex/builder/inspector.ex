@@ -6,6 +6,7 @@ defmodule Pathex.Builder.Inspector do
   alias Pathex.Builder.Code
   alias Pathex.Common
 
+  @impl Pathex.Builder
   def build(combination) do
     slashed =
       combination

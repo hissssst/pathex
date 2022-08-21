@@ -68,6 +68,7 @@ defmodule Pathex.Common do
     end)
   end
 
+  @spec safe_drop_meta(Macro.t()) :: Macro.t()
   def safe_drop_meta(ast) do
     Macro.prewalk(ast, fn
       {name, meta, context} = var when is_var(var) ->

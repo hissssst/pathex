@@ -21,8 +21,8 @@
         # You can give explicit globs or simply directories.
         # In the latter case `**/*.{ex,exs}` will be used.
         #
-        included: ["lib/", "src/", "test/", "web/", "apps/"],
-        excluded: [~r"/_build/", ~r"/deps/", ~r"/node_modules/"]
+        included: ["lib/"],
+        excluded: [~r"/_build/", ~r"/deps/", ~r"/node_modules/", "test/"]
       },
       #
       # Load and configure plugins here:
@@ -99,7 +99,7 @@
         {Credo.Check.Readability.TrailingBlankLine, []},
         {Credo.Check.Readability.TrailingWhiteSpace, []},
         # TODO: enable by default in Credo 1.1
-        {Credo.Check.Readability.UnnecessaryAliasExpansion, false},
+        {Credo.Check.Readability.UnnecessaryAliasExpansion, []},
         {Credo.Check.Readability.VariableNames, []},
 
         #
@@ -123,7 +123,7 @@
         {Credo.Check.Warning.BoolOperationOnSameValues, []},
         {Credo.Check.Warning.ExpensiveEmptyEnumCheck, []},
         {Credo.Check.Warning.IExPry, []},
-        {Credo.Check.Warning.IoInspect, false}, # Disable warning. "There should be no calls to IO.inspect/1. [W:1]" # TODO: rad restore default data
+        {Credo.Check.Warning.IoInspect, []}, # Disable warning. "There should be no calls to IO.inspect/1. [W:1]" # TODO: rad restore default data
         {Credo.Check.Warning.LazyLogging, false}, # Not suitable for 1.9.1
         {Credo.Check.Warning.OperationOnSameValues, []},
         {Credo.Check.Warning.OperationWithConstantResult, []},
@@ -144,7 +144,7 @@
         {Credo.Check.Consistency.UnusedVariableNames, false},
         {Credo.Check.Design.DuplicatedCode, false},
         {Credo.Check.Readability.MultiAlias, false},
-        {Credo.Check.Readability.Specs, false},
+        {Credo.Check.Readability.Specs, []},
         {Credo.Check.Readability.SinglePipe, false},
         {Credo.Check.Refactor.ABCSize, false},
         {Credo.Check.Refactor.AppendSingleItem, false},
@@ -152,7 +152,7 @@
         {Credo.Check.Refactor.ModuleDependencies, false},
         {Credo.Check.Refactor.PipeChainStart, false},
         {Credo.Check.Refactor.VariableRebinding, false},
-        {Credo.Check.Warning.MapGetUnsafePass, false},
+        {Credo.Check.Warning.MapGetUnsafePass, []},
         {Credo.Check.Warning.UnsafeToAtom, false}
 
         #

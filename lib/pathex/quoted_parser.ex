@@ -5,7 +5,7 @@ defmodule Pathex.QuotedParser do
   import Pathex.Common, only: [is_var: 1]
   alias Pathex.Operations
 
-  @spec parse(Macro.t(), Macro.Env.t(), Pathex.mod()) :: Pathex.Combination.t()
+  @spec parse(Macro.t(), Macro.Env.t(), Pathex.mod()) :: {[Macro.t()], Pathex.Combination.t()}
   def parse(quoted, env, mod) do
     {binds, combination} =
       quoted

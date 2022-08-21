@@ -9,6 +9,7 @@ defmodule Pathex.Builder.MatchableViewer do
   @structure_variable {:x, [], Elixir}
   @function_variable {:function, [], Elixir}
 
+  @impl Pathex.Builder
   def build(combination) do
     getters =
       combination

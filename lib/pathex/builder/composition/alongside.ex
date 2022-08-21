@@ -5,6 +5,7 @@ defmodule Pathex.Builder.Composition.Alongside do
   @behaviour Pathex.Builder.Composition
   alias Pathex.Builder.Code
 
+  @impl Pathex.Builder.Composition
   def build(items) do
     [
       delete: build_delete(items),
@@ -72,7 +73,7 @@ defmodule Pathex.Builder.Composition.Alongside do
     |> Code.new([input, func])
   end
 
-  def build_update([left, right]) do
+  defp build_update([left, right]) do
     input = {:input_struct, [], nil}
     func = {:func, [], nil}
 
@@ -84,7 +85,7 @@ defmodule Pathex.Builder.Composition.Alongside do
     |> Code.new([input, func])
   end
 
-  def build_update(list) do
+  defp build_update(list) do
     input = {:input_struct, [], nil}
     func = {:func, [], nil}
 
@@ -99,7 +100,7 @@ defmodule Pathex.Builder.Composition.Alongside do
     |> Code.new([input, func])
   end
 
-  def build_force_update(list) do
+  defp build_force_update(list) do
     input = {:input_struct, [], nil}
     func = {:func, [], nil}
     default = {:default, [], nil}

@@ -28,10 +28,15 @@ defmodule Pathex do
   """
 
   alias Pathex.Builder
+  alias Pathex.Builder.Viewer
   alias Pathex.Combination
   alias Pathex.Common
   alias Pathex.Operations
   alias Pathex.QuotedParser
+
+  import Kernel, except: [inspect: 2]
+
+  defguardp is_mod(m) when m in ~w[naive map json]a
 
   @typedoc """
   Function which is passed to path-closure as second element in args tuple
@@ -57,7 +62,7 @@ defmodule Pathex do
            force_update_args(input, output)
            | update_args(input, output)
            | inspect_args() ->
-             result(output | input))
+             result(output | input) | Macro.t())
 
   @typedoc "More about [modifiers](modifiers.md)"
   @type mod :: :map | :json | :naive
@@ -80,18 +85,13 @@ defmodule Pathex do
   @doc export: true
   defmacro __using__(opts) do
     case Keyword.get(opts, :default_mod, :naive) do
-      :naive ->
-        quote do
-          require Pathex
-          import Pathex, only: [path: 1, path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
+      mod when is_mod(mod) ->
+        if module = __CALLER__.module do
+          Module.put_attribute(module, :pathex_default_mod, mod)
         end
-
-      mod when mod in ~w[json map]a ->
         quote do
           require Pathex
           import Pathex, only: [path: 1, path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
-
-          @pathex_default_mod unquote(mod)
         end
 
       _wrong_mod ->
@@ -420,7 +420,9 @@ defmodule Pathex do
 
   @doc """
   Macro which gets value in the structure and deletes it.
-  Note that current implementation of this function performs double lookup.
+  > Note:
+  >
+  > Current implementation of this function performs double lookup.
 
   Example:
       iex> {:ok, {1, [2, 3]}} = pop([1, 2, 3], path(0))
@@ -442,7 +444,9 @@ defmodule Pathex do
 
   @doc """
   Gets value under `path` in `struct` and then deletes it.
-  Note that current implementation of this function performs double lookup.
+  > Note:
+  >
+  > Current implementation of this function performs double lookup.
 
   Example:
       iex> {1, [2, 3]} = pop!([1, 2, 3], path(0))
@@ -495,12 +499,6 @@ defmodule Pathex do
   defmacro path(quoted, mod \\ nil) do
     mod = get_mod(mod, __CALLER__)
     {binds, combination} = QuotedParser.parse(quoted, __CALLER__, mod)
-
-    if Macro.Env.in_match?(__CALLER__) do
-
-    else
-
-    end
 
     combination
     |> assert_combination_length(__CALLER__)
@@ -622,30 +620,91 @@ defmodule Pathex do
     Macro.to_string path_closure.(:inspect, [])
   end
 
+  @doc """
+  This macro converts path (which can be matched upon) into pattern.
+
+  These requirements must be satisfied in order for this macro to work correctly:
+  1. Path must be inlined into this macro. This means that path must be defined
+  in a argument of this macro
+  2. Path must consist only of list with constants or map variable or constant items
+  3. Path must result only in case with one clause
+
+  Example
+      iex> import Pathex
+      iex> structure = %{users: %{1 => %{fname: "Jose", lname: "Valim"}}}
+      iex> case structure do
+      ...>   pattern(fname, path(:users / 1 / :fname, :map)) ->
+      ...>     {:ok, fname}
+      ...>   _ ->
+      ...>     :error
+      ...> end
+      {:ok, "Jose"}
+  """
+  @doc export: true
+  defmacro pattern(variable \\ {:_, [], Elixir}, path) do
+    {:ok, path, mod} =
+      with :error <- destruct_inlined(path, __CALLER__) do
+        raise CompileError, description: "Can't have uninlined paths"
+      end
+
+    mod = get_mod(mod, __CALLER__)
+
+    if not Macro.Env.in_match?(__CALLER__) do
+      raise CompileError, description: "Can't create pattern outside of pattern"
+    end
+
+    with(
+      {[], combination} <- QuotedParser.parse(path, __CALLER__, mod),
+      [path] <- Pathex.Combination.to_paths(combination),
+      {:ok, match} <- Viewer.match_from_path(path, variable)
+    ) do
+      match
+    else
+      {:error, _} ->
+        raise CompileError, description: "Can't generate matching from this combination"
+
+      {_binds, _combination} ->
+        raise CompileError, description: "You can only use variables and constants in pattern matching"
+
+      _other ->
+        raise CompileError, description: "Unknown error"
+    end
+  end
+
   # Helpers
 
   # Helper for generating code for path operation
-  # Special case for inline paths
-  defp gen({:path, _, [path | tail]}, op, args, caller) do
-    mod =
-      tail
-      |> List.first()
-      |> get_mod(caller)
+  defp gen(code, op, args, caller) do
+    case destruct_inlined(code, caller) do
+      # Special case for inline paths
+      {:ok, path, mod} ->
+        path_func = build_only(path, op, caller, get_mod(mod, caller))
+        quote generated: true do
+          unquote(path_func).(unquote_splicing(args))
+        end
+        |> Common.set_generated()
 
-    path_func = build_only(path, op, caller, mod)
+      # Case for not inlined paths
+      :error ->
+        # case Macro.expand(path, caller) do
+        #   {:fn, _, clauses} ->
+        #     Enum.find_value(clauses, fn
+        #       {:"->", _, [[^op, args], body]} -> {args, body}
+        #       _ -> false
+        #     end)
+        #     |> IO.inspect()
 
-    quote generated: true do
-      unquote(path_func).(unquote_splicing(args))
+        #     IO.puts "YEAH!"
+
+        #   _ ->
+        #     :error
+        # end
+
+        quote generated: true do
+          unquote(code).(unquote(op), {unquote_splicing(args)})
+        end
+        |> Common.set_generated()
     end
-    |> Common.set_generated()
-  end
-
-  # Case for not inlined paths
-  defp gen(path, op, args, _caller) do
-    quote generated: true do
-      unquote(path).(unquote(op), {unquote_splicing(args)})
-    end
-    |> Common.set_generated()
   end
 
   defp wrap_ok(func) do
@@ -675,18 +734,23 @@ defmodule Pathex do
 
   defp get_mod(nil, %Macro.Env{module: module}) do
     Module.get_attribute(module, :pathex_default_mod) || :naive
+  rescue
+    e in ArgumentError ->
+      IO.warn """
+      You've attemted to compile the path within the enviroment which
+      is different from the original env. Therefore, Pathex was unable
+      to get the default modifier (which is bound to the env), so
+      `:naive` will be used
+
+      Original error: #{Kernel.inspect e, pretty: true}
+      """
+      :naive
   end
 
-  defp get_mod(mod, _), do: detect_mod(mod)
-
-  # Helper for detecting mod
-  @spec detect_mod(mod() | charlist()) :: mod() | no_return()
-  defp detect_mod(mod) when mod in ~w[naive map json]a, do: mod
-  defp detect_mod(str) when is_binary(str), do: detect_mod('#{str}')
-  defp detect_mod('json'), do: :json
-  defp detect_mod('map'), do: :map
-  defp detect_mod('naive'), do: :naive
-  defp detect_mod(_), do: raise("Can't have this modifier set")
+  defp get_mod(mod, _) when is_mod(mod), do: mod
+  defp get_mod(mod, _) do
+    raise CompileError, description: "You can't set #{Kernel.inspect mod} as a mod"
+  end
 
   # Builds only one clause of a path
   defp build_only(path, opname, caller, mod) do
@@ -749,5 +813,40 @@ defmodule Pathex do
       unquote_splicing(binds)
       unquote(combination)
     end
+  end
+
+  defp destruct_inlined({:path, meta, [path | mod]}, env) do
+    case Keyword.fetch(meta, :import)  do
+      {:ok, Pathex} ->
+        {:ok, path, maybemod mod}
+
+      :error ->
+        case Macro.Env.lookup_import(env, {:path, 2}) do
+          [{:macro, Pathex} | _] ->
+            {:ok, path, maybemod mod}
+
+          _ ->
+            :error
+        end
+
+      _ ->
+        :error
+    end
+  end
+  defp destruct_inlined({{:".", _, [m, :path]}, _, [path | mod]}, env) do
+    case Macro.expand(m, env) do
+      Pathex ->
+        {:ok, path, maybemod mod}
+
+      _ ->
+        :error
+    end
+  end
+  defp destruct_inlined(_, _), do: :error
+
+  defp maybemod([]), do: nil
+  defp maybemod([mod]) when is_mod(mod), do: mod
+  defp maybemod(_) do
+    raise CompileError, description: "Incorrect modifier"
   end
 end

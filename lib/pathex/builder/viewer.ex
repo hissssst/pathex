@@ -2,10 +2,12 @@ defmodule Pathex.Builder.Viewer do
   # Module with common functions for viewers
   @moduledoc false
 
+  alias Pathex.Combination
   import Pathex.Common, only: [list_match: 2, pin: 1, is_var: 1]
 
   # Helpers
 
+  @spec match_from_path(Pathex.Combination.path(), Macro.t()) :: {:ok, Macro.t()} | {:error, {:bad_item, any()}}
   def match_from_path(path, initial \\ {:x, [], Elixir}) do
     path
     |> Enum.reverse()
@@ -22,6 +24,7 @@ defmodule Pathex.Builder.Viewer do
   end
 
   # Non variable cases
+  @spec create_getter(Combination.pair(), Macro.t()) :: Macro.t()
   def create_getter({:tuple, index}, tail) when is_integer(index) and index >= 0 do
     quote do
       tuple when is_tuple(tuple) and tuple_size(tuple) > unquote(index) ->
@@ -104,6 +107,7 @@ defmodule Pathex.Builder.Viewer do
     end
   end
 
+  @spec fallback() :: Macro.t()
   def fallback do
     quote do
       _ -> :error
@@ -111,6 +115,7 @@ defmodule Pathex.Builder.Viewer do
   end
 
   # Some bug in Macro.expand
+  @spec expand_local(Macro.t()) :: Macro.t()
   def expand_local({:and, _, _} = quoted), do: quoted
 
   def expand_local(quoted) do

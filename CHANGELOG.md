@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.3
+
+**Breaking**
+
+None
+
+**Non-breaking**
+
+* `Pathex.t` spec fix
+* `Pathex.Short` for shorter path definition
+* `Pathex.pattern` for creating patterns from inlined paths
+* `Pathex` now can be `use`-d inside functions or anything like this
+* Paths inlining is now detected for aliased, imported and macro calls
+* Internal spec fixes, dead code eliminations and formatting
+
 ## 2.2
 
 **Breaking**
