@@ -15,8 +15,9 @@ defmodule Pathex.MixProject do
       name: "Pathex",
       source_url: "https://github.com/hissssst/pathex",
       docs: docs(),
+
       # compilers: [:unused | Mix.compilers()],
-      unused: [{:_, :__using__, :_}, {:_, :__impl__, :_}]
+      # unused: [{:_, :__using__, :_}, {:_, :__impl__, :_}]
     ]
   end
 
@@ -39,7 +40,10 @@ defmodule Pathex.MixProject do
       maintainers: [
         "Georgy Sychev"
       ],
-      links: %{GitHub: "https://github.com/hissssst/pathex"}
+      links: %{
+        GitHub:    "https://github.com/hissssst/pathex",
+        Changelog: "https://github.com/hissssst/pathex/blob/master/CHANGELOG.md"
+      }
     ]
   end
 
