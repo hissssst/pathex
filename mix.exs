@@ -7,7 +7,7 @@ defmodule Pathex.MixProject do
     [
       app: :pathex,
       version: @version,
-      elixir: "~> 1.10",
+      elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),
@@ -45,10 +45,12 @@ defmodule Pathex.MixProject do
 
   defp deps do
     [
-      {:mix_unused, "~> 0.3", only: :dev, runtime: false},
-      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
+      # # Uncomment for development
       # {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       # {:gradient, github: "esl/gradient", only: [:dev], runtime: false},
+      # {:mix_unused, "~> 0.3", only: :dev, runtime: false},
+
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       {:credo, "~> 1.5", only: :dev, runtime: false}
     ]
   end

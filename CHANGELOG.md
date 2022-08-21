@@ -4,7 +4,7 @@
 
 **Breaking**
 
-None
+* Pathex now uses Elixir 1.13 (or higher) version
 
 **Non-breaking**
 
