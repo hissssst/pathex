@@ -53,8 +53,9 @@ defmodule Pathex.MixProject do
       # {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       # {:gradient, github: "esl/gradient", only: :dev, runtime: false},
       # {:mix_unused, "~> 0.3", only: :dev, runtime: false},
-      # {:ex_doc, "~> 0.28", only: :dev, runtime: false},
       # {:credo, "~> 1.5", only: :dev, runtime: false}
+
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
     ]
   end
 
