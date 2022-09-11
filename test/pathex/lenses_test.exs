@@ -127,8 +127,8 @@ defmodule Pathex.LensesTest do
       assert {:ok, [x: %{a: 1, b: 2}, y: %{c: 3}]} =
                force_set([x: %{a: 1}, y: %{c: 3}], some ~> pb, 2)
 
-      assert {:ok, %{x: [a: 1, b: 2], y: %{c: 3}}} =
-               force_set(%{x: [a: 1], y: %{c: 3}}, some ~> pb, 2)
+      result = force_set(%{x: [a: 1], y: %{c: 3}}, some ~> pb, 2)
+      assert result in [{:ok, %{x: [a: 1, b: 2], y: %{c: 3}}}, {:ok, %{x: [a: 1], y: %{b: 2, c: 3}}}]
 
       # Delete
       assert {:ok, %{x: [2, 3]}} = delete(%{x: [1, 2, 3]}, px ~> some)
@@ -237,6 +237,18 @@ defmodule Pathex.LensesTest do
       for anything <- anythings do
         assert {:ok, anything} === view(anything, fl2)
       end
+    end
+  end
+
+  describe "Prisms force_update" do
+    test "matching" do
+      assert 123 = Pathex.force_set! 0, Lenses.matching(_), 123
+      assert 123 = Pathex.force_set! 0, Lenses.matching(x when x != 0), 123
+    end
+
+    test "filtering" do
+      assert 123 = Pathex.force_set! 0, Lenses.filtering(fn _ -> true end), 123
+      assert 123 = Pathex.force_set! 0, Lenses.filtering(& &1 != 0), 123
     end
   end
 end

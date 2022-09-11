@@ -32,7 +32,7 @@ defmodule Pathex.Lenses.Matching do
           func.(x)
 
         :force_update, {_x, func, default} ->
-          default
+          {:ok, default}
 
         :inspect, _ ->
           {:matching, [], [unquote unescape_pins escape ast]}
@@ -53,7 +53,7 @@ defmodule Pathex.Lenses.Matching do
           func.(x)
 
         :force_update, {_x, func, default} ->
-          default
+          {:ok, default}
 
         :inspect, _ ->
           {:matching, [], [unquote unescape_pins escape pattern]}

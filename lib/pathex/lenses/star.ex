@@ -51,7 +51,10 @@ defmodule Pathex.Lenses.Star do
         |> :maps.iterator()
         |> map_update(func, false, %{})
 
-      :update, {tuple, func} when is_tuple(tuple) and tuple_size(tuple) > 0 ->
+      :force_update, {{}, _func, default} ->
+        {:ok, {default}}
+
+      :update, {tuple, func} when is_tuple(tuple) ->
         tuple_update(tuple, func, 1, tuple_size(tuple), false)
 
       :update, {[{a, _} | _] = keyword, func} when is_atom(a) ->
@@ -60,7 +63,7 @@ defmodule Pathex.Lenses.Star do
       :update, {list, func} when is_list(list) ->
         list_update(list, func, false, [])
 
-      :force_update, {%{} = map, func, default} ->
+      :force_update, {map, func, default} when is_map(map) and map_size(map) > 0 ->
         map
         |> Map.new(fn {key, value} ->
           case func.(value) do
@@ -91,6 +94,9 @@ defmodule Pathex.Lenses.Star do
           end
         end)
         |> wrap_ok()
+
+      :force_update, {[], _func, default} ->
+        {:ok, [default]}
 
       :force_update, {l, func, default} when is_list(l) ->
         l

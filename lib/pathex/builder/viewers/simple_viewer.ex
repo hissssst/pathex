@@ -23,7 +23,7 @@ defmodule Pathex.Builder.SimpleViewer do
 
   defp reduce_into(path_items, acc) do
     path_items
-    |> Enum.flat_map(&Viewer.create_getter(&1, acc))
+    |> Enum.flat_map(&Viewer.create_viewer(&1, acc))
     |> Kernel.++(Viewer.fallback())
     |> Common.to_case()
   end

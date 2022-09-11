@@ -169,11 +169,11 @@ defmodule PathexTest do
 
     assert {:ok, %{x: %{y: {1, 0}}}} == force_set(%{x: %{y: {1, 2}}}, p, 0)
     assert {:ok, %{x: %{y: [1, 0]}}} == force_set(%{x: %{y: [1, 2]}}, p, 0)
-    assert {:ok, %{x: %{y: [0]}}} == force_set(%{x: %{y: []}}, p, 0)
-    assert {:ok, %{x: %{y: {0}}}} == force_set(%{x: %{y: {}}}, p, 0)
+    assert {:ok, %{x: %{y: [nil, 0]}}} == force_set(%{x: %{y: []}}, p, 0)
+    assert {:ok, %{x: %{y: {nil, 0}}}} == force_set(%{x: %{y: {}}}, p, 0)
   end
 
-  test "force_set: path: list append" do
+  test "force_set: path: list prepend" do
     p = path(:x / :y / -1)
     assert {:ok, %{x: %{y: [0, 1, 2]}}} == force_set(%{x: %{y: [1, 2]}}, p, 0)
     assert {:ok, %{x: %{y: [0]}}} == force_set(%{x: %{y: []}}, p, 0)
@@ -237,6 +237,16 @@ defmodule PathexTest do
     assert :error = view(%{x: %{x: %{}}}, p)
     assert :error = view(%{x: %{}}, p)
     assert :error = view(%{}, p)
+  end
+
+  test "force_set: path: out of bounds" do
+    assert {1, 2, 0} = force_set! {1, 2, 3}, path(2), 0
+    assert {1, 2, 3, 0} = force_set! {1, 2, 3}, path(3), 0
+    assert {1, 2, 3, nil, 0} = force_set! {1, 2, 3}, path(4), 0
+
+    assert [1, 2, 0] = force_set! [1, 2, 3], path(2), 0
+    assert [1, 2, 3, 0] = force_set! [1, 2, 3], path(3), 0
+    assert [1, 2, 3, nil, 0] = force_set! [1, 2, 3], path(4), 0
   end
 
   test "inlined: path: view" do

@@ -24,20 +24,25 @@ defmodule Pathex.Builder.Viewer do
   end
 
   # Non variable cases
-  @spec create_getter(Combination.pair(), Macro.t()) :: Macro.t()
-  def create_getter({:tuple, index}, tail) when is_integer(index) and index >= 0 do
+  @spec create_viewer(Combination.pair(), Macro.t()) :: Macro.t()
+  def create_viewer({:tuple, index}, tail) when is_integer(index) and index >= 0 do
     quote do
       tuple when is_tuple(tuple) and tuple_size(tuple) > unquote(index) ->
-        elem(tuple, unquote(index)) |> unquote(tail)
+        :erlang.element(unquote(index + 1), tuple) |> unquote(tail)
     end
   end
 
-  def create_getter({:tuple, index}, _tail) when is_integer(index) and index < 0 do
-    # Can't create getter for tuple with negative index. What can we do?
-    raise ArgumentError, "Tuple index can't be negative"
+  def create_viewer({:tuple, index}, tail) when is_integer(index) and index < 0 do
+    quote do
+      tuple when is_tuple(tuple) and tuple_size(tuple) >= unquote(-index) ->
+        index = tuple_size(tuple) + unquote(index + 1)
+        :erlang.element(index, tuple) |> unquote(tail)
+    end
+    # # Can't create getter for tuple with negative index. What can we do?
+    # raise ArgumentError, "Tuple index can't be negative"
   end
 
-  def create_getter({:keyword, key}, tail) when is_atom(key) do
+  def create_viewer({:keyword, key}, tail) when is_atom(key) do
     quote do
       kwd when is_list(kwd) ->
         with {:ok, value} <- Keyword.fetch(kwd, unquote(key)) do
@@ -46,13 +51,13 @@ defmodule Pathex.Builder.Viewer do
     end
   end
 
-  def create_getter({:map, key}, tail) do
+  def create_viewer({:map, key}, tail) do
     quote do
       %{unquote(pin(key)) => x} -> x |> unquote(tail)
     end
   end
 
-  def create_getter({:list, index}, tail) when is_integer(index) and index >= 0 do
+  def create_viewer({:list, index}, tail) when is_integer(index) and index >= 0 do
     x = {:x, [], Elixir}
     match = list_match(index, x)
 
@@ -61,7 +66,7 @@ defmodule Pathex.Builder.Viewer do
     end
   end
 
-  def create_getter({:list, index}, tail) when is_integer(index) and index < 0 do
+  def create_viewer({:list, index}, tail) when is_integer(index) and index < 0 do
     quote do
       list when is_list(list) ->
         case Enum.at(list, unquote(index), :__pathex_var_not_found__) do
@@ -75,7 +80,7 @@ defmodule Pathex.Builder.Viewer do
   end
 
   # Variable cases
-  def create_getter({:keyword, key}, tail) when is_var(key) do
+  def create_viewer({:keyword, key}, tail) when is_var(key) do
     quote do
       kwd when is_list(kwd) and is_atom(unquote(key)) ->
         with {:ok, value} <- Keyword.fetch(kwd, unquote(key)) do
@@ -84,7 +89,7 @@ defmodule Pathex.Builder.Viewer do
     end
   end
 
-  def create_getter({:list, index}, tail) when is_var(index) do
+  def create_viewer({:list, index}, tail) when is_var(index) do
     quote do
       list when is_list(list) and is_integer(unquote(index)) ->
         case Enum.at(list, unquote(index), :__pathex_var_not_found__) do
@@ -97,13 +102,18 @@ defmodule Pathex.Builder.Viewer do
     end
   end
 
-  def create_getter({:tuple, index}, tail) when is_var(index) do
+  def create_viewer({:tuple, index}, tail) when is_var(index) do
     quote do
-      tuple
-      when is_tuple(tuple) and is_integer(unquote(index)) and
+      tuple when is_tuple(tuple) and is_integer(unquote(index)) and
              unquote(index) >= 0 and
              tuple_size(tuple) > unquote(index) ->
         elem(tuple, unquote(index)) |> unquote(tail)
+
+      tuple when is_tuple(tuple) and is_integer(unquote(index)) and
+             unquote(index) < 0 and
+             tuple_size(tuple) >= -unquote(index) ->
+        index = tuple_size(tuple) + unquote(index) + 1
+        :erlang.element(index, tuple) |> unquote(tail)
     end
   end
 

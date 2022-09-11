@@ -18,19 +18,26 @@ defmodule Pathex.Common do
   Creates clause which matches `index`-th element in list
   with `inner` variable
   """
-  @spec list_match(non_neg_integer(), Macro.t()) :: Macro.t()
+  @spec list_match(integer(), Macro.t()) :: Macro.t()
   def list_match(index, inner \\ {:x, [], Elixir})
 
   def list_match(0, inner) do
     quote(do: [unquote(inner) | _])
   end
 
-  def list_match(index, inner) do
-    underscores = Enum.map(1..index, fn _ -> {:_, [], Elixir} end)
+  def list_match(index, inner) when index > 0 do
+    underscores = List.duplicate({:_, [], Elixir}, index)
 
     quote generated: true do
       [unquote_splicing(underscores), unquote(inner) | _]
     end
+  end
+
+  def list_match(index, inner) when index < 0 do
+    index = abs(index) - 1
+    underscores = List.duplicate({:_, [], Elixir}, index)
+
+    List.update_at([inner] ++ underscores, -1, fn x -> quote(do: unquote(x) | _) end)
   end
 
   @doc """

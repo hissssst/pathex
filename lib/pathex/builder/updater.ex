@@ -9,8 +9,8 @@ defmodule Pathex.Builder.Setter do
   # Helpers
 
   # Non variable
-  @spec create_setter(Combination.pair(), Macro.t()) :: Macro.t()
-  def create_setter({:map, key}, tail) do
+  @spec create_updater(Combination.pair(), Macro.t()) :: Macro.t()
+  def create_updater({:map, key}, tail) do
     pinned = pin(key)
 
     quote do
@@ -19,7 +19,7 @@ defmodule Pathex.Builder.Setter do
     end
   end
 
-  def create_setter({:list, index}, tail) when is_integer(index) do
+  def create_updater({:list, index}, tail) when is_integer(index) do
     x = {:x, [], Elixir}
     match = list_match(index, x)
 
@@ -29,21 +29,32 @@ defmodule Pathex.Builder.Setter do
     end
   end
 
-  def create_setter({:tuple, index}, tail) when is_integer(index) do
-    indexplusone = index + 1
-
+  def create_updater({:tuple, index}, tail) when is_integer(index) and index >= 0 do
     quote do
       t when is_tuple(t) and tuple_size(t) > unquote(index) ->
         val =
-          unquote(indexplusone)
+          unquote(index + 1)
           |> :erlang.element(t)
           |> unquote(tail)
 
-        :erlang.setelement(unquote(indexplusone), t, val)
+        :erlang.setelement(unquote(index + 1), t, val)
     end
   end
 
-  def create_setter({:keyword, key}, tail) when is_atom(key) do
+  def create_updater({:tuple, index}, tail) when is_integer(index) and index < 0 do
+    quote do
+      t when is_tuple(t) and tuple_size(t) >= unquote(-index) ->
+        index = tuple_size(t) + unquote(index + 1)
+        val =
+          index
+          |> :erlang.element(t)
+          |> unquote(tail)
+
+        :erlang.setelement(index, t, val)
+    end
+  end
+
+  def create_updater({:keyword, key}, tail) when is_atom(key) do
     quote do
       [{a, _} | _] = keyword when is_atom(a) ->
         unquote(__MODULE__).keyword_update(keyword, unquote(key), fn x ->
@@ -54,10 +65,17 @@ defmodule Pathex.Builder.Setter do
 
   # Variable
 
-  def create_setter({:list, index}, tail) when is_var(index) do
+  def create_updater({:list, index}, tail) when is_var(index) do
     quote do
-      list when is_list(list) and is_integer(unquote(index)) ->
-        if abs(unquote(index)) > length(list) do
+      list when is_list(list) and is_integer(unquote(index)) and unquote(index) >= 0 ->
+        if unquote(index) >= length(list) do
+          throw(:path_not_found)
+        else
+          List.update_at(list, unquote(index), fn x -> x |> unquote(tail) end)
+        end
+
+      list when is_list(list) and is_integer(unquote(index)) and unquote(index) < 0 ->
+        if -unquote(index) > length(list) do
           throw(:path_not_found)
         else
           List.update_at(list, unquote(index), fn x -> x |> unquote(tail) end)
@@ -65,7 +83,7 @@ defmodule Pathex.Builder.Setter do
     end
   end
 
-  def create_setter({:tuple, index}, tail) when is_var(index) do
+  def create_updater({:tuple, index}, tail) when is_var(index) do
     quote do
       tuple
       when is_tuple(tuple) and is_integer(unquote(index)) and
@@ -79,10 +97,17 @@ defmodule Pathex.Builder.Setter do
           |> unquote(tail)
 
         :erlang.setelement(indexplusone, tuple, val)
+
+      tuple when is_tuple(tuple) and is_integer(unquote(index)) and
+             (unquote(index) < 0) and
+             (tuple_size(tuple) >= -unquote(index)) ->
+        index = tuple_size(tuple) + unquote(index) + 1
+        val = :erlang.element(index, tuple) |> unquote(tail)
+        :erlang.setelement(index, tuple, val)
     end
   end
 
-  def create_setter({:keyword, key}, tail) when is_var(key) do
+  def create_updater({:keyword, key}, tail) when is_var(key) do
     quote do
       keyword when is_list(keyword) and is_atom(unquote(key)) ->
         unquote(__MODULE__).keyword_update(keyword, unquote(key), fn x ->

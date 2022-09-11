@@ -10,7 +10,7 @@ defmodule Pathex.Lenses.Filtering do
         if(predicate.(structure), do: func.(structure), else: :error)
 
       :force_update, {structure, func, default} ->
-        if(predicate.(structure), do: func.(structure), else: default)
+        if(predicate.(structure), do: func.(structure), else: {:ok, default})
 
       :inspect, _ ->
         {:filtering, [], [inspect predicate]}

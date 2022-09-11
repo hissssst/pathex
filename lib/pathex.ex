@@ -185,6 +185,21 @@ defmodule Pathex do
   Example:
       iex> p = path "hey" / "you"
       iex> :error = force_set %{"hey" => {1, 2}}, p, "value"
+
+  Note that for paths created with `Pathex.path/2` list and tuple indexes
+  which are out of bounds fill the empty space with `nil`.
+
+  Example:
+      iex> p = path 4
+      iex> {:ok, [1, 2, 3, nil, 5]} = force_set [1, 2, 3], p, 5
+      iex> {:ok, {1, 2, 3, nil, 5}} = force_set {1, 2, 3}, p, 5
+
+  This is also true for negative indexes (except -1 for lists which always prepends)
+
+  Example:
+      iex> p = path -5
+      iex> {:ok, [0, nil, 1, 2, 3]} = force_set [1, 2, 3], p, 0
+      iex> {:ok, {0, nil, 1, 2, 3}} = force_set {1, 2, 3}, p, 0
   """
   @doc export: true
   defmacro force_set(struct, path, value) do
@@ -214,6 +229,21 @@ defmodule Pathex do
       iex> p = path "hey" / "you"
       iex> force_set! %{"hey" => {1, 2}}, p, "value"
       ** (Pathex.Error) Type mismatch in structure
+
+  Note that for paths created with `Pathex.path/2` list and tuple indexes
+  which are out of bounds fill the empty space with `nil`.
+
+  Example:
+      iex> p = path 4
+      iex> [1, 2, 3, nil, 5] = force_set! [1, 2, 3], p, 5
+      iex> {1, 2, 3, nil, 5} = force_set! {1, 2, 3}, p, 5
+
+  This is also true for negative indexes (except -1 for lists which always prepends)
+
+  Example:
+      iex> p = path -5
+      iex> [0, nil, 1, 2, 3] = force_set! [1, 2, 3], p, 0
+      iex> {0, nil, 1, 2, 3} = force_set! {1, 2, 3}, p, 0
   """
   @doc export: true
   defmacro force_set!(struct, path, value) do
@@ -423,6 +453,7 @@ defmodule Pathex do
   > Note:
   >
   > Current implementation of this function performs double lookup.
+  > Which is still more efficient than `pop_in`
 
   Example:
       iex> {:ok, {1, [2, 3]}} = pop([1, 2, 3], path(0))
@@ -447,6 +478,7 @@ defmodule Pathex do
   > Note:
   >
   > Current implementation of this function performs double lookup.
+  > Which is still more efficient than `pop_in`
 
   Example:
       iex> {1, [2, 3]} = pop!([1, 2, 3], path(0))
@@ -472,28 +504,31 @@ defmodule Pathex do
   end
 
   @doc """
-  Creates path from `quoted` ast. Paths look like unix fs path and consist of
-  elements separated from each other with `/`. See 
+  Creates path from `quoted` ast. Paths look like unix filesystems paths and consist of
+  elements separated from each other with `/`. Each element defines the key or index
+  in the collection.
 
-  For example:
+  Example:
       iex> x = 1
       iex> mypath = path 1 / :atom / "string" / {"tuple?"} / x
       iex> structure = [0, [atom: %{"string" => %{{"tuple?"} => %{1 => 2}}}]]
       iex> {:ok, 2} = view structure, mypath
 
-  Default [modifier](modifiers.md) of this `path/2` is `:naive` which means that
-  * Every variable is treated as index or key to tuple, list, map and keyword
-  * Every atom is treated as key to map or keyword
-  * Every integer is treated as index to tuple, list or key to map
-  * Every other data type is treated as key to map
+  Paths can be used with one of the verbs in `Pathex` module (for example, `Pathex.view/2`).
+  Paths can be customized with [modifiers](modifiers.md), composed using one of
+  composition operators (`Pathex.concat/2`, `Pathex.~>/2`, `Pathex.|||/2`, `Pathex.&&&/2` or
+  `Pathex.alongside/1`).
 
   > Note:  
-  > `-1` allows data to be prepended to the list
-      iex> x = -1
-      iex> p1 = path(-1)
-      iex> p2 = path(x)
-      iex> {:ok, [1, 2]} = force_set([2], p1, 1)
-      iex> {:ok, [1, 2]} = force_set([2], p2, 1)
+  > Each element in path can have collection type annotated using `::` operator. Available collection
+  > types are `:list`, `:keyword`, `:tuple` and `:map`. Multiple collections can be annotated using list
+  > It must comply with the limits set with [modifier](modifiers.md).
+
+  Example:
+      iex> p = path( (0 :: [:list, :map]) / (:x :: :keyword) )
+      iex> {:ok, :hit} = view %{0 => [x: :hit]}, p
+      iex> {:ok, :hit} = view [[x: :hit]], p
+      iex> :error = view [%{x: :hit}], p
   """
   @doc export: true
   defmacro path(quoted, mod \\ nil) do
@@ -626,15 +661,16 @@ defmodule Pathex do
   These requirements must be satisfied in order for this macro to work correctly:
   1. Path must be inlined into this macro. This means that path must be defined
   in a argument of this macro
-  2. Path must consist only of list with constants or map variable or constant items
+  2. Defined paths must contain constants only
   3. Path must result only in case with one clause
 
-  Example
+  Example:
       iex> import Pathex
       iex> structure = %{users: %{1 => %{fname: "Jose", lname: "Valim"}}}
       iex> case structure do
       ...>   pattern(fname, path(:users / 1 / :fname, :map)) ->
       ...>     {:ok, fname}
+      ...>
       ...>   _ ->
       ...>     :error
       ...> end
@@ -644,13 +680,13 @@ defmodule Pathex do
   defmacro pattern(variable \\ {:_, [], Elixir}, path) do
     {:ok, path, mod} =
       with :error <- destruct_inlined(path, __CALLER__) do
-        raise CompileError, description: "Can't have uninlined paths"
+        raise CompileError, description: "You can't have uninlined paths"
       end
 
     mod = get_mod(mod, __CALLER__)
 
     if not Macro.Env.in_match?(__CALLER__) do
-      raise CompileError, description: "Can't create pattern outside of pattern"
+      raise CompileError, description: "You can't use this macro outside of pattern"
     end
 
     with(
@@ -660,6 +696,9 @@ defmodule Pathex do
     ) do
       match
     else
+      paths when is_list(paths) ->
+        raise CompileError, description: "Unfortunately, this path defines more than one pattern"
+
       {:error, _} ->
         raise CompileError, description: "Can't generate matching from this combination"
 
@@ -705,6 +744,7 @@ defmodule Pathex do
         end
         |> Common.set_generated()
     end
+    # |> tap(fn x -> IO.puts Macro.to_string x end)
   end
 
   defp wrap_ok(func) do
@@ -735,14 +775,14 @@ defmodule Pathex do
   defp get_mod(nil, %Macro.Env{module: module}) do
     Module.get_attribute(module, :pathex_default_mod) || :naive
   rescue
-    e in ArgumentError ->
+    error in ArgumentError ->
       IO.warn """
       You've attemted to compile the path within the enviroment which
       is different from the original env. Therefore, Pathex was unable
       to get the default modifier (which is bound to the env), so
       `:naive` will be used
 
-      Original error: #{Kernel.inspect e, pretty: true}
+      Original error: #{Exception.message error}
       """
       :naive
   end

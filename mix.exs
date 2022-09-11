@@ -1,7 +1,7 @@
 defmodule Pathex.MixProject do
   use Mix.Project
 
-  @version "2.3.0"
+  @version "2.4.0"
 
   def project do
     [
@@ -24,7 +24,7 @@ defmodule Pathex.MixProject do
   def application, do: []
 
   def description do
-    "Code generation library for functional lenses"
+    "Functional lenses for nested structures"
   end
 
   defp package do
@@ -51,11 +51,10 @@ defmodule Pathex.MixProject do
     [
       # # Uncomment for development
       # {:dialyxir, "~> 1.0", only: :dev, runtime: false},
-      # {:gradient, github: "esl/gradient", only: [:dev], runtime: false},
+      # {:gradient, github: "esl/gradient", only: :dev, runtime: false},
       # {:mix_unused, "~> 0.3", only: :dev, runtime: false},
-
-      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
-      {:credo, "~> 1.5", only: :dev, runtime: false}
+      # {:ex_doc, "~> 0.28", only: :dev, runtime: false},
+      # {:credo, "~> 1.5", only: :dev, runtime: false}
     ]
   end
 

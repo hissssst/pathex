@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.4
+
+Negative indexes, lens fixes, force_update nil filling and refactoring
+
+**Breaking**
+
+* matching force_update fix. Now it doesn't raise an error when called
+* filtering force_update fix. Now it doesn't raise an error when called
+* Tuple force_update fix. Now it works with indexes and for `force_set {}, path(2), 1` it will create `{nil, nil, 1}`.
+* List force_update fix. Now it works with indexes and for `force_set [], path(2), 1` it will create `[nil, nil, 1]`.
+
+**Non-breaking**
+
+* Tuple negative index is now supported for all operations
+* List negative indexes now work the same way as positive indexes (but backwards), except `-1` which still prepends to the list.
+
 ## 2.3
 
 **Breaking**

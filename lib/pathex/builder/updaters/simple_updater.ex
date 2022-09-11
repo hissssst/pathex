@@ -18,7 +18,7 @@ defmodule Pathex.Builder.SimpleUpdater do
   end
 
   defp reduce_into(path_items, acc) do
-    setters = Enum.flat_map(path_items, &Setter.create_setter(&1, acc))
+    setters = Enum.flat_map(path_items, &Setter.create_updater(&1, acc))
     Common.to_case(setters ++ Setter.fallback())
   end
 

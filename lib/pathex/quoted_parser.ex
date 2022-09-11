@@ -60,12 +60,8 @@ defmodule Pathex.QuotedParser do
     {nil, [map: key, keyword: key]}
   end
 
-  defp detect_quoted(key) when is_integer(key) and key >= 0 do
+  defp detect_quoted(key) when is_integer(key) do
     {nil, [map: key, list: key, tuple: key]}
-  end
-
-  defp detect_quoted(key) when is_integer(key) and key < 0 do
-    {nil, [map: key, list: key]}
   end
 
   defp detect_quoted(other) do

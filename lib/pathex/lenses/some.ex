@@ -87,6 +87,9 @@ defmodule Pathex.Lenses.Some do
             {:ok, Keyword.put(kwd, a, default)}
         end
 
+      :force_update, {[], _func, default} ->
+        {:ok, [default]}
+
       :force_update, {list, func, default} when is_list(list) ->
         list
         |> Enum.reduce({:error, []}, fn
