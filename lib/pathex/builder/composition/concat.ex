@@ -46,7 +46,7 @@ defmodule Pathex.Builder.Composition.Concat do
 
   defp do_build_delete([head | tail], arg, func) do
     inner_arg = {:x, [], Elixir}
-    inner = do_build_update(tail, inner_arg, func)
+    inner = do_build_delete(tail, inner_arg, func)
 
     quote do
       unquote(head).(
