@@ -1,7 +1,7 @@
 defmodule Pathex.MixProject do
   use Mix.Project
 
-  @version "2.4.1"
+  @version "2.4.2"
 
   def project do
     [
@@ -53,7 +53,7 @@ defmodule Pathex.MixProject do
       # {:dialyxir, "~> 1.0", only: :dev, runtime: false},
       # {:gradient, github: "esl/gradient", only: :dev, runtime: false},
       # {:mix_unused, "~> 0.3", only: :dev, runtime: false},
-      # {:credo, "~> 1.5", only: :dev, runtime: false}
+      # {:credo, "~> 1.5", only: :dev, runtime: false},
 
       {:ex_doc, "~> 0.28", only: :dev, runtime: false},
     ]
