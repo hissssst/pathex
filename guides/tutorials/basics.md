@@ -21,7 +21,7 @@ p = path :x / :y
 This path specifies a way to get (or set, or delete or whatever) value `1` from `%{x: %{y: 1}}`
 
 > Note:
-> You **don't** have to capture used variables
+> You **don't** have to pin variables used in paths
 >
 > ```elixir
 > x = 1
