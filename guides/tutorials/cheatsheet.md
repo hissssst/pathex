@@ -27,7 +27,7 @@ Note that `Pathex` is 2 to 4 times faster than `Access`
 | `get_in(s, [:x, :y, :z])`          | `Pathex.get(s, path(:x / :y / :z))`         |
 | `put_in(s, [:x, :y, :z], v)`       | `Pathex.set(s, path(:x / :y / :z), v)`      |
 
-Note that `Pathex` works with structures (i.e. `%User{}`) like maps and doesn't need any special behaviour implemented in the module. Plus `Pathex` also works with tuples and lists
+Note that `Pathex` works with structs (i.e. `%User{}`) as maps and doesn't need any special behaviour implemented in the module. Plus `Pathex` works with tuples and lists.
 
 This means that this code
 ```
@@ -56,7 +56,7 @@ Pathex.view(structure, path(:x / :y / :z / 10 / 1 / :z / :y / :x))
 
 ## Traverse leaves
 
-This function traverses all leaves in the structure
+This function traverses all leaves in the structure.
 
 ```elixir
 use Pathex; import Pathex.Combinator; import Pathex.Lenses
@@ -80,7 +80,7 @@ end
 ```
 
 You can change the `star()` lens to whatever lens you prefer.
-For example, for parsed HTML documents you can use `star() ~> path(2)` to
+For example, for parsing HTML documents you can use `star() ~> path(2)` to
 not traverse attributes. And if you want to find one leaf, you can use `some()`
 
 ## Walk structure
