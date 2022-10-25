@@ -4,12 +4,12 @@ This guide will show the basics of `Pathex`. This is the best place to start lea
 It won't take more than 5 minutes.
 
 As README says, Pathex is a library for working with collections and nested key-value structures.
-Pathex uses powerful functional abstraction called lens (in Pathex we call it path or path-closure, you'll later see why).
-Path is a basically a path to value in nested structure, almost like filesystem path.
+Pathex uses a powerful functional abstraction called a lens (in Pathex we call it path or path-closure, you'll later see why).
+Path is a basically a path to a value in a nested structure, almost like filesystem path.
 
 ## Create paths
 
-First of all, we need to know how to create paths. Path can be created with `Pathex.path/2` macro.
+First of all, we need to know how to create paths. A path can be created with the `Pathex.path/2` macro.
 
 For example:
 
@@ -29,7 +29,7 @@ This path specifies a way to get (or set, or delete or whatever) value `1` from 
 > path :some_atom / ^x # Wrong
 > ```
 
-Each type of value used in `path` corresponds to one or more types of Elixir collections
+Each type of value used in a `path` corresponds to one or more types of Elixir collections
 
 * Strings, tuples, maps, functions, lists are treated only as `Map` keys.
 * Atoms are treated as `Map` or `Keyword` keys.
@@ -54,23 +54,23 @@ iex> Pathex.view(%{usernames: ["SubZero", "Scorpion"]}, p)
 
 There are a lot of other ways to use paths. Every macro with human-readable name
 (except `path`) is a macro for using path in some way, check `Pathex` documentation.
-In all such macros first argument is an input structure and the second argument is a path-closure itself
+In all such macros, the first argument is an input structure and the second argument is a path-closure.
 
 > Note:
-> Path-closure which are created inside path-using macro are optimised to have
+> Path-closure which are created inside path-using macros are optimised to have
 > only one operation generated (instead of default three).
 > You can read more about path-closures and operations [here](path.md)
 
 As usual
 
-* Macro without `!` always return `{:ok, result}` or `:error`
-* Macro with `!` return `result` or raise `Pathex.Error`
+* Macros without `!` always return `{:ok, result}` or `:error`
+* Macros with `!` return `result` or raise `Pathex.Error`
 
 ## Compose paths
 
 Path-closures can be composed together to create new path-closure,
-every path comosition macro is a binary operator. Some compositions
-are optimized to have generate one closure even if multiple closures
+every path composition macro is a binary operator. Some compositions
+are optimized to generate one closure even if multiple closures
 are used.
 
 You can concat paths with `Pathex.~>/2` composition macro
@@ -82,7 +82,7 @@ iex> composed_path = p1 ~> p2
 iex> 1 = Pathex.view(%{x: [y: 1]}, composed_path)
 ```
 
-> Think about paths composition just like paths concatenation in shell  
+> Think about path composition just like path concatenation in shell  
 > For example  
 >
 > ```elixir
@@ -93,7 +93,7 @@ iex> 1 = Pathex.view(%{x: [y: 1]}, composed_path)
 
 ## Prebuilt paths
 
-`Pathex` provides some prebuilt paths for non-standart data manipulation. You
+`Pathex` provides some prebuilt paths for non-standard data manipulation. You
 can find them in `Pathex.Lenses` module. You can read more about them in
 [lenses guide](lenses.md)
 
@@ -111,8 +111,8 @@ path(1 / :x / :y, :json)
 path(1 / :x / :y)
 ```
 
-Because `:json` mod optimizes closure to one big case,
-while default `:naive` mod generates nested cases
+Because `:json` mod optimizes the closure to one big case,
+while the default `:naive` mod generates nested cases.
 
 And, in this example:
 
@@ -122,9 +122,9 @@ path(1 / :x / :y)
 x = :x; path(1 / x / :y)
 ```
 
-Because constants provide more information about available type.
-This means that for `:x` pathex know that this can be a to `Keyword` or `Map`,
-while `x` means that this is a variable which can contain `List`/`Tuple` index or `Map`/`Keyword` value
+Because constants provide more information about available types.
+This means that for `:x` Pathex knows that this can be a `Keyword` or `Map`,
+while `x` means that this is a variable which could contain a `List`/`Tuple` index or a `Map`/`Keyword` value
 
 And, in this example:
 
@@ -134,5 +134,5 @@ path(1 / x / :y)
 path(1) ~> path(x) ~> path(:y)
 ```
 
-Because paths concatenation actually creates a path which calls all operands internally
-which increases the call stack and makes concatenated path handle errors by hand
+Because path concatenation actually creates a path that calls all operands internally
+which increases the call stack and makes concatenated paths handle errors manually.
