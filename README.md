@@ -105,9 +105,9 @@ end
 
 ### Reusable
 
-One path can be used to update, get, set, delete a value in the structure!
-And paths can be composed together.
-This composition is very efficient, there's no need to concat lists like `Access` does.
+One path can be used to update, get, set, delete or update a value in the structure!
+And these paths can even be composed together.
+This composition is very efficient, there's no need to concatenate lists like `Access` does.
 
 ```elixir
 # User structure
@@ -139,7 +139,7 @@ import Pathex.Lenses
   |> Pathex.view!(all() ~> username)
 ```
 
-Pathex can be used to manipulate different nested data structure. From `GenServer` state to HTML or Elixir's AST!
+Pathex can be used to manipulate different nested data structures. From `GenServer` state to HTML or Elixir's AST!
 
 ### Extensible
 
