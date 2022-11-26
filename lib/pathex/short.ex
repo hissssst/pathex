@@ -31,7 +31,8 @@ defmodule Pathex.Short do
   or only in bounded context (for example, you can `use Pathex.Short` only
   inside functions)
 
-  Example:
+  ## Example
+
       iex> use Pathex.Short
       iex> path = :x / :y
       iex> 1 = Pathex.view!(%{x: %{y: 1}}, path)

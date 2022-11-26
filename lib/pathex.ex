@@ -1,6 +1,8 @@
 defmodule Pathex do
   @moduledoc """
-  This module contains functions and macros to be used with `Pathex` and i
+  This module contains main functions and macros used to create, use and manipulate paths.
+
+  ### Usage
 
   To use Pathex just insert to your context. You can import Pathex in module body or even in function body.
   ```elixir
@@ -8,7 +10,7 @@ defmodule Pathex do
   import Pathex, only: [path: 1, path: 2, "~>": 2, ...]
   ```
 
-  Or you can use `use`
+  Or you can just `use Pathex`.
   ```elixir
   defmodule MyModule do
 
@@ -21,10 +23,12 @@ defmodule Pathex do
   ```
   This will import all operatiors and `path` macro
 
+  ### Available macros
+
   Any macro here belongs to one of three categories:
   1. Macro which creates path closure (only `path/2`)
-  2. Macro which uses path closure as path (`over/3`, `set/3`, `view/2`, ...)
-  3. Macro which creates path composition (`~>/2`, `|||/2`, ...)
+  2. Macro which uses path closure to manipulate the value (like `over/3`, `set/3`, `view/2`, ...)
+  3. Macro which creates some path composition (like `alongside/1`, `~>/2`, `|||/2`, ...)
   """
 
   alias Pathex.Builder
@@ -103,7 +107,8 @@ defmodule Pathex do
   Applies `func` to the item under the `path` in `struct`
   and returns modified structure. Works like `Map.update!/3` but doesn't raise.
 
-  Example:
+  ## Example
+
       iex> index = 1
       iex> inc = fn x -> x + 1 end
       iex> {:ok, [0, %{x: 9}]} = over [0, %{x: 8}], path(index / :x), inc
@@ -124,7 +129,8 @@ defmodule Pathex do
   Applies the `func` to the item under `path` in `struct` and returns modified structure.
   Works like `Map.update!/3`.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> inc = fn x -> x + 1 end
       iex> [0, %{x: 9}] = over! [0, %{x: 8}], path(x / :x), inc
@@ -141,7 +147,8 @@ defmodule Pathex do
   @doc """
   Sets `value` under `path` in `structure`. Think of it like `Map.put/3`.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> {:ok, [0, %{x: 123}]} = set [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
@@ -155,7 +162,8 @@ defmodule Pathex do
   @doc """
   Sets the `value` under `path` in `struct`. Think of it like `Map.put/3`.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> [0, %{x: 123}] = set! [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
@@ -174,7 +182,8 @@ defmodule Pathex do
   If the path does not exist it creates the path favouring maps
   when structure is unknown.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> {:ok, [0, %{x: 123}]} = force_set [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
@@ -182,21 +191,24 @@ defmodule Pathex do
 
   If the item in path doesn't have the right type, it returns `:error`.
 
-  Example:
+  ## Example
+
       iex> p = path "hey" / "you"
       iex> :error = force_set %{"hey" => {1, 2}}, p, "value"
 
   Note that for paths created with `Pathex.path/2` list and tuple indexes
   which are out of bounds fill the empty space with `nil`.
 
-  Example:
+  ## Example
+
       iex> p = path 4
       iex> {:ok, [1, 2, 3, nil, 5]} = force_set [1, 2, 3], p, 5
       iex> {:ok, {1, 2, 3, nil, 5}} = force_set {1, 2, 3}, p, 5
 
   This is also true for negative indexes (except -1 for lists which always prepends)
 
-  Example:
+  ## Example
+
       iex> p = path -5
       iex> {:ok, [0, nil, 1, 2, 3]} = force_set [1, 2, 3], p, 0
       iex> {:ok, {0, nil, 1, 2, 3}} = force_set {1, 2, 3}, p, 0
@@ -217,7 +229,8 @@ defmodule Pathex do
   If the path does not exist it creates the path favouring maps
   when structure is unknown.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> [0, %{x: 123}] = force_set! [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
@@ -225,7 +238,8 @@ defmodule Pathex do
 
   If the item in path doesn't have the right type, it raises.
 
-  Example:
+  ## Example
+
       iex> p = path "hey" / "you"
       iex> force_set! %{"hey" => {1, 2}}, p, "value"
       ** (Pathex.Error) Type mismatch in structure
@@ -233,14 +247,16 @@ defmodule Pathex do
   Note that for paths created with `Pathex.path/2` list and tuple indexes
   which are out of bounds fill the empty space with `nil`.
 
-  Example:
+  ## Example
+
       iex> p = path 4
       iex> [1, 2, 3, nil, 5] = force_set! [1, 2, 3], p, 5
       iex> {1, 2, 3, nil, 5} = force_set! {1, 2, 3}, p, 5
 
   This is also true for negative indexes (except -1 for lists which always prepends)
 
-  Example:
+  ## Example
+
       iex> p = path -5
       iex> [0, nil, 1, 2, 3] = force_set! [1, 2, 3], p, 0
       iex> {0, nil, 1, 2, 3} = force_set! {1, 2, 3}, p, 0
@@ -262,7 +278,8 @@ defmodule Pathex do
   If the path does not exist it creates the path favouring maps
   when structure is unknown and inserts default value.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> {:ok, [0, %{x: {:xxx, 8}}]} = force_over([0, %{x: 8}], path(x / :x), & {:xxx, &1}, 123)
       iex> p = path "hey" / 0
@@ -270,7 +287,8 @@ defmodule Pathex do
 
   If the item in path doesn't have the right type, it returns `:error`.
 
-  Example:
+  ## Example
+
       iex> p = path "hey" / "you"
       iex> :error = force_over %{"hey" => {1, 2}}, p, fn x -> x end, "value"
   """
@@ -285,7 +303,8 @@ defmodule Pathex do
   If the path does not exist it creates the path favouring maps
   when structure is unknown and inserts default value.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> [0, %{x: {:xxx, 8}}] = force_over!([0, %{x: 8}], path(x / :x), & {:xxx, &1}, 123)
       iex> p = path "hey" / 0
@@ -293,7 +312,8 @@ defmodule Pathex do
 
   If the item in path doesn't have the right type, it raises.
 
-  Example:
+  ## Example
+
       iex> p = path "hey" / "you"
       iex> force_over! %{"hey" => {1, 2}}, p, fn x -> x end, "value"
       ** (Pathex.Error) Type mismatch in structure
@@ -308,7 +328,8 @@ defmodule Pathex do
   @doc """
   Applies `func` under `path` in `struct` and returns result of this `func`.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> {:ok, 9} = at [0, %{x: 8}], path(x / :x), fn x -> x + 1 end
       iex> p = path "hey" / 0
@@ -323,7 +344,8 @@ defmodule Pathex do
   Applies `func` under `path` in `struct` and returns result of this `func`.
   Raises if path is not found.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> 9 = at! [0, %{x: 8}], path(x / :x), fn x -> x + 1 end
       iex> p = path "hey" / 0
@@ -339,7 +361,8 @@ defmodule Pathex do
   @doc """
   Gets the value under `path` in `struct`.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> {:ok, 8} = view [0, %{x: 8}], path(x / :x)
       iex> p = path "hey" / 0
@@ -353,7 +376,8 @@ defmodule Pathex do
   @doc """
   Gets the value under `path` in `struct`. Raises if `path` not found.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> 8 = view! [0, %{x: 8}], path(x / :x)
       iex> p = path "hey" / 0
@@ -369,7 +393,8 @@ defmodule Pathex do
   @doc """
   Gets the value under `path` in `struct` or returns `default` when `path` is not present.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> 8 = get([0, %{x: 8}], path(x / :x))
       iex> p = path "hey" / "you"
@@ -392,7 +417,8 @@ defmodule Pathex do
   @doc """
   Gets the value under `path` in `struct` or returns default value if not found.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> true = exists?([0, %{x: 8}], path(x / :x))
       iex> p = path "hey" / "you"
@@ -413,7 +439,8 @@ defmodule Pathex do
   @doc """
   Deletes value under `path` in `struct`.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> {:ok, [0, %{}]} = delete([0, %{x: 8}], path(x / :x))
       iex> :error = delete([0, %{x: 8}], path(1 / :y))
@@ -428,7 +455,8 @@ defmodule Pathex do
   @doc """
   Deletes value under `path` in `struct` or raises if value is not found.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> [0, %{}] = delete!([0, %{x: 8}], path(x / :x))
   """
@@ -455,7 +483,8 @@ defmodule Pathex do
   > Current implementation of this function performs double lookup.
   > Which is still more efficient than `pop_in`
 
-  Example:
+  ## Example
+
       iex> {:ok, {1, [2, 3]}} = pop([1, 2, 3], path(0))
   """
   @doc export: true
@@ -480,7 +509,8 @@ defmodule Pathex do
   > Current implementation of this function performs double lookup.
   > Which is still more efficient than `pop_in`
 
-  Example:
+  ## Example
+
       iex> {1, [2, 3]} = pop!([1, 2, 3], path(0))
   """
   @doc export: true
@@ -508,7 +538,8 @@ defmodule Pathex do
   elements separated from each other with `/`. Each element defines the key or index
   in the collection.
 
-  Example:
+  ## Example
+
       iex> x = 1
       iex> mypath = path 1 / :atom / "string" / {"tuple?"} / x
       iex> structure = [0, [atom: %{"string" => %{{"tuple?"} => %{1 => 2}}}]]
@@ -519,12 +550,13 @@ defmodule Pathex do
   composition operators (`Pathex.concat/2`, `Pathex.~>/2`, `Pathex.|||/2`, `Pathex.&&&/2` or
   `Pathex.alongside/1`).
 
-  > Note:  
+  > Note:
   > Each element in path can have collection type annotated using `::` operator. Available collection
   > types are `:list`, `:keyword`, `:tuple` and `:map`. Multiple collections can be annotated using list
   > It must comply with the limits set with [modifier](modifiers.md).
 
-  Example:
+  ## Example
+
       iex> p = path( (0 :: [:list, :map]) / (:x :: :keyword) )
       iex> {:ok, :hit} = view %{0 => [x: :hit]}, p
       iex> {:ok, :hit} = view [[x: :hit]], p
@@ -543,11 +575,12 @@ defmodule Pathex do
   end
 
   @doc """
-  Creates composition of two paths similar to concatenating them together.  
+  Creates composition of two paths similar to concatenating them together.
   This means that `a ~> b` path-closure applies `a` and only if it returns `{:ok, something}`
   it applies `b` to `something`
 
-  Example:
+  ## Example
+
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> composed_path = p1 ~> p2
@@ -559,7 +592,8 @@ defmodule Pathex do
   @doc """
   The same as `Pathex.~>/2` for those who do not like operators
 
-  Example:
+  ## Example
+
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> composed_path = concat(p1, p2)
@@ -576,11 +610,12 @@ defmodule Pathex do
   end
 
   @doc """
-  Creates composition of two paths which has some inspiration from logical `and`.  
+  Creates composition of two paths which has some inspiration from logical `and`.
   This means that `a &&& b` path-closure tries to apply `a` and only if it returns `{:ok, something}`, tries
   apply `b` and if `b` returns **exactly the same** as `a` does, the `a &&& b` returns `{:ok, something}`
 
-  Example:
+  ## Example
+
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> ap = p1 &&& p2
@@ -598,11 +633,12 @@ defmodule Pathex do
   end
 
   @doc """
-  Creates composition of two paths which has some inspiration from logical `or`.  
+  Creates composition of two paths which has some inspiration from logical `or`.
   This means that `a ||| b` path-closure tries to apply `a` and only if it returns `:error`, tries
   apply `b`
 
-  Example:
+  ## Example
+
       iex> p1 = path :x / :y
       iex> p2 = path :a / :b
       iex> op = p1 ||| p2
@@ -626,7 +662,8 @@ defmodule Pathex do
   Think of `alongside([path1, path2, path3])` as `path1 &&& path2 &&& path3`
   The only difference is that for viewing alongside returns list of variables
 
-  Example:
+  ## Example
+
       iex> pa = alongside [path(:x), path(:y)]
       iex> {:ok, [1, 2]} = view(%{x: 1, y: 2}, pa)
       iex> {:ok, %{x: 3, y: 3}} = set(%{x: 1, y: 2}, pa, 3)
@@ -643,7 +680,8 @@ defmodule Pathex do
   @doc """
   Inspect the given path-closure and returns string which corresponds to given path-closure
 
-  Example:
+  ## Example
+
       iex> index = 1
       iex> p = path(:x) ~> path(:y / index) &&& path(-1)
       iex> Pathex.inspect(p)
@@ -664,7 +702,8 @@ defmodule Pathex do
   2. Defined paths must contain constants only
   3. Path must result only in case with one clause
 
-  Example:
+  ## Example
+
       iex> import Pathex
       iex> structure = %{users: %{1 => %{fname: "Jose", lname: "Valim"}}}
       iex> case structure do

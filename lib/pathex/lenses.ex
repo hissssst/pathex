@@ -9,7 +9,8 @@ defmodule Pathex.Lenses do
   Path function which works with **any** possible key it can find
   It takes any key **and than** applies inner function (or concated path)
 
-  Example:
+  ## Example
+
       iex> require Pathex
       iex> anyl = Pathex.Lenses.any()
       iex> {:ok, 1} = Pathex.view %{x: 1}, anyl
@@ -39,7 +40,8 @@ defmodule Pathex.Lenses do
   It takes all keys **and than** applies inner function (or concated path)
   If any application fails, this lens returns `:error`
 
-  Example:
+  ## Example
+
       iex> require Pathex; import Pathex
       iex> alll = Pathex.Lenses.all()
       iex> Pathex.over!([%{x: 0}, [x: 1]], alll ~> path(:x), fn x -> x + 1 end)
@@ -57,7 +59,8 @@ defmodule Pathex.Lenses do
   Path function which applies inner function (or concated path-closure)
   to every value it can apply it to
 
-  Example:
+  ## Example
+
       iex> require Pathex; import Pathex
       iex> starl = Pathex.Lenses.star()
       iex> Pathex.view!(%{x: [1], y: [2], z: 3}, starl ~> path(0)) |> Enum.sort()
@@ -73,7 +76,8 @@ defmodule Pathex.Lenses do
   Think of this function as `filter_map`. It is particularly useful for filtering  
   and selecting needed values with custom functions or `matching/1` macro
 
-  Example:
+  ## Example
+
       iex> require Pathex; import Pathex; require Pathex.Lenses
       iex> starl = Pathex.Lenses.star()
       iex> structure = [{1, 4}, {2, 8}, {3, 6}, {4, 10}]
@@ -92,7 +96,8 @@ defmodule Pathex.Lenses do
   Path function which applies inner function (or concated path-closure)
   to the first value it can apply it to
 
-  Example:
+  ## Example
+
       iex> require Pathex; import Pathex
       iex> somel = Pathex.Lenses.some()
       iex> Pathex.view!([x: [11], y: [22], z: 33], somel ~> path(0))
@@ -121,7 +126,8 @@ defmodule Pathex.Lenses do
   > Note:  
   > In terms of functional programming, such conditional lenses are called prisms
 
-  Example:
+  ## Example
+
       iex> import Pathex.Lenses; import Pathex
       iex> adminl = matching(%{role: :admin})
       iex> {:ok, %{name: "Name", role: :admin}} = Pathex.view(%{name: "Name", role: :admin}, adminl)
@@ -147,7 +153,8 @@ defmodule Pathex.Lenses do
   > Note:  
   > In terms of functional programming, such conditional lenses are called prisms
 
-  Example:
+  ## Example
+
       iex> import Pathex.Lenses; import Pathex
       iex> adminl = filtering(& &1.role == :admin)
       iex> {:ok, %{name: "Name", role: :admin}} = Pathex.view(%{name: "Name", role: :admin}, adminl)

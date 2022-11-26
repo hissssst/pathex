@@ -27,7 +27,8 @@ defmodule Pathex.Accessibility do
   @doc """
   Converts path-closure to `Access.t()`
 
-  Example:
+  ## Example
+
       iex> import Pathex
       iex> access = to_access path(:x / 0, :map)
       iex> 1 = get_in(%{x: %{0 => 1}}, access)
@@ -71,7 +72,8 @@ defmodule Pathex.Accessibility do
   > Note:
   > Paths created using this function do not support force operations yet
 
-  Example:
+  ## Example
+
       iex> import Pathex
       iex> p = from_access [:x, :y]
       iex> 10 = view!(%{x: [y: 10]}, p)
@@ -132,7 +134,8 @@ defmodule Pathex.Accessibility do
   at runtime, therefore some optimizations of paths are not possible. Use this
   function only when `Pathex.path/2` is not applicable
 
-  Example:
+  ## Example
+
       iex> import Pathex
       iex> p = from_list [:x, 1, :y]
       iex> 10 = view!(%{x: [1, [y: 10]]}, p)

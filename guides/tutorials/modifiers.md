@@ -5,6 +5,11 @@ Modifier defines behaviour of the path in a way of structures it can match insid
 For example, path created with `:map` modifier can only match maps inside them.
 Modifiers can be specified only in form of an atom, variables are not accepted.
 
+## When? How? & Why?
+
+You should use modifiers when you need to specify type of inner structures to match
+or reduce amount of generated code by `Pathex` or improve performance of the path
+
 ## Usage
 
 Currently only three modifiers are available:
@@ -27,7 +32,9 @@ path 0 / :x, :json
 This modifier matches lists, tuples, keyword and maps
 It generates matches for every structure like
 
-For example `path(:x, :naive)` generates something like
+### For example:
+
+`path(:x, :naive)` generates something like
 
 ```elixir
 case input do
@@ -39,9 +46,6 @@ case input do
      end
 end
 ```
-
-> Note:
-> Variables are treated as their values
 
 ## Json modifier
 
@@ -60,7 +64,9 @@ This modifier specifies paths which macth lists (for integer keys only) and maps
 But passed integers are exanded into list matching
 this makes it very efficient to view data from the structure
 
-For example `path 1 / :x, :json` generates closure with
+### For example:
+
+`path 1 / :x, :json` generates closure with
 
 ```elixir
 case input do
@@ -81,7 +87,9 @@ Which extracts maximum efficiency from BEAM's pattern-matching
 
 This modifier matches only maps and therefore is the fastest modifier available
 
-For example `path 1 / :x / "y", :map` will generate closure with
+### For example:
+
+`path 1 / :x / "y", :map` will generate closure with
 
 ```elixir
 case input do
@@ -97,7 +105,10 @@ end
 
 Usually a key passed to `path` can match to one or more types. For example, key `:x` can be a key in `Map` like `%{x: 1}` and a key in `Keyword` like `[x: 1]`. To make key match only certain type it can be annotated to the exact type using this syntax `path(:x :: :map)`. Available annotations are `:map`, `:keyword`, `:list` and `:tuple`.
 
-## When? How? & Why?
+### For example:
 
-You should use modifiers when you need to specify type of inner structures to match
-or reduce amount of generated code by `Pathex` or improve performance of the path
+```elixir
+first_in_tuple = path(1 :: :tuple)
+:error   = Pathex.view([0, 1, 2, 3], first_in_tuple)
+{:ok, 0} = Pathex.view({0, 1, 2, 3}, first_in_tuple)
+```

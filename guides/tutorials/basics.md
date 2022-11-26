@@ -1,17 +1,18 @@
 # Basics
 
 This guide will show the basics of `Pathex`. This is the best place to start learning `Pathex`.
-It won't take more than 5 minutes.
+It won't take more than 5 minutes to read.
 
-As README says, Pathex is a library for working with collections and nested key-value structures.
-Pathex uses a powerful functional abstraction called a lens (in Pathex we call it path or path-closure, you'll later see why).
+As [README](README.md) says, Pathex is a library for working with collections and nested key-value structures.
+Pathex uses a powerful functional abstraction called a __lens__ (in Pathex we call it __path__ or __path-closure__, you'll later see why).
 Path is a basically a path to a value in a nested structure, almost like filesystem path.
+With this path you can __use__ some verbs to get, set, delete or update the value in the structure.
 
 ## Create paths
 
-First of all, we need to know how to create paths. A path can be created with the `Pathex.path/2` macro.
+First of all, we need to know how to create paths. A simple path can be created with the `Pathex.path/2` macro.
 
-For example:
+### For example:
 
 ```elixir
 p = path :x / :y
@@ -42,18 +43,26 @@ Each type of value used in a `path` corresponds to one or more types of Elixir c
 
 ## Use paths
 
-Alright, we have a path. Now, we need to know how to use it
+Alright, we have a path. Now, we need to know how to use it.
+
+### For example:
 
 Let's take a value from nested structure
 
 ```elixir
-iex> p = path :usernames / 0
-iex> Pathex.view(%{usernames: ["SubZero", "Scorpion"]}, p)
+iex> first_username = path :usernames / 0
+iex> Pathex.view(%{usernames: ["SubZero", "Scorpion"]}, first_username)
 {:ok, "SubZero"}
 ```
 
-There are a lot of other ways to use paths. Every macro with human-readable name
-(except `path`) is a macro for using path in some way, check `Pathex` documentation.
+Or let's change the value
+```elixir
+iex> Pathex.set(%{usernames: ["SubZero", "Scorpion"]}, first_username, "Shao Khan")
+{:ok, %{usernames: ["Shao Khan", "Scorpion"]}}
+```
+
+As you can see, every macro with the verbal name in `Pathex` module is a macro for using the path.
+There are a lot of other ways to use paths.
 In all such macros, the first argument is an input structure and the second argument is a path-closure.
 
 > Note:
@@ -75,15 +84,18 @@ are used.
 
 You can concat paths with `Pathex.~>/2` composition macro
 
+### For example:
+
 ```elixir
 iex> p1 = path :x
 iex> p2 = path :y
 iex> composed_path = p1 ~> p2
-iex> 1 = Pathex.view(%{x: [y: 1]}, composed_path)
+iex> 1 = Pathex.view!(%{x: [y: 1]}, composed_path)
 ```
 
-> Think about path composition just like path concatenation in shell  
-> For example  
+> You can think about path composition just like it's path concatenation in shell
+>
+> **For example:**
 >
 > ```elixir
 > iex> first_user = path :users / 0          # users/0

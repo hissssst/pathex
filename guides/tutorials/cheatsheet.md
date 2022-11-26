@@ -5,17 +5,18 @@ This documentation page is intended to provide some common use cases of `Pathex`
 ## Operations
 
 This section describes actions which can be used with path-closures.
-Note that for single-key operations `Pathex` is slightly slower than `Map` or `Keyword`
+Note that for 1-depth operations `Pathex` is slightly slower than `Map` or `Keyword`
 
-| Map             | Pathex                |
-|:----------------|----------------------:|
-| `Map.fetch/2`   | `Pathex.view/2`       |
-| `Map.get/3`     | `Pathex.get/3`        |
-| `Map.update!/3` | `Pathex.over/3`       |
-| `Map.update/4`  | `Pathex.force_over/4` |
-| `Map.put/3`     | `Pathex.force_set/3`  |
-| `Map.replace/3` | `Pathex.set/3`        |
-| `Map.delete/2`  | `Pathex.delete/2`     |
+| Map              | Pathex                |
+|:-----------------|----------------------:|
+| `Map.fetch/2`    | `Pathex.view/2`       |
+| `Map.get/3`      | `Pathex.get/3`        |
+| `Map.update!/3`  | `Pathex.over/3`       |
+| `Map.update/4`   | `Pathex.force_over/4` |
+| `Map.put/3`      | `Pathex.force_set/3`  |
+| `Map.replace/3`  | `Pathex.set/3`        |
+| `Map.delete/2`   | `Pathex.delete/2`     |
+| `Map.has_key?/2` | `Pathex.exists?/2`    |
 
 ## Nested
 
@@ -50,7 +51,8 @@ Pathex.view(structure, path(:x / :y / :z / 10 / 1 / :z / :y / :x))
 | `Enum.find/2`       | `Pathex.Lenses.some/0` |
 | `Enum.map/2`        | `Pathex.Lenses.all/0`  |
 | `Enum.filter_map/3` | `Pathex.Lenses.star/0` |
-| `Enum.at/2`         | `path()`               |
+| `Enum.at/2`         | `Pathex.path/2`        |
+| `Enum.fetch/2`      | `Pathex.path/2`        |
 
 [More examples in Lenses tutorial](lenses.md)
 
