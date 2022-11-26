@@ -1,5 +1,20 @@
 # Changelog
 
+## 2.4.3
+
+* Documentation improvements, typos etc.
+* Documentation for VSCode reformatting
+
+## 2.4.2
+
+* Fixed `:delete` op bug for `all` lens #21
+* Improved performance of `all` lens
+* Added Code of Conduct
+
+## 2.4.1
+
+* Fixed `:delete` op bug for `all` lens #20
+
 ## 2.4
 
 Negative indexes, lens fixes, force_update nil filling and refactoring
