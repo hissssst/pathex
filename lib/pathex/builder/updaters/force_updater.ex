@@ -73,8 +73,9 @@ defmodule Pathex.Builder.ForceUpdater do
       list when is_list(list) and unquote(index) == -1 ->
         [unquote(acc_items) | list]
 
-      list when is_list(list) and is_integer(unquote index) and unquote(index) < 0 ->
+      list when is_list(list) and is_integer(unquote(index)) and unquote(index) < 0 ->
         length = length(list)
+
         if -unquote(index) > length do
           len = max(-unquote(index) - 1 - length, 0)
           [unquote(acc_items) | List.duplicate(nil, len)] ++ list
@@ -82,11 +83,12 @@ defmodule Pathex.Builder.ForceUpdater do
           List.update_at(list, unquote(index), fn x -> x |> unquote(tail) end)
         end
 
-      list when is_list(list) and is_integer(unquote index) ->
+      list when is_list(list) and is_integer(unquote(index)) ->
         length = length(list)
+
         if unquote(index) > length do
           len = max(unquote(index) - length, 0)
-          list ++ List.duplicate(nil, len) ++ [unquote acc_items]
+          list ++ List.duplicate(nil, len) ++ [unquote(acc_items)]
         else
           List.update_at(list, unquote(index), fn x -> x |> unquote(tail) end)
         end
@@ -95,26 +97,30 @@ defmodule Pathex.Builder.ForceUpdater do
 
   defp create_updater({:tuple, index}, tail, acc_items) when is_var(index) do
     quote do
-      tuple when is_tuple(tuple) and is_integer(unquote index) and
-        unquote(index) >= 0 and
-        tuple_size(tuple) <= unquote(index) ->
+      tuple
+      when is_tuple(tuple) and is_integer(unquote(index)) and
+             unquote(index) >= 0 and
+             tuple_size(tuple) <= unquote(index) ->
         len = max(unquote(index) - tuple_size(tuple), 0)
-        List.to_tuple(Tuple.to_list(tuple) ++ List.duplicate(nil, len) ++ [unquote acc_items])
+        List.to_tuple(Tuple.to_list(tuple) ++ List.duplicate(nil, len) ++ [unquote(acc_items)])
 
-      tuple when is_tuple(tuple) and is_integer(unquote index) and
-        unquote(index) < 0 and
-        tuple_size(tuple) < -unquote(index) ->
+      tuple
+      when is_tuple(tuple) and is_integer(unquote(index)) and
+             unquote(index) < 0 and
+             tuple_size(tuple) < -unquote(index) ->
         len = max(-unquote(index) - tuple_size(tuple) - 1, 0)
         List.to_tuple([unquote(acc_items) | List.duplicate(nil, len)] ++ Tuple.to_list(tuple))
 
-      tuple when is_tuple(tuple) and is_integer(unquote index) and
-        unquote(index) < 0 ->
+      tuple
+      when is_tuple(tuple) and is_integer(unquote(index)) and
+             unquote(index) < 0 ->
         index = tuple_size(tuple) + unquote(index) + 1
         val = :erlang.element(index, tuple) |> unquote(tail)
         :erlang.setelement(index, tuple, val)
 
-      tuple when is_tuple(tuple) and is_integer(unquote index) and
-        unquote(index) >= 0 ->
+      tuple
+      when is_tuple(tuple) and is_integer(unquote(index)) and
+             unquote(index) >= 0 ->
         indexplusone = unquote(index) + 1
 
         val =
@@ -191,7 +197,7 @@ defmodule Pathex.Builder.ForceUpdater do
   defp gen_fallback({:list, n}, acc) when is_integer(n) and n < 0 do
     quote do
       l when is_list(l) ->
-        len = max(unquote(-n - 1)  - length(l), 0)
+        len = max(unquote(-n - 1) - length(l), 0)
         [unquote(acc) | List.duplicate(nil, len)] ++ l
     end
   end
@@ -237,11 +243,11 @@ defmodule Pathex.Builder.ForceUpdater do
 
   defp gen_fallback({:tuple, n}, acc) do
     quote do
-      t when is_tuple(t) and is_integer(unquote n) and unquote(n) >= 0 ->
+      t when is_tuple(t) and is_integer(unquote(n)) and unquote(n) >= 0 ->
         len = unquote(n) - tuple_size(t)
         List.to_tuple(Tuple.to_list(t) ++ List.duplicate(nil, len) ++ [unquote(acc)])
 
-      t when is_tuple(t) and is_integer(unquote n) ->
+      t when is_tuple(t) and is_integer(unquote(n)) ->
         len = -unquote(n) - tuple_size(t) - 1
         List.to_tuple([unquote(acc) | List.duplicate(nil, len)] ++ Tuple.to_list(t))
     end
@@ -261,9 +267,10 @@ defmodule Pathex.Builder.ForceUpdater do
   end
 
   defp collection(:list, items) do
-    quote do: [unquote_splicing items]
+    quote do: [unquote_splicing(items)]
   end
+
   defp collection(:tuple, items) do
-    quote do: {unquote_splicing items}
+    quote do: {unquote_splicing(items)}
   end
 end

@@ -129,7 +129,11 @@ defmodule Pathex.LensesTest do
                force_set([x: %{a: 1}, y: %{c: 3}], some ~> pb, 2)
 
       result = force_set(%{x: [a: 1], y: %{c: 3}}, some ~> pb, 2)
-      assert result in [{:ok, %{x: [a: 1, b: 2], y: %{c: 3}}}, {:ok, %{x: [a: 1], y: %{b: 2, c: 3}}}]
+
+      assert result in [
+               {:ok, %{x: [a: 1, b: 2], y: %{c: 3}}},
+               {:ok, %{x: [a: 1], y: %{b: 2, c: 3}}}
+             ]
 
       # Delete
       assert {:ok, %{x: [2, 3]}} = delete(%{x: [1, 2, 3]}, px ~> some)
@@ -243,128 +247,185 @@ defmodule Pathex.LensesTest do
 
   describe "Prisms force_update" do
     test "matching" do
-      assert 123 = Pathex.force_set! 0, Lenses.matching(_), 123
-      assert 123 = Pathex.force_set! 0, Lenses.matching(x when x != 0), 123
+      assert 123 = Pathex.force_set!(0, Lenses.matching(_), 123)
+      assert 123 = Pathex.force_set!(0, Lenses.matching(x when x != 0), 123)
     end
 
     test "filtering" do
-      assert 123 = Pathex.force_set! 0, Lenses.filtering(fn _ -> true end), 123
-      assert 123 = Pathex.force_set! 0, Lenses.filtering(& &1 != 0), 123
+      assert 123 = Pathex.force_set!(0, Lenses.filtering(fn _ -> true end), 123)
+      assert 123 = Pathex.force_set!(0, Lenses.filtering(&(&1 != 0)), 123)
     end
   end
 
   describe "All lens complete" do
     test "tuple" do
       all = Pathex.Lenses.all()
-      px = path :x
+      px = path(:x)
 
       ### View
-      assert {:ok, [1, 2, 3, 4]} = Pathex.view {1, 2, 3, 4}, all
-      assert {:ok, [1, 2, 3, 4]} = Pathex.view {[x: 1], %{x: 2}, %{x: 3}, [x: 4]}, all ~> px
-      assert :error = Pathex.view {[x: 1], %{x: 2}, %{x: 3}, 4}, all ~> px
+      assert {:ok, [1, 2, 3, 4]} = Pathex.view({1, 2, 3, 4}, all)
+      assert {:ok, [1, 2, 3, 4]} = Pathex.view({[x: 1], %{x: 2}, %{x: 3}, [x: 4]}, all ~> px)
+      assert :error = Pathex.view({[x: 1], %{x: 2}, %{x: 3}, 4}, all ~> px)
 
       ### Update
-      assert {:ok, {2, 3, 4, 5}} = Pathex.over {1, 2, 3, 4}, all, &(&1 + 1)
-      assert {:ok, {[x: 2], %{x: 3}, %{x: 4}, [x: 5]}} = Pathex.over {[x: 1], %{x: 2}, %{x: 3}, [x: 4]}, all ~> px, &(&1 + 1)
-      assert :error = Pathex.over {[x: 1], %{x: 2}, %{x: 3}, 4}, all ~> px, &(&1 + 1)
+      assert {:ok, {2, 3, 4, 5}} = Pathex.over({1, 2, 3, 4}, all, &(&1 + 1))
+
+      assert {:ok, {[x: 2], %{x: 3}, %{x: 4}, [x: 5]}} =
+               Pathex.over({[x: 1], %{x: 2}, %{x: 3}, [x: 4]}, all ~> px, &(&1 + 1))
+
+      assert :error = Pathex.over({[x: 1], %{x: 2}, %{x: 3}, 4}, all ~> px, &(&1 + 1))
 
       ### Force update
-      assert {:ok, {2, 3, 4, 5}} = Pathex.force_over {1, 2, 3, 4}, all, &(&1 + 1)
-      assert {:ok, {[x: 2], %{x: 3}, %{x: 4}, [x: 5]}} = Pathex.force_over {[x: 1], %{x: 2}, %{x: 3}, [x: 4]}, all ~> px, &(&1 + 1)
-      assert {:ok, {[x: 2], %{x: 3}, %{x: 4}, %{x: 123, y: 2}}} = Pathex.force_over {[x: 1], %{x: 2}, %{x: 3}, %{y: 2}}, all ~> px, &(&1 + 1), 123
-      assert {:ok, {[x: 2], %{x: 3}, %{x: 4}, %{x: 123}}} = Pathex.force_over {[x: 1], %{x: 2}, %{x: 3}, 4}, all ~> px, &(&1 + 1), 123
+      assert {:ok, {2, 3, 4, 5}} = Pathex.force_over({1, 2, 3, 4}, all, &(&1 + 1))
+
+      assert {:ok, {[x: 2], %{x: 3}, %{x: 4}, [x: 5]}} =
+               Pathex.force_over({[x: 1], %{x: 2}, %{x: 3}, [x: 4]}, all ~> px, &(&1 + 1))
+
+      assert {:ok, {[x: 2], %{x: 3}, %{x: 4}, %{x: 123, y: 2}}} =
+               Pathex.force_over({[x: 1], %{x: 2}, %{x: 3}, %{y: 2}}, all ~> px, &(&1 + 1), 123)
+
+      assert {:ok, {[x: 2], %{x: 3}, %{x: 4}, %{x: 123}}} =
+               Pathex.force_over({[x: 1], %{x: 2}, %{x: 3}, 4}, all ~> px, &(&1 + 1), 123)
 
       ### Delete
-      assert {:ok, {}} = Pathex.delete {1, 2, 3, 4}, all
-      assert {:ok, {[], %{}, %{}, []}} = Pathex.delete {[x: 1], %{x: 2}, %{x: 3}, [x: 4]}, all ~> px
-      assert :error = Pathex.over {[x: 1], %{x: 2}, %{x: 3}, 4}, all ~> px, &(&1 + 1)
+      assert {:ok, {}} = Pathex.delete({1, 2, 3, 4}, all)
+
+      assert {:ok, {[], %{}, %{}, []}} =
+               Pathex.delete({[x: 1], %{x: 2}, %{x: 3}, [x: 4]}, all ~> px)
+
+      assert :error = Pathex.over({[x: 1], %{x: 2}, %{x: 3}, 4}, all ~> px, &(&1 + 1))
     end
 
     test "list" do
       all = Pathex.Lenses.all()
-      px = path :x
+      px = path(:x)
 
       ### View
-      assert {:ok, [1, 2, 3, 4]} = Pathex.view [1, 2, 3, 4], all
-      assert {:ok, [1, 2, 3, 4]} = Pathex.view [[x: 1], %{x: 2}, %{x: 3}, [x: 4]], all ~> px
-      assert :error = Pathex.view [[x: 1], %{x: 2}, %{x: 3}, 4], all ~> px
+      assert {:ok, [1, 2, 3, 4]} = Pathex.view([1, 2, 3, 4], all)
+      assert {:ok, [1, 2, 3, 4]} = Pathex.view([[x: 1], %{x: 2}, %{x: 3}, [x: 4]], all ~> px)
+      assert :error = Pathex.view([[x: 1], %{x: 2}, %{x: 3}, 4], all ~> px)
 
       ### Update
-      assert {:ok, [2, 3, 4, 5]} = Pathex.over [1, 2, 3, 4], all, &(&1 + 1)
-      assert {:ok, [[x: 2], %{x: 3}, %{x: 4}, [x: 5]]} = Pathex.over [[x: 1], %{x: 2}, %{x: 3}, [x: 4]], all ~> px, &(&1 + 1)
-      assert :error = Pathex.over [[x: 1], %{x: 2}, %{x: 3}, 4], all ~> px, &(&1 + 1)
+      assert {:ok, [2, 3, 4, 5]} = Pathex.over([1, 2, 3, 4], all, &(&1 + 1))
+
+      assert {:ok, [[x: 2], %{x: 3}, %{x: 4}, [x: 5]]} =
+               Pathex.over([[x: 1], %{x: 2}, %{x: 3}, [x: 4]], all ~> px, &(&1 + 1))
+
+      assert :error = Pathex.over([[x: 1], %{x: 2}, %{x: 3}, 4], all ~> px, &(&1 + 1))
 
       ### Force update
-      assert {:ok, [2, 3, 4, 5]} = Pathex.force_over [1, 2, 3, 4], all, &(&1 + 1)
-      assert {:ok, [[x: 2], %{x: 3}, %{x: 4}, [x: 5]]} = Pathex.force_over [[x: 1], %{x: 2}, %{x: 3}, [x: 4]], all ~> px, &(&1 + 1)
-      assert {:ok, [[x: 2], %{x: 3}, %{x: 4}, %{x: 123, y: 2}]} = Pathex.force_over [[x: 1], %{x: 2}, %{x: 3}, %{y: 2}], all ~> px, &(&1 + 1), 123
-      assert {:ok, [[x: 2], %{x: 3}, %{x: 4}, %{x: 123}]} = Pathex.force_over [[x: 1], %{x: 2}, %{x: 3}, 4], all ~> px, &(&1 + 1), 123
+      assert {:ok, [2, 3, 4, 5]} = Pathex.force_over([1, 2, 3, 4], all, &(&1 + 1))
+
+      assert {:ok, [[x: 2], %{x: 3}, %{x: 4}, [x: 5]]} =
+               Pathex.force_over([[x: 1], %{x: 2}, %{x: 3}, [x: 4]], all ~> px, &(&1 + 1))
+
+      assert {:ok, [[x: 2], %{x: 3}, %{x: 4}, %{x: 123, y: 2}]} =
+               Pathex.force_over([[x: 1], %{x: 2}, %{x: 3}, %{y: 2}], all ~> px, &(&1 + 1), 123)
+
+      assert {:ok, [[x: 2], %{x: 3}, %{x: 4}, %{x: 123}]} =
+               Pathex.force_over([[x: 1], %{x: 2}, %{x: 3}, 4], all ~> px, &(&1 + 1), 123)
 
       ### Delete
-      assert {:ok, []} = Pathex.delete [1, 2, 3, 4], all
-      assert {:ok, [[], %{}, %{}, []]} = Pathex.delete [[x: 1], %{x: 2}, %{x: 3}, [x: 4]], all ~> px
-      assert :error = Pathex.over [[x: 1], %{x: 2}, %{x: 3}, 4], all ~> px, &(&1 + 1)
+      assert {:ok, []} = Pathex.delete([1, 2, 3, 4], all)
+
+      assert {:ok, [[], %{}, %{}, []]} =
+               Pathex.delete([[x: 1], %{x: 2}, %{x: 3}, [x: 4]], all ~> px)
+
+      assert :error = Pathex.over([[x: 1], %{x: 2}, %{x: 3}, 4], all ~> px, &(&1 + 1))
     end
 
     test "map" do
       all = Pathex.Lenses.all()
-      px = path :x
+      px = path(:x)
 
       ### View
-      assert {:ok, list} = Pathex.view %{a: 1, b: 2, c: 3, d: 4}, all
-      assert [1, 2, 3, 4] = Enum.sort list
+      assert {:ok, list} = Pathex.view(%{a: 1, b: 2, c: 3, d: 4}, all)
+      assert [1, 2, 3, 4] = Enum.sort(list)
 
-      assert {:ok, list} = Pathex.view %{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: %{x: 4}}, all ~> px
-      assert [1, 2, 3, 4] = Enum.sort list
+      assert {:ok, list} =
+               Pathex.view(%{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: %{x: 4}}, all ~> px)
 
-      assert :error = Pathex.view %{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: 4}, all ~> px
+      assert [1, 2, 3, 4] = Enum.sort(list)
+
+      assert :error = Pathex.view(%{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: 4}, all ~> px)
 
       ### Update
-      assert {:ok, %{a: 2, b: 3, c: 4, d: 5}} = Pathex.over %{a: 1, b: 2, c: 3, d: 4}, all, &(&1 + 1)
+      assert {:ok, %{a: 2, b: 3, c: 4, d: 5}} =
+               Pathex.over(%{a: 1, b: 2, c: 3, d: 4}, all, &(&1 + 1))
 
-      assert {:ok, result} = Pathex.over %{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: %{x: 4}}, all ~> px, &(&1 + 1)
+      assert {:ok, result} =
+               Pathex.over(
+                 %{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: %{x: 4}},
+                 all ~> px,
+                 &(&1 + 1)
+               )
+
       assert %{a: %{x: 2}, b: %{x: 3}, c: %{x: 4}, d: %{x: 5}} = result
 
-      assert :error = Pathex.over %{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: 4}, all ~> px, &(&1 + 1)
+      assert :error =
+               Pathex.over(%{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: 4}, all ~> px, &(&1 + 1))
 
       ### Force update
-      assert {:ok, result} = Pathex.force_over %{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: 5}, all ~> px, &(&1 + 1), 123
+      assert {:ok, result} =
+               Pathex.force_over(
+                 %{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: 5},
+                 all ~> px,
+                 &(&1 + 1),
+                 123
+               )
+
       assert %{a: %{x: 2}, b: %{x: 3}, c: %{x: 4}, d: %{x: 123}} = result
 
       ### Delete
-      assert {:ok, %{}} == Pathex.delete %{a: 1, b: 2, c: 3, d: 4}, all
-      assert {:ok, result} = Pathex.delete %{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: %{x: 4}}, all ~> px
+      assert {:ok, %{}} == Pathex.delete(%{a: 1, b: 2, c: 3, d: 4}, all)
+
+      assert {:ok, result} =
+               Pathex.delete(%{a: %{x: 1}, b: %{x: 2}, c: %{x: 3}, d: %{x: 4}}, all ~> px)
+
       assert %{a: %{}, b: %{}, c: %{}, d: %{}} == result
     end
 
     test "keyword" do
       all = Pathex.Lenses.all()
-      px = path :x
+      px = path(:x)
 
       ### View
-      assert {:ok, list} = Pathex.view [a: 1, b: 2, c: 3, d: 4], all
-      assert [1, 2, 3, 4] = Enum.sort list
+      assert {:ok, list} = Pathex.view([a: 1, b: 2, c: 3, d: 4], all)
+      assert [1, 2, 3, 4] = Enum.sort(list)
 
-      assert {:ok, list} = Pathex.view [a: [x: 1], b: [x: 2], c: [x: 3], d: [x: 4]], all ~> px
-      assert [1, 2, 3, 4] = Enum.sort list
+      assert {:ok, list} = Pathex.view([a: [x: 1], b: [x: 2], c: [x: 3], d: [x: 4]], all ~> px)
+      assert [1, 2, 3, 4] = Enum.sort(list)
 
-      assert :error = Pathex.view [a: [x: 1], b: [x: 2], c: [x: 3], d: 4], all ~> px
+      assert :error = Pathex.view([a: [x: 1], b: [x: 2], c: [x: 3], d: 4], all ~> px)
 
       ### Update
-      assert {:ok, [a: 2, b: 3, c: 4, d: 5]} = Pathex.over [a: 1, b: 2, c: 3, d: 4], all, &(&1 + 1)
+      assert {:ok, [a: 2, b: 3, c: 4, d: 5]} =
+               Pathex.over([a: 1, b: 2, c: 3, d: 4], all, &(&1 + 1))
 
-      assert {:ok, result} = Pathex.over [a: [x: 1], b: [x: 2], c: [x: 3], d: [x: 4]], all ~> px, &(&1 + 1)
+      assert {:ok, result} =
+               Pathex.over([a: [x: 1], b: [x: 2], c: [x: 3], d: [x: 4]], all ~> px, &(&1 + 1))
+
       assert [a: [x: 2], b: [x: 3], c: [x: 4], d: [x: 5]] = result
 
-      assert :error = Pathex.over [a: [x: 1], b: [x: 2], c: [x: 3], d: 4], all ~> px, &(&1 + 1)
+      assert :error = Pathex.over([a: [x: 1], b: [x: 2], c: [x: 3], d: 4], all ~> px, &(&1 + 1))
 
       ### Force update
-      assert {:ok, result} = Pathex.force_over [a: [x: 1], b: [x: 2], c: [x: 3], d: 5], all ~> px, &(&1 + 1), 123
+      assert {:ok, result} =
+               Pathex.force_over(
+                 [a: [x: 1], b: [x: 2], c: [x: 3], d: 5],
+                 all ~> px,
+                 &(&1 + 1),
+                 123
+               )
+
       assert [a: [x: 2], b: [x: 3], c: [x: 4], d: %{x: 123}] = result
 
       ### Delete
-      assert {:ok, []} == Pathex.delete [a: 1, b: 2, c: 3, d: 4], all
-      assert {:ok, result} = Pathex.delete [a: [x: 1], b: [x: 2], c: [x: 3], d: [x: 4]], all ~> px
+      assert {:ok, []} == Pathex.delete([a: 1, b: 2, c: 3, d: 4], all)
+
+      assert {:ok, result} =
+               Pathex.delete([a: [x: 1], b: [x: 2], c: [x: 3], d: [x: 4]], all ~> px)
+
       assert [a: [], b: [], c: [], d: []] == result
     end
   end

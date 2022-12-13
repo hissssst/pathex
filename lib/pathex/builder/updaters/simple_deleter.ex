@@ -75,8 +75,9 @@ defmodule Pathex.Builder.SimpleDeleter do
     quote do
       list when is_list(list) ->
         index = length(list) + unquote(index)
+
         if index < 0 do
-          throw :path_not_found
+          throw(:path_not_found)
         else
           case unquote(@function_variable).(:lists.nth(index + 1, list)) do
             {:ok, new_value} ->
@@ -96,6 +97,7 @@ defmodule Pathex.Builder.SimpleDeleter do
     quote do
       tuple when is_tuple(tuple) and tuple_size(tuple) > unquote(index) ->
         index = unquote(index + 1)
+
         case unquote(@function_variable).(:erlang.element(index, tuple)) do
           {:ok, new_value} ->
             :erlang.setelement(index, tuple, new_value)
@@ -113,6 +115,7 @@ defmodule Pathex.Builder.SimpleDeleter do
     quote do
       tuple when is_tuple(tuple) and tuple_size(tuple) >= -unquote(index) ->
         index = tuple_size(tuple) + unquote(1 + index)
+
         case unquote(@function_variable).(:erlang.element(index, tuple)) do
           {:ok, new_value} ->
             :erlang.setelement(index, tuple, new_value)
@@ -158,6 +161,7 @@ defmodule Pathex.Builder.SimpleDeleter do
 
       list when is_list(list) and is_integer(unquote(index)) and unquote(index) < 0 ->
         index = length(list) + unquote(index)
+
         if index < 0 do
           throw(:path_not_found)
         else
@@ -199,6 +203,7 @@ defmodule Pathex.Builder.SimpleDeleter do
              unquote(index) < 0 and
              tuple_size(tuple) >= -unquote(index) ->
         index = tuple_size(tuple) + unquote(index) + 1
+
         case unquote(@function_variable).(:erlang.element(index, tuple)) do
           {:ok, new_value} ->
             :erlang.setelement(index, tuple, new_value)

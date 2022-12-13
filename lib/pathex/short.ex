@@ -1,5 +1,4 @@
 defmodule Pathex.Short do
-
   @moduledoc """
   This module provides short definitions of pathex paths.
 
@@ -14,12 +13,12 @@ defmodule Pathex.Short do
   ```
   """
 
-  import Kernel, except: ["/": 2]
+  import Kernel, except: [/: 2]
   require Pathex
 
   defmacro __using__(opts \\ []) do
     quote do
-      import Kernel, except: ["/": 2]
+      import Kernel, except: [/: 2]
       import Pathex.Short
 
       use(Pathex, unquote(opts))

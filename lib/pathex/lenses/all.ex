@@ -149,6 +149,7 @@ defmodule Pathex.Lenses.All do
       :error -> :error
     end
   end
+
   defp list_view([], _func, acc), do: {:ok, :lists.reverse(acc)}
 
   defp keyword_view([{atom, value} | tail], func, acc) when is_atom(atom) do
@@ -157,12 +158,15 @@ defmodule Pathex.Lenses.All do
       :error -> :error
     end
   end
+
   defp keyword_view([], _func, acc), do: {:ok, :lists.reverse(acc)}
   defp keyword_view(_, _, _), do: :error
 
   defp map_view(iterator, func, acc) do
     case :maps.next(iterator) do
-      :none -> {:ok, acc}
+      :none ->
+        {:ok, acc}
+
       {_key, value, iterator} ->
         case func.(value) do
           {:ok, result} ->
@@ -175,6 +179,7 @@ defmodule Pathex.Lenses.All do
   end
 
   defp tuple_view(_, _, iterator, size, acc) when iterator > size, do: {:ok, :lists.reverse(acc)}
+
   defp tuple_view(tuple, func, iterator, size, acc) do
     case func.(:erlang.element(iterator, tuple)) do
       {:ok, result} -> tuple_view(tuple, func, iterator + 1, size, [result | acc])
@@ -190,6 +195,7 @@ defmodule Pathex.Lenses.All do
       :error -> :error
     end
   end
+
   defp list_update([], _func, acc), do: {:ok, :lists.reverse(acc)}
 
   defp keyword_update([{atom, value} | tail], func, acc) when is_atom(atom) do
@@ -198,12 +204,15 @@ defmodule Pathex.Lenses.All do
       :error -> :error
     end
   end
+
   defp keyword_update([], _func, acc), do: {:ok, :lists.reverse(acc)}
   defp keyword_update(_, _, _), do: :error
 
   defp map_update(iterator, func, acc) do
     case :maps.next(iterator) do
-      :none -> {:ok, acc}
+      :none ->
+        {:ok, acc}
+
       {key, value, iterator} ->
         case func.(value) do
           {:ok, result} ->
@@ -216,11 +225,14 @@ defmodule Pathex.Lenses.All do
   end
 
   defp tuple_update(tuple, _, iterator, size) when iterator > size, do: {:ok, tuple}
+
   defp tuple_update(tuple, func, iterator, size) do
     import :erlang, only: [element: 2, setelement: 3]
 
     case func.(element(iterator, tuple)) do
-      :error -> :error
+      :error ->
+        :error
+
       {:ok, result} ->
         tuple = setelement(iterator, tuple, result)
         tuple_update(tuple, func, iterator + 1, size)
@@ -236,6 +248,7 @@ defmodule Pathex.Lenses.All do
       :error -> :error
     end
   end
+
   defp list_delete([], _func, acc), do: {:ok, :lists.reverse(acc)}
 
   defp keyword_delete([{atom, value} | tail], func, acc) when is_atom(atom) do
@@ -245,12 +258,15 @@ defmodule Pathex.Lenses.All do
       :error -> :error
     end
   end
+
   defp keyword_delete([], _func, acc), do: {:ok, :lists.reverse(acc)}
   defp keyword_delete(_, _, _), do: :error
 
   defp map_delete(iterator, func, acc) do
     case :maps.next(iterator) do
-      :none -> {:ok, acc}
+      :none ->
+        {:ok, acc}
+
       {key, value, iterator} ->
         case func.(value) do
           {:ok, result} ->
@@ -266,11 +282,14 @@ defmodule Pathex.Lenses.All do
   end
 
   defp tuple_delete(tuple, _, iterator, size) when iterator > size, do: {:ok, tuple}
+
   defp tuple_delete(tuple, func, iterator, size) do
     import :erlang, only: [element: 2, setelement: 3, delete_element: 2]
 
     case func.(element(iterator, tuple)) do
-      :error -> :error
+      :error ->
+        :error
+
       :delete_me ->
         tuple = delete_element(iterator, tuple)
         tuple_delete(tuple, func, iterator, size - 1)

@@ -127,10 +127,13 @@ defmodule Pathex.Builder.Composition.Concat do
     inner = do_build_force_update(item_tail, default_tail, inner_arg, func)
 
     quote do
-      unquote(head).(:force_update, {unquote(arg), fn unquote(inner_arg) ->
-        unquote(inner)
-      end,
-      unquote(default)})
+      unquote(head).(
+        :force_update,
+        {unquote(arg),
+         fn unquote(inner_arg) ->
+           unquote(inner)
+         end, unquote(default)}
+      )
     end
   end
 

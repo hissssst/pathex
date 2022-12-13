@@ -45,6 +45,7 @@ defmodule Pathex.Builder.Setter do
     quote do
       t when is_tuple(t) and tuple_size(t) >= unquote(-index) ->
         index = tuple_size(t) + unquote(index + 1)
+
         val =
           index
           |> :erlang.element(t)
@@ -98,9 +99,10 @@ defmodule Pathex.Builder.Setter do
 
         :erlang.setelement(indexplusone, tuple, val)
 
-      tuple when is_tuple(tuple) and is_integer(unquote(index)) and
-             (unquote(index) < 0) and
-             (tuple_size(tuple) >= -unquote(index)) ->
+      tuple
+      when is_tuple(tuple) and is_integer(unquote(index)) and
+             unquote(index) < 0 and
+             tuple_size(tuple) >= -unquote(index) ->
         index = tuple_size(tuple) + unquote(index) + 1
         val = :erlang.element(index, tuple) |> unquote(tail)
         :erlang.setelement(index, tuple, val)

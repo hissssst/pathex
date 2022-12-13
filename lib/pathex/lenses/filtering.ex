@@ -13,7 +13,7 @@ defmodule Pathex.Lenses.Filtering do
         if(predicate.(structure), do: func.(structure), else: {:ok, default})
 
       :inspect, _ ->
-        {:filtering, [], [inspect predicate]}
+        {:filtering, [], [inspect(predicate)]}
     end
   end
 end

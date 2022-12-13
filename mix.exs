@@ -1,7 +1,7 @@
 defmodule Pathex.MixProject do
   use Mix.Project
 
-  @version "2.4.3"
+  @version "2.5.0"
 
   def project do
     [
@@ -14,7 +14,7 @@ defmodule Pathex.MixProject do
       deps: deps(),
       name: "Pathex",
       source_url: "https://github.com/hissssst/pathex",
-      docs: docs(),
+      docs: docs()
 
       # compilers: [:unused | Mix.compilers()],
       # unused: [{:_, :__using__, :_}, {:_, :__impl__, :_}]
@@ -41,7 +41,7 @@ defmodule Pathex.MixProject do
         "Georgy Sychev"
       ],
       links: %{
-        GitHub:    "https://github.com/hissssst/pathex",
+        GitHub: "https://github.com/hissssst/pathex",
         Changelog: "https://github.com/hissssst/pathex/blob/master/CHANGELOG.md"
       }
     ]
@@ -50,12 +50,11 @@ defmodule Pathex.MixProject do
   defp deps do
     [
       # # Uncomment for development
-      # {:dialyxir, "~> 1.0", only: :dev, runtime: false},
-      # {:gradient, github: "esl/gradient", only: :dev, runtime: false},
-      # {:mix_unused, "~> 0.3", only: :dev, runtime: false},
-      # {:credo, "~> 1.5", only: :dev, runtime: false},
-
-      {:ex_doc, "~> 0.28", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.0", only: :dev, runtime: false},
+      {:gradient, github: "esl/gradient", only: :dev, runtime: false},
+      {:mix_unused, "~> 0.3", only: :dev, runtime: false},
+      {:credo, "~> 1.5", only: :dev, runtime: false},
+      {:ex_doc, "~> 0.28", only: :dev, runtime: false}
     ]
   end
 
@@ -87,7 +86,7 @@ defmodule Pathex.MixProject do
         Pathex.Combinator,
         Pathex.Debug,
         Pathex.Accessibility,
-        Pathex.Short,
+        Pathex.Short
       ],
       "Code generation": [
         Pathex.Builder,

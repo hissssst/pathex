@@ -4,10 +4,11 @@ defmodule Pathex.Combination do
 
   @type variable :: {atom(), list(), atom()}
   @type struct_type :: :map | :keyword | :list | :tuple
-  @type pair :: {:map, any()}
-  | {:keyword, atom() | variable()}
-  | {:list, integer() | variable()}
-  | {:tuple, non_neg_integer() | variable()}
+  @type pair ::
+          {:map, any()}
+          | {:keyword, atom() | variable()}
+          | {:list, integer() | variable()}
+          | {:tuple, non_neg_integer() | variable()}
 
   @typedoc """
   Plain representation of one path for generating one `case(do:)`

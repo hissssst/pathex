@@ -35,7 +35,7 @@ defmodule Pathex.Lenses.Matching do
           {:ok, default}
 
         :inspect, _ ->
-          {:matching, [], [unquote unescape_pins escape ast]}
+          {:matching, [], [unquote(unescape_pins(escape(ast)))]}
 
         op, _ when op in ~w[delete view update force_update]a ->
           :error
@@ -56,7 +56,7 @@ defmodule Pathex.Lenses.Matching do
           {:ok, default}
 
         :inspect, _ ->
-          {:matching, [], [unquote unescape_pins escape pattern]}
+          {:matching, [], [unquote(unescape_pins(escape(pattern)))]}
 
         op, _ when op in ~w[delete view update force_update]a ->
           :error

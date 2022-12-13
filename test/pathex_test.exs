@@ -240,13 +240,13 @@ defmodule PathexTest do
   end
 
   test "force_set: path: out of bounds" do
-    assert {1, 2, 0} = force_set! {1, 2, 3}, path(2), 0
-    assert {1, 2, 3, 0} = force_set! {1, 2, 3}, path(3), 0
-    assert {1, 2, 3, nil, 0} = force_set! {1, 2, 3}, path(4), 0
+    assert {1, 2, 0} = force_set!({1, 2, 3}, path(2), 0)
+    assert {1, 2, 3, 0} = force_set!({1, 2, 3}, path(3), 0)
+    assert {1, 2, 3, nil, 0} = force_set!({1, 2, 3}, path(4), 0)
 
-    assert [1, 2, 0] = force_set! [1, 2, 3], path(2), 0
-    assert [1, 2, 3, 0] = force_set! [1, 2, 3], path(3), 0
-    assert [1, 2, 3, nil, 0] = force_set! [1, 2, 3], path(4), 0
+    assert [1, 2, 0] = force_set!([1, 2, 3], path(2), 0)
+    assert [1, 2, 3, 0] = force_set!([1, 2, 3], path(3), 0)
+    assert [1, 2, 3, nil, 0] = force_set!([1, 2, 3], path(4), 0)
   end
 
   test "inlined: path: view" do

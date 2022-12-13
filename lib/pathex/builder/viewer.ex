@@ -7,7 +7,8 @@ defmodule Pathex.Builder.Viewer do
 
   # Helpers
 
-  @spec match_from_path(Pathex.Combination.path(), Macro.t()) :: {:ok, Macro.t()} | {:error, {:bad_item, any()}}
+  @spec match_from_path(Pathex.Combination.path(), Macro.t()) ::
+          {:ok, Macro.t()} | {:error, {:bad_item, any()}}
   def match_from_path(path, initial \\ {:x, [], Elixir}) do
     path
     |> Enum.reverse()
@@ -38,6 +39,7 @@ defmodule Pathex.Builder.Viewer do
         index = tuple_size(tuple) + unquote(index + 1)
         :erlang.element(index, tuple) |> unquote(tail)
     end
+
     # # Can't create getter for tuple with negative index. What can we do?
     # raise ArgumentError, "Tuple index can't be negative"
   end
@@ -104,12 +106,14 @@ defmodule Pathex.Builder.Viewer do
 
   def create_viewer({:tuple, index}, tail) when is_var(index) do
     quote do
-      tuple when is_tuple(tuple) and is_integer(unquote(index)) and
+      tuple
+      when is_tuple(tuple) and is_integer(unquote(index)) and
              unquote(index) >= 0 and
              tuple_size(tuple) > unquote(index) ->
         elem(tuple, unquote(index)) |> unquote(tail)
 
-      tuple when is_tuple(tuple) and is_integer(unquote(index)) and
+      tuple
+      when is_tuple(tuple) and is_integer(unquote(index)) and
              unquote(index) < 0 and
              tuple_size(tuple) >= -unquote(index) ->
         index = tuple_size(tuple) + unquote(index) + 1

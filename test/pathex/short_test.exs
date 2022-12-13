@@ -1,5 +1,4 @@
 defmodule Pathex.ShortTest do
-
   use ExUnit.Case
   doctest Pathex.Short, import: true
 

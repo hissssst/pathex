@@ -93,6 +93,7 @@ defmodule Pathex do
         if module = __CALLER__.module do
           Module.put_attribute(module, :pathex_default_mod, mod)
         end
+
         quote do
           require Pathex
           import Pathex, only: [path: 1, path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
@@ -690,7 +691,7 @@ defmodule Pathex do
   @spec inspect(Pathex.t()) :: iodata()
   @doc export: true
   def inspect(path_closure) when is_function(path_closure, 2) do
-    Macro.to_string path_closure.(:inspect, [])
+    Macro.to_string(path_closure.(:inspect, []))
   end
 
   @doc """
@@ -742,7 +743,8 @@ defmodule Pathex do
         raise CompileError, description: "Can't generate matching from this combination"
 
       {_binds, _combination} ->
-        raise CompileError, description: "You can only use variables and constants in pattern matching"
+        raise CompileError,
+          description: "You can only use variables and constants in pattern matching"
 
       _other ->
         raise CompileError, description: "Unknown error"
@@ -757,6 +759,7 @@ defmodule Pathex do
       # Special case for inline paths
       {:ok, path, mod} ->
         path_func = build_only(path, op, caller, get_mod(mod, caller))
+
         quote generated: true do
           unquote(path_func).(unquote_splicing(args))
         end
@@ -783,6 +786,7 @@ defmodule Pathex do
         end
         |> Common.set_generated()
     end
+
     # |> tap(fn x -> IO.puts Macro.to_string x end)
   end
 
@@ -815,20 +819,22 @@ defmodule Pathex do
     Module.get_attribute(module, :pathex_default_mod) || :naive
   rescue
     error in ArgumentError ->
-      IO.warn """
+      IO.warn("""
       You've attemted to compile the path within the enviroment which
       is different from the original env. Therefore, Pathex was unable
       to get the default modifier (which is bound to the env), so
       `:naive` will be used
 
-      Original error: #{Exception.message error}
-      """
+      Original error: #{Exception.message(error)}
+      """)
+
       :naive
   end
 
   defp get_mod(mod, _) when is_mod(mod), do: mod
+
   defp get_mod(mod, _) do
-    raise CompileError, description: "You can't set #{Kernel.inspect mod} as a mod"
+    raise CompileError, description: "You can't set #{Kernel.inspect(mod)} as a mod"
   end
 
   # Builds only one clause of a path
@@ -895,14 +901,14 @@ defmodule Pathex do
   end
 
   defp destruct_inlined({:path, meta, [path | mod]}, env) do
-    case Keyword.fetch(meta, :import)  do
+    case Keyword.fetch(meta, :import) do
       {:ok, Pathex} ->
-        {:ok, path, maybemod mod}
+        {:ok, path, maybemod(mod)}
 
       :error ->
         case Macro.Env.lookup_import(env, {:path, 2}) do
           [{:macro, Pathex} | _] ->
-            {:ok, path, maybemod mod}
+            {:ok, path, maybemod(mod)}
 
           _ ->
             :error
@@ -912,19 +918,22 @@ defmodule Pathex do
         :error
     end
   end
-  defp destruct_inlined({{:".", _, [m, :path]}, _, [path | mod]}, env) do
+
+  defp destruct_inlined({{:., _, [m, :path]}, _, [path | mod]}, env) do
     case Macro.expand(m, env) do
       Pathex ->
-        {:ok, path, maybemod mod}
+        {:ok, path, maybemod(mod)}
 
       _ ->
         :error
     end
   end
+
   defp destruct_inlined(_, _), do: :error
 
   defp maybemod([]), do: nil
   defp maybemod([mod]) when is_mod(mod), do: mod
+
   defp maybemod(_) do
     raise CompileError, description: "Incorrect modifier"
   end
