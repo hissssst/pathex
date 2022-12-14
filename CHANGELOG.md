@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.5.0
+
+**Breaking**
+
+None
+
+**Non-breaking**
+
+* `Pathex.Accessibility.from_struct/2` to create `force_over`-friendly lenses for Elixir structures
+* `Pathex.Accessibility.from_record/3` to create `force_over`-friendly lenses for records
+
 ## 2.4.3
 
 * Documentation improvements, typos etc.
