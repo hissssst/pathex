@@ -280,4 +280,11 @@ defmodule PathexTest do
     assert {:ok, {1, 3}} = delete({1, 2, 3}, path(1))
     assert {:ok, %{3 => 4}} = delete(%{1 => 2, 3 => 4}, path(1))
   end
+
+  test "exists?: concatenated" do
+    s = [%{x: 1}]
+
+    assert true  == exists?(s, path(0) ~> path(:x))
+    assert false == exists?(s, path(0) ~> path(:y))
+  end
 end

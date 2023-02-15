@@ -40,19 +40,19 @@ This creates closure which can get, set, update and delete values in this path
 
 ```elixir
 {:ok, "6th avenue" = street} =
-    %{
-      user: %{
-        id: 1,
-        name: "hissssst",
-        private: %{
-          phone: "123-456-789",
-          addresses: [
-             [city: "City", street: "6th avenue", mail_index: 123456]
-          ]
-        }
+  %{
+    user: %{
+      id: 1,
+      name: "hissssst",
+      private: %{
+        phone: "123-456-789",
+        addresses: [
+           [city: "City", street: "6th avenue", mail_index: 123456]
+        ]
       }
     }
-    |> Pathex.view(path_to_streets)
+  }
+  |> Pathex.view(path_to_streets)
 
 %{
   "users" => %{

@@ -393,6 +393,7 @@ defmodule Pathex do
 
   @doc """
   Gets the value under `path` in `struct` or returns `default` when `path` is not present.
+  Note that the default value is always lazily evaluted.
 
   ## Example
 
@@ -427,11 +428,12 @@ defmodule Pathex do
   """
   @doc export: true
   defmacro exists?(struct, path) do
-    res = gen(path, :view, [struct, quote(do: fn _ -> true end)], __CALLER__)
+    res = gen(path, :view, [struct, quote(do: fn _ -> {:ok, []} end)], __CALLER__)
 
     quote do
-      with :error <- unquote(res) do
-        false
+      case unquote(res) do
+        {:ok, _} -> true
+        :error -> false
       end
     end
     |> Common.set_generated()
