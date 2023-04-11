@@ -96,6 +96,7 @@ defmodule Pathex do
 
         quote do
           require Pathex
+          require Pathex.Lenses
           import Pathex, only: [path: 1, path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
         end
 
@@ -874,12 +875,24 @@ defmodule Pathex do
 
   # This function raises warning if combination will lead to very big closure
   @maximum_combination_size 256
+  defp assert_combination_length(none, env) when none in [[], [[]]] do
+    stacktrace = extract_stacktrace(env)
+
+    """
+    This path will never match. If this is intended behaviour, just
+    ignore this message or use something like `Pathex.Lenses.filtering(fn _ -> false end)`.
+    If this behaviour is unintended, please refer to documentation of mods you're using.
+    """
+    |> IO.warn(stacktrace)
+
+    []
+  end
+
   defp assert_combination_length(combination, env) do
     size = Combination.size(combination)
 
     if size > @maximum_combination_size do
-      {func, arity} = env.function || {:nofunc, 0}
-      stacktrace = [{env.module, func, arity, [file: '#{env.file}', line: env.line]}]
+      stacktrace = extract_stacktrace(env)
 
       """
       This path will generate too many clauses, and therefore will slow down
@@ -893,6 +906,11 @@ defmodule Pathex do
     end
 
     combination
+  end
+
+  defp extract_stacktrace(%Macro.Env{function: function, module: module, line: line, file: file}) do
+    {func, arity} = function || {:nofunc, 0}
+    [{module, func, arity, [file: '#{file}', line: line]}]
   end
 
   defp prepend_binds(combination, binds) do

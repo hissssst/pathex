@@ -284,7 +284,7 @@ defmodule PathexTest do
   test "exists?: concatenated" do
     s = [%{x: 1}]
 
-    assert true  == exists?(s, path(0) ~> path(:x))
+    assert true == exists?(s, path(0) ~> path(:x))
     assert false == exists?(s, path(0) ~> path(:y))
   end
 end

@@ -40,6 +40,11 @@ defmodule Pathex.Builder do
         ...
       end
   """
+  def build([], _operations) do
+    # Empty combination generates never matching path
+    quote do: fn _, _ -> :error end
+  end
+
   @spec build(Pathex.Combination.t(), Operations.t()) :: Macro.t()
   def build(combination, operations) do
     operations

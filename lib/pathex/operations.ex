@@ -85,7 +85,12 @@ defmodule Pathex.Operations do
 
   @spec filter_combination(Pathex.Combination.t(), Pathex.mod()) :: Pathex.Combination.t()
   def filter_combination(combination, mod) do
-    Enum.map(combination, &filter_one(mod, &1))
+    combination
+    |> Enum.map(&filter_one(mod, &1))
+    |> Enum.filter(fn
+      [] -> false
+      _ -> true
+    end)
   end
 
   defp filter_one(:naive, path), do: path
