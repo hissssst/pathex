@@ -155,6 +155,9 @@ def deps do
   ]
 end
 ```
+
+> Pathex is significantly faster with OTP 26
+
 ## Contributions
 
 Welcome! If you want to get your hands dirty, you can check existing `TODO`'s.

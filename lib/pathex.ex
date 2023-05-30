@@ -85,6 +85,12 @@ defmodule Pathex do
   ```elixir
   use Pathex
   ```
+
+  > #### `use Pathex` {: .info}
+  >
+  > When you `use Pathex`, the Pathex module will
+  > require `Pathex` and import `Pathex`'s operators, `path/2` and `alongside/1` macros.
+  > Plus it will set special module attribute with `default_mod` value in it.
   """
   @doc export: true
   defmacro __using__(opts) do
