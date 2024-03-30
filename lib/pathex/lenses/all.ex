@@ -5,41 +5,6 @@ defmodule Pathex.Lenses.All do
 
   # Helpers
 
-  defmacrop at_pattern(pipe, pattern, do: code) do
-    quote do
-      case unquote(pipe) do
-        unquote(pattern) -> unquote(code)
-        other -> other
-      end
-    end
-  end
-
-  defmacrop cont(func, value, acc) do
-    quote do
-      case unquote(func).(unquote(value)) do
-        {:ok, v} -> {:cont, {:ok, [v | unquote(acc)]}}
-        :error -> {:halt, :error}
-      end
-    end
-  end
-
-  defmacrop reverse_if_ok(res) do
-    quote do
-      with {:ok, l} <- unquote(res) do
-        {:ok, :lists.reverse(l)}
-      end
-    end
-  end
-
-  defmacrop bool_to_either(bool, ok) do
-    quote do
-      case unquote(bool) do
-        true -> {:ok, unquote(ok)}
-        false -> :error
-      end
-    end
-  end
-
   defmacrop wrap_ok(code) do
     quote(do: {:ok, unquote(code)})
   end

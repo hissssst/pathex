@@ -4,15 +4,6 @@ defmodule Pathex.Lenses.Star do
 
   # Helpers
 
-  defmacrop extend_if_ok(status, func, value, acc) do
-    quote do
-      case unquote(func).(unquote(value)) do
-        {:ok, result} -> {:ok, [result | unquote(acc)]}
-        :error -> {unquote(status), unquote(acc)}
-      end
-    end
-  end
-
   defmacrop wrap_ok(code) do
     quote(do: {:ok, unquote(code)})
   end
