@@ -27,3 +27,5 @@ pathex-*.tar
 # Nix auto shell
 .direnv
 .envrc
+.nix-mix
+.nix-hex
