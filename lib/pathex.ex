@@ -40,6 +40,24 @@ defmodule Pathex do
 
   import Kernel, except: [inspect: 2]
 
+  defmacrop raise_incorrect_modifier(mod) do
+    quote do
+      mod = unquote(mod)
+
+      formatted =
+        try do
+          mod
+          |> Macro.to_string()
+          |> Code.format_string!()
+        rescue
+          _ -> Kernel.inspect(mod)
+        end
+
+      raise CompileError,
+        description: "Incorrect modifier. Expected :naive, :json or :map. Got #{formatted}"
+    end
+  end
+
   defguardp is_mod(m) when m in ~w[naive map json]a
 
   @typedoc """
@@ -106,8 +124,8 @@ defmodule Pathex do
           import Pathex, only: [path: 1, path: 2, ~>: 2, &&&: 2, |||: 2, alongside: 1]
         end
 
-      _wrong_mod ->
-        raise ArgumentError, "Pathex only works with navie, json and map mods"
+      wrong_mod ->
+        raise_incorrect_modifier(wrong_mod)
     end
   end
 
@@ -729,7 +747,7 @@ defmodule Pathex do
   defmacro pattern(variable \\ {:_, [], Elixir}, path) do
     {:ok, path, mod} =
       with :error <- destruct_inlined(path, __CALLER__) do
-        raise CompileError, description: "You can't have uninlined paths"
+        raise CompileError, description: "You can't have uninlined paths in pattern"
       end
 
     mod = get_mod(mod, __CALLER__)
@@ -843,7 +861,7 @@ defmodule Pathex do
   defp get_mod(mod, _) when is_mod(mod), do: mod
 
   defp get_mod(mod, _) do
-    raise CompileError, description: "You can't set #{Kernel.inspect(mod)} as a mod"
+    raise_incorrect_modifier(mod)
   end
 
   # Builds only one clause of a path
@@ -916,7 +934,7 @@ defmodule Pathex do
 
   defp extract_stacktrace(%Macro.Env{function: function, module: module, line: line, file: file}) do
     {func, arity} = function || {:nofunc, 0}
-    [{module, func, arity, [file: '#{file}', line: line]}]
+    [{module, func, arity, [file: ~c"#{file}", line: line]}]
   end
 
   defp prepend_binds(combination, binds) do
@@ -960,7 +978,7 @@ defmodule Pathex do
   defp maybemod([]), do: nil
   defp maybemod([mod]) when is_mod(mod), do: mod
 
-  defp maybemod(_) do
-    raise CompileError, description: "Incorrect modifier"
+  defp maybemod(mod) do
+    raise_incorrect_modifier(mod)
   end
 end

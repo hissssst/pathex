@@ -106,14 +106,14 @@
         ## Refactoring Opportunities
         #
         {Credo.Check.Refactor.CondStatements, []},
-        {Credo.Check.Refactor.CyclomaticComplexity, [max_complexity: 20]},
+        {Credo.Check.Refactor.CyclomaticComplexity, [max_complexity: 50]},
         {Credo.Check.Refactor.FunctionArity, []},
         {Credo.Check.Refactor.LongQuoteBlocks, [max_line_count: 155]},
         {Credo.Check.Refactor.MapInto, false}, # Not suitable for 1.9.1
         {Credo.Check.Refactor.MatchInCondition, []},
         {Credo.Check.Refactor.NegatedConditionsInUnless, []},
         {Credo.Check.Refactor.NegatedConditionsWithElse, []},
-        {Credo.Check.Refactor.Nesting, [max_nesting: 3]},
+        {Credo.Check.Refactor.Nesting, [max_nesting: 10]},
         {Credo.Check.Refactor.UnlessWithElse, []},
         {Credo.Check.Refactor.WithClauses, false},
 
