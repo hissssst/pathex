@@ -23,3 +23,7 @@ erl_crash.dump
 pathex-*.tar
 
 /.elixir_ls/
+
+# Nix auto shell
+.direnv
+.envrc
