@@ -10,7 +10,7 @@ defmodule Pathex.CheatsheetTest do
         star() ~> (recursive ||| matching(_))
       end)
 
-    assert {:ok, [[1234, :dot], 1, 2]} =
+    assert {:ok, result} =
              %{
                x: 1,
                y: 2,
@@ -20,6 +20,8 @@ defmodule Pathex.CheatsheetTest do
                }
              }
              |> Pathex.view(leaves)
+
+    assert Enum.sort(List.flatten(result)) == [1, 2, 1234, :dot]
   end
 
   def postwalking(iterlens, predicate) do

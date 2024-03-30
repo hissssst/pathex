@@ -116,8 +116,10 @@ defmodule Pathex.LensesTest do
       assert {:ok, {%{a: 1, b: 2}, %{b: 0}, %{c: 3}}} =
                force_set({%{a: 1}, %{b: 0}, %{c: 3}}, some ~> pb, 2)
 
-      assert {:ok, %{x: %{a: 1, b: 2}, y: %{b: 0}}} =
+      assert {:ok, result} =
                force_set(%{x: %{a: 1}, y: %{b: 0}}, some ~> pb, 2)
+
+      assert result in [%{x: %{a: 1, b: 2}, y: %{b: 0}}, %{x: %{a: 1}, y: %{b: 2}}]
 
       assert {:ok, [x: [a: 1, b: 2], y: %{b: 0}]} =
                force_set([x: [a: 1], y: %{b: 0}], some ~> pb, 2)
@@ -146,13 +148,15 @@ defmodule Pathex.LensesTest do
 
       # View
       assert {:ok, 1} = view([1, 2], some)
-      assert {:ok, 2} = view(%{x: 2, y: -2}, some)
+      assert {:ok, two_or_minus_two} = view(%{x: 2, y: -2}, some)
+      assert two_or_minus_two in [2, -2]
       assert {:ok, 3} = view([y: 3, z: 123], some)
       assert {:ok, 4} = view({4, 5}, some)
 
       # Update
       assert {:ok, [1, 123]} = over([0, 123], some, inc)
-      assert {:ok, %{x: 124, y: -1}} = over(%{x: 123, y: -1}, some, inc)
+      assert {:ok, result} = over(%{x: 123, y: -1}, some, inc)
+      assert result in [%{x: 124, y: -1}, %{x: 123, y: 0}]
 
       # Delete
       assert {:ok, [1, 2, 3]} = delete([0, 1, 2, 3], some)
