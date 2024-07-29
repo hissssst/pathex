@@ -4,6 +4,16 @@ defmodule Pathex.Debug do
   and performs the same way `matching(_)` does
   """
 
+  @doc """
+  Works like `matching(_)` lens, but also prints out debugging information with prefix.
+
+  ## Example
+
+    iex> p = path(1) ~> debug("debug()> ")
+    iex> view! %{1 => 2}, p
+    debug()> Called view on 2
+    2
+  """
   @spec debug(String.t()) :: Pathex.t()
   def debug(prefix \\ "") do
     spaced =
