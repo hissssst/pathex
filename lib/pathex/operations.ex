@@ -83,25 +83,42 @@ defmodule Pathex.Operations do
     raise ArgumentError, "Modificator #{mod} is not supported"
   end
 
-  @spec filter_combination(Pathex.Combination.t(), Pathex.mod()) :: Pathex.Combination.t()
-  def filter_combination(combination, mod) do
-    combination
-    |> Enum.map(&filter_one(mod, &1))
-    |> Enum.filter(fn
-      [] -> false
-      _ -> true
-    end)
+  @spec filter_combination(Pathex.Combination.t(), Pathex.mod(), Pathex.Combination.t()) :: {:ok, Pathex.Combination.t()} | {:error, any()}
+  def filter_combination(combination, mod, acc \\ [])
+  def filter_combination([], _mod, acc), do: {:ok, Enum.reverse(acc)}
+  def filter_combination([head | tail], mod, acc) do
+    with {:ok, step} <- filter_one(mod, head) do
+      filter_combination(tail, mod, [step | acc])
+    end
   end
 
-  defp filter_one(:naive, path), do: path
-  defp filter_one(:map, path), do: Keyword.take(path, [:map])
-
+  defp filter_one(:naive, [_ | _] = path), do: {:ok, path}
+  defp filter_one(:map, path) do
+    case Keyword.fetch(path, :map) do
+      :error -> {:error, "At least some map key expected, but got only #{inspect(path)}"}
+      {:ok, map_key} -> {:ok, map: map_key}
+    end
+  end
   defp filter_one(:json, path) do
-    Enum.filter(path, fn
-      {:map, i} when is_integer(i) -> false
-      {:map, _} -> true
-      {:list, i} when is_integer(i) and i >= 0 -> true
-      _ -> false
-    end)
+    filtered =
+      Enum.filter(path, fn
+        {:map, i} when is_integer(i) -> false
+        {:map, _} -> true
+        {:list, i} when is_integer(i) and i >= 0 -> true
+        _ -> false
+      end)
+
+    case filtered do
+      [] ->
+        [{_, value} | _] = path
+        types = Enum.map_join(path, ", ", fn {type, _} -> type end)
+        reason = ":json modifier expects any non-integer map key or positive list index literal. " <>
+          "But got #{value} for #{types}"
+
+        {:error, reason}
+
+      filtered ->
+        {:ok, filtered}
+    end
   end
 end

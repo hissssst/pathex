@@ -2,6 +2,11 @@
 
 Speed or composability? Choose both!
 
+## Elixir 1.17 warning
+
+It turns out that Elixir 1.17 release has 3 bugs which block reliable usage of Pathex library, one of which is critical.
+So please, do not use Elixir 1.17 with the Pathex library. However, these issues are fixed in upcoming Elixir 1.18 release.
+
 ### What is Pathex?
 
 Pathex is a library for performing fast actions with nested data structures in Elixir.

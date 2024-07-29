@@ -205,35 +205,35 @@ defmodule Pathex do
   @doc """
   Sets the `value` under `path` in `struct`.
 
+  ### Creates path if it is not present
+
   If the path does not exist it creates the path favouring maps
   when structure is unknown.
-
-  ## Example
 
       iex> x = 1
       iex> {:ok, [0, %{x: 123}]} = force_set [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
       iex> {:ok, %{"hey" => %{0 => 1}}} = force_set %{}, p, 1
 
-  If the item in path doesn't have the right type, it returns `:error`.
+  ### Incorrect types may be detected during call
 
-  ## Example
+  If the item in path doesn't have the right type, it returns `:error`.
 
       iex> p = path "hey" / "you"
       iex> :error = force_set %{"hey" => {1, 2}}, p, "value"
 
+  ### Empty space is filled with nil
+
   Note that for paths created with `Pathex.path/2` list and tuple indexes
   which are out of bounds fill the empty space with `nil`.
-
-  ## Example
 
       iex> p = path 4
       iex> {:ok, [1, 2, 3, nil, 5]} = force_set [1, 2, 3], p, 5
       iex> {:ok, {1, 2, 3, nil, 5}} = force_set {1, 2, 3}, p, 5
 
-  This is also true for negative indexes (except -1 for lists which always prepends)
+  ### Negative indexes
 
-  ## Example
+  This is also true for negative indexes (except -1 for lists which always prepends)
 
       iex> p = path -5
       iex> {:ok, [0, nil, 1, 2, 3]} = force_set [1, 2, 3], p, 0
@@ -252,36 +252,36 @@ defmodule Pathex do
   @doc """
   Sets the `value` under `path` in `struct`.
 
+  ### Creates path if it is not present
+
   If the path does not exist it creates the path favouring maps
   when structure is unknown.
-
-  ## Example
 
       iex> x = 1
       iex> [0, %{x: 123}] = force_set! [0, %{x: 8}], path(x / :x), 123
       iex> p = path "hey" / 0
       iex> %{"hey" => %{0 => 1}} = force_set! %{}, p, 1
 
-  If the item in path doesn't have the right type, it raises.
+  ### Incorrect types may be detected during call
 
-  ## Example
+  If the item in path doesn't have the right type, it raises.
 
       iex> p = path "hey" / "you"
       iex> force_set! %{"hey" => {1, 2}}, p, "value"
       ** (Pathex.Error) Type mismatch in structure
 
+  ### Empty space is filled with nil
+
   Note that for paths created with `Pathex.path/2` list and tuple indexes
   which are out of bounds fill the empty space with `nil`.
-
-  ## Example
 
       iex> p = path 4
       iex> [1, 2, 3, nil, 5] = force_set! [1, 2, 3], p, 5
       iex> {1, 2, 3, nil, 5} = force_set! {1, 2, 3}, p, 5
 
-  This is also true for negative indexes (except -1 for lists which always prepends)
+  ### Negative indexes
 
-  ## Example
+  This is also true for negative indexes (except `-1` for lists which always prepends)
 
       iex> p = path -5
       iex> [0, nil, 1, 2, 3] = force_set! [1, 2, 3], p, 0
@@ -794,26 +794,11 @@ defmodule Pathex do
 
       # Case for not inlined paths
       :error ->
-        # case Macro.expand(path, caller) do
-        #   {:fn, _, clauses} ->
-        #     Enum.find_value(clauses, fn
-        #       {:"->", _, [[^op, args], body]} -> {args, body}
-        #       _ -> false
-        #     end)
-        #     |> IO.inspect()
-
-        #     IO.puts "YEAH!"
-
-        #   _ ->
-        #     :error
-        # end
-
         quote generated: true do
           unquote(code).(unquote(op), {unquote_splicing(args)})
         end
         |> Common.set_generated()
     end
-
     # |> tap(fn x -> IO.puts Macro.to_string x end)
   end
 

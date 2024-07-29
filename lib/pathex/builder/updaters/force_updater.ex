@@ -148,9 +148,18 @@ defmodule Pathex.Builder.ForceUpdater do
     collection(type, [acc_items])
   end
 
-  defp add_to_acc({type, n}, acc_items) when is_integer(n) do
+  defp add_to_acc({type, -1}, acc_items) do
+    collection(type, [acc_items])
+  end
+
+  defp add_to_acc({type, n}, acc_items) when is_integer(n) and n > 0 do
     nils = for _ <- 1..n, do: nil
     collection(type, nils ++ [acc_items])
+  end
+
+  defp add_to_acc({type, n}, acc_items) when is_integer(n) and n < 0 do
+    nils = for _ <- 1..(-n), do: nil
+    collection(type, [acc_items | nils])
   end
 
   defp add_to_acc({:list, var}, acc_items) do

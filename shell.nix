@@ -1,13 +1,22 @@
 { pkgs ? (import <nixpkgs> { }), ... }:
 with pkgs;
-let otp = beam.packages.erlangR26;
-in pkgs.mkShell {
+let
+  otp = beam.packages.erlang_27;
+  elixir = otp.elixir_1_17.overrideAttrs (oldAttrs: {
+    version = "1.18-dev";
+    src = fetchFromGitHub {
+      owner = "elixir-lang";
+      repo = "elixir";
+      rev = "b799e9eda4613a1bc40fd0824fb08d5df3b3e24b";
+      sha256 = "sha256-mTG9/Qk/kXoVdWL9oBv1WuNMyQjIINx8Gpi91l6oS4M=";
+    };
+  });
+in
+pkgs.mkShell {
   buildInputs = [
-    otp.elixir_1_16
+    elixir
     otp.erlang
-    ((if otp ? elixir-ls then otp.elixir-ls else otp.elixir_ls).override {
-      elixir = otp.elixir_1_16;
-    })
+    ((if otp ? elixir-ls then otp.elixir-ls else otp.elixir_ls).override { inherit elixir; })
   ];
 
   shellHook = ''

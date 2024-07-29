@@ -14,9 +14,17 @@ defmodule Pathex.QuotedParser do
       |> Enum.map(&detect_quoted/1)
       |> Enum.unzip()
 
-    binds = Enum.reject(binds, &is_nil/1)
-    combination = Operations.filter_combination(combination, mod)
-    {binds, combination}
+    case Operations.filter_combination(combination, mod) do
+      {:ok, combination} ->
+        binds = Enum.reject(binds, &is_nil/1)
+        {binds, combination}
+
+      {:error, reason} ->
+        raise CompileError,
+          line: env.line,
+          file: env.file,
+          description: "The step is filtered by specified modifier. " <> reason
+    end
   end
 
   @doc """
