@@ -1,7 +1,7 @@
 defmodule Pathex.MixProject do
   use Mix.Project
 
-  @version "2.5.3"
+  @version "2.6.0"
 
   def project do
     [

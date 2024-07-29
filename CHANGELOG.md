@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.6.0
+
+**Breaking**
+
+All of these are bug fixes, that's why we only bump the minor version
+
+* Fixes bug with `-1` incorrectly appending when used in nested lenses
+* Now error is raised when modifier conflicts with path definition
+
+**Non-breaking**
+
+* Slightly improved docs
+* Added docs for Elixir 1.17
+
 ## 2.5.3
 
 **Breaking**
