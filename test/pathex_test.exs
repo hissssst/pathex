@@ -298,5 +298,4 @@ defmodule PathexTest do
     assert true == exists?(s, path(0) ~> path(:x))
     assert false == exists?(s, path(0) ~> path(:y))
   end
-
 end

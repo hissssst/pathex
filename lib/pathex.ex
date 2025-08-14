@@ -481,6 +481,30 @@ defmodule Pathex do
   end
 
   @doc """
+  Deletes value under `path` in `struct` if it is present.
+  Otherwise, returns a struct unmodified
+
+  ## Example
+
+      iex> [0, %{}] = without([0, %{x: 8}], path(0 / :x))
+      iex> [0, %{x: 8}] = without([0, %{x: 8}], path(1 / :y))
+  """
+  @doc export: true
+  defmacro without(struct, path) do
+    [struct_var] = Macro.generate_unique_arguments(1, Pathex)
+    result = gen(path, :delete, [struct_var, quote(do: fn _ -> :delete_me end)], __CALLER__)
+
+    quote do
+      unquote(struct_var) = unquote(struct)
+
+      case unquote(result) do
+        {:ok, result} -> result
+        :error -> unquote(struct_var)
+      end
+    end
+  end
+
+  @doc """
   Deletes value under `path` in `struct` or raises if value is not found.
 
   ## Example

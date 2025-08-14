@@ -15,7 +15,7 @@ Note that for 1-depth operations `Pathex` is slightly slower than `Map` or `Keyw
 | `Map.update/4`   | `Pathex.force_over/4` |
 | `Map.put/3`      | `Pathex.force_set/3`  |
 | `Map.replace/3`  | `Pathex.set/3`        |
-| `Map.delete/2`   | `Pathex.delete/2`     |
+| `Map.delete/2`   | `Pathex.without/2`    |
 | `Map.has_key?/2` | `Pathex.exists?/2`    |
 
 ## Nested

@@ -172,11 +172,11 @@ defmodule Pathex.Accessibility do
   ## Example
 
       iex> require Pathex
-      iex> defmodule User do
+      iex> defmodule Admin do
       ...>   defstruct name: "", age: nil
       ...> end
-      iex> name_lens = from_struct(User, :name)
-      iex> %{name: "Joe"} = Pathex.force_set!(%{}, name_lens, "Joe")
+      iex> name_lens = from_struct(Admin, :name)
+      iex> Pathex.force_set!(%{}, name_lens, "Joe")
   """
   @spec from_struct(module(), atom()) :: Pathex.t(struct(), any())
   def from_struct(module, key) when is_atom(key) and is_atom(module) do
@@ -221,11 +221,13 @@ defmodule Pathex.Accessibility do
           map = Map.put(map, key, value)
           requireds = Map.take(map, required)
 
-          if map_size(requireds) == reqlen do
-            defaulteds = Map.take(map, defaulted)
-            {:ok, struct(module, :maps.merge(defaulteds, requireds))}
-          else
-            :error
+          case map_size(requireds) do
+            ^reqlen ->
+              defaulteds = Map.take(map, defaulted)
+              {:ok, struct(module, :maps.merge(defaulteds, requireds))}
+
+            _ ->
+              :error
           end
 
         :inspect, _ ->
@@ -294,23 +296,32 @@ defmodule Pathex.Accessibility do
   end
 
   defp check_struct(module, key) do
-    do_split(module.__info__(:struct), [], [], nil, key)
-  end
+    # https://github.com/elixir-lang/elixir/issues/14616
 
-  defp do_split([%{field: key, required: true} | tail], required, defaulted, _, key) do
-    do_split(tail, [key | required], defaulted, true, key)
+    struct_info =
+      if function_exported?(Macro, :struct_info!, 2) do
+        apply(Macro, :struct_info!, [module, __ENV__])
+      else
+        module.__info__(:struct)
+      end
+
+    do_split(struct_info, [], [], nil, key)
   end
 
   defp do_split([%{field: key, required: false} | tail], required, defaulted, _, key) do
     do_split(tail, required, [key | defaulted], false, key)
   end
 
-  defp do_split([%{field: field, required: true} | tail], required, defaulted, acc, key) do
-    do_split(tail, [field | required], defaulted, acc, key)
+  defp do_split([%{field: key} | tail], required, defaulted, _, key) do
+    do_split(tail, [key | required], defaulted, true, key)
   end
 
   defp do_split([%{field: field, required: false} | tail], required, defaulted, acc, key) do
     do_split(tail, required, [field | defaulted], acc, key)
+  end
+
+  defp do_split([%{field: field} | tail], required, defaulted, acc, key) do
+    do_split(tail, [field | required], defaulted, acc, key)
   end
 
   defp do_split([], _, _, nil, key) do

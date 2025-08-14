@@ -4,7 +4,6 @@ defmodule Pathex.Builder.Inspector do
 
   @behaviour Pathex.Builder
   alias Pathex.Builder.Code
-  alias Pathex.Common
 
   @impl Pathex.Builder
   def build(combination) do
@@ -16,14 +15,19 @@ defmodule Pathex.Builder.Inspector do
       |> Enum.reduce(fn r, l -> quote(do: unquote(l) / unquote(r)) end)
 
     quote(do: path(unquote(slashed)))
-    |> Common.safe_drop_meta()
     |> Macro.escape()
-    |> Macro.prewalk(&unescape/1)
+    |> Macro.postwalk(&unescape/1)
     |> Code.new([])
   end
 
-  defp unescape({:{}, _meta, [name, meta, context]}) when is_atom(name) and is_atom(context) do
-    {name, meta, context}
+  defp unescape({:{}, _meta, [name, meta, context]}) when is_atom(name) and is_list(meta) and is_atom(context) do
+    quote do
+      try do
+        Macro.escape unquote({name, meta, context})
+      rescue
+        _ -> unquote({name, meta, context})
+      end
+    end
   end
 
   defp unescape(other), do: other

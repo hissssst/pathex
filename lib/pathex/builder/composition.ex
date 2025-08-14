@@ -36,7 +36,7 @@ defmodule Pathex.Builder.Composition do
             [:inspect, _]
           ]}
        )
-       when is_atom(name) and is_atom(context) do
+       when is_atom(name) and is_list(meta) and is_atom(context) do
     var = {name, meta, context}
     quote(do: unquote(var).(:inspect, []))
   end

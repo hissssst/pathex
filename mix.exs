@@ -1,13 +1,13 @@
 defmodule Pathex.MixProject do
   use Mix.Project
 
-  @version "2.6.0"
+  @version "2.6.1"
 
   def project do
     [
       app: :pathex,
       version: @version,
-      elixir: ">= 1.13.0 and < 1.17.0 or > 1.18.0 or == 1.18.0-dev",
+      elixir: ">= 1.13.0 and < 1.17.0 or >= 1.17.3 or > 1.18.0 or == 1.18.0-dev",
       start_permanent: Mix.env() == :prod,
       description: description(),
       package: package(),

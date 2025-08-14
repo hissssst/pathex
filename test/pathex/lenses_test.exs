@@ -161,6 +161,13 @@ defmodule Pathex.LensesTest do
       # Delete
       assert {:ok, [1, 2, 3]} = delete([0, 1, 2, 3], some)
     end
+
+    test "Update" do
+      import Lenses
+
+      assert :error = set([1, 2, 3], some() ~> matching(x when x > 5), 5)
+      assert {:ok, [1, 2, 5]} = set([1, 2, 6], some() ~> matching(x when x > 5), 5)
+    end
   end
 
   describe "conditional lenses (aka prisms)" do

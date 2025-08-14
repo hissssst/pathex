@@ -73,5 +73,38 @@ defmodule Pathex.DeletionTest do
       assert {:ok, list} = Pathex.delete(data, star() ~> matching(x when x > 500))
       assert length(list) == 500
     end
+
+    test "star ~> matching exact" do
+      assert {:ok, %{x: [1, 2]}} == Pathex.delete(%{x: [1, 2, 3]}, path(:x) ~> star() ~> matching(x when x >= 3))
+
+      assert :error == Pathex.delete([1, 2, 3], star() ~> matching(x when x >= 4))
+      assert :error == Pathex.delete(%{x: [1, 2, 3]}, path(:x) ~> star() ~> matching(x when x >= 4))
+    end
+  end
+
+  describe "Regression" do
+    import Pathex.Lenses
+
+    test "some deletion" do
+      assert {:ok, [2, 3]} == Pathex.delete([1, 2, 3], some())
+      assert {:ok, %{x: [2, 3]}} == Pathex.delete(%{x: [1, 2, 3]}, path(:x) ~> some())
+      assert {:ok, %{x: [1, 2]}} == Pathex.delete(%{x: [1, 2, 3]}, path(:x) ~> some() ~> matching(x when x >= 3))
+
+      assert :error == Pathex.delete([1, 2, 3], some() ~> matching(x when x >= 4))
+      assert :error == Pathex.delete(%{x: [1, 2, 3]}, path(:x) ~> some() ~> matching(x when x >= 4))
+    end
+  end
+
+  describe "without" do
+    import Pathex.Lenses
+
+    test "just works" do
+      assert [2, 3] == Pathex.without([1, 2, 3], some())
+      assert %{x: [2, 3]} == Pathex.without(%{x: [1, 2, 3]}, path(:x) ~> some())
+      assert %{x: [1, 2]} == Pathex.without(%{x: [1, 2, 3]}, path(:x) ~> some() ~> matching(x when x >= 3))
+
+      assert [1, 2, 3] == Pathex.without([1, 2, 3], some() ~> matching(x when x >= 4))
+      assert %{x: [1, 2, 3]} == Pathex.without(%{x: [1, 2, 3]}, path(:x) ~> some() ~> matching(x when x >= 4))
+    end
   end
 end

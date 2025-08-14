@@ -236,7 +236,9 @@ defmodule Pathex.Lenses.Some do
         [{key, new_value} | tail]
 
       :error ->
-        [{key, value} | keyword_update(tail, func)]
+        with keyword when is_list(keyword) <- keyword_update(tail, func) do
+          [{key, value} | keyword]
+        end
     end
   end
 
@@ -252,7 +254,9 @@ defmodule Pathex.Lenses.Some do
         [new_value | tail]
 
       :error ->
-        [value | list_update(tail, func)]
+        with list when is_list(list) <- list_update(tail, func) do
+          [value | list]
+        end
     end
   end
 
@@ -294,7 +298,9 @@ defmodule Pathex.Lenses.Some do
         tail
 
       :error ->
-        [{key, value} | keyword_delete(tail, func)]
+        with tail when is_list(tail) <- keyword_delete(tail, func) do
+          [{key, value} | tail]
+        end
     end
   end
 
@@ -309,7 +315,9 @@ defmodule Pathex.Lenses.Some do
         tail
 
       :error ->
-        [value | list_delete(tail, func)]
+        with tail when is_list(tail) <- list_delete(tail, func) do
+          [value | tail]
+        end
     end
   end
 end

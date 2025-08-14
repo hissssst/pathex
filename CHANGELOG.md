@@ -1,5 +1,18 @@
 # Changelog
 
+## 2.6.1
+
+**Breaking**
+
+None
+
+**Non-breaking**
+
+* Elixir versions compatibility improved
+* 1.18 structures bug workaround
+* Fixes composition of all and star lenses
+* Adds `without` macro
+
 ## 2.6.0
 
 **Breaking**
